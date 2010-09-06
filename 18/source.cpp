@@ -86,16 +86,25 @@ private:
         if (list_size <= 1)
             return;
 
+		bool swapped;
+
         for (int i = list_size - 1; i > 0; --i) {
             for (int j = 0; j < i; ++j) {
+				swapped = false;
                 Node *n1 = getNodeIndexOf(j);
                 Node *n2 = getNodeIndexOf(j + 1);
                 n1->lock();
                 n2->lock();
-                if (Node::compare(n1, n2) > 0)
+                if (Node::compare(n1, n2) > 0){
                     Node::swap(n1, n2);
+					swapped = true;
+				}
                 n2->unlock();
                 n1->unlock();
+
+				if(swapped){
+					sleep(1);
+				}
             }
         }
     }
@@ -128,7 +137,6 @@ public:
         list_size = 0;
         head_ptr->unlock();
         delete head_ptr;
-        head_ptr = NULL;
     }
 
     int size() const {
