@@ -70,7 +70,7 @@ philosopher(void *num) {
                 printf("Philosopher %d: put %s fork %d (another was already taken)\n", id, "left", left_fork);
                 pthread_mutex_unlock(&forks[left_fork]);
                 wait(f);
-
+				continue;
             }
         }
         printf("Philosopher %d: eating.\n", id);
