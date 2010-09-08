@@ -1,0 +1,969 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>Common threads: POSIX threads explained, Part 3</title>
+<meta http-equiv="PICS-Label" content='(PICS-1.1 "http://www.icra.org/ratingsv02.html" l gen true r (cz 1 lz 1 nz 1 oz 1 vz 1) "http://www.rsac.org/ratingsv01.html" l gen true r (n 0 s 0 v 0 l 0) "http://www.classify.org/safesurf/" l gen true r (SS~~000 1))'/>
+<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/"/>
+<link rel="SHORTCUT ICON" href="http://www.ibm.com/favicon.ico"/>
+<meta name="Owner" content="developerWorks Content/Raleigh/IBM"/>
+<meta name="DC.Language" scheme="rfc1766" content="en"/>
+<meta name="IBM.Country" content="ZZ"/>
+<meta name="Security" content="Public"/>
+<meta name="IBM.SpecialPurpose" content="SP001"/>
+<meta name="IBM.PageAttributes" content="sid=1003"/>
+<meta name="Source" content="v16 Template Generator"/>
+<meta name="Robots" content="index,follow"/>
+<meta name="Abstract" content="In this article, the last of a three-part series on POSIX threads, Daniel takes a good look at how to use condition variables. Condition variables are POSIX thread structures that allow you to 'wake up' threads when certain conditions are met. You can think of them as a thread-safe form of signalling. Daniel wraps up the article by using all that you've learned so far to implement a multi-threaded work crew application."/>
+<meta name="Description" content="In this article, the last of a three-part series on POSIX threads, Daniel takes a good look at how to use condition variables. Condition variables are POSIX thread structures that allow you to 'wake up' threads when certain conditions are met. You can think of them as a thread-safe form of signalling. Daniel wraps up the article by using all that you've learned so far to implement a multi-threaded work crew application."/>
+<meta name="Keywords" content="Linux, operating systems, Linux news, open source, Linux papers, Linux information, Linux articles, Linux whitepapers, IBM, tttlca"/>
+<meta name="DC.Date" scheme="iso8601" content="2000-09-01"/>
+<meta name="DC.Type" scheme="IBM_ContentClassTaxonomy" content="CT316"/>
+<meta name="DC.Subject" scheme="IBM_SubjectTaxonomy" content="SWGC0"/>
+<meta scheme="IBM_WTMCategory" name="IBM.WTMCategory" content="SOFDCLNXZZ" />
+<meta name="DC.Rights" content="© Copyright IBM Corporation 2000"/>
+<meta name="IBM.Effective" scheme="W3CDTF" content="2000-09-01"/>
+<meta name="title" content="Common threads: POSIX threads explained, Part 3"/>
+
+<!-- HEADER_SCRIPTS_AND_CSS_INCLUDE -->
+<link href="//dw1.s81c.com/common/v16/css/all.css" media="all" rel="stylesheet" title="www" type="text/css"/>
+<link href="//dw1.s81c.com/common/v16/css/screen.css" media="screen,projection" rel="stylesheet" title="www" type="text/css"/>
+<link href="//dw1.s81c.com/common/v16/css/screen-uas.css" media="screen,projection" rel="stylesheet" title="www" type="text/css"/>
+<link href="//dw1.s81c.com/common/v16/css/zz/en/screen-fonts.css" media="screen,projection" rel="stylesheet" title="www" type="text/css"/>
+<link href="//dw1.s81c.com/common/v16/css/handheld.css" media="handheld" rel="stylesheet" title="www" type="text/css"/>
+<link href="//dw1.s81c.com/common/v16/css/print.css" media="print" rel="stylesheet" title="www" type="text/css"/>
+<link href="//dw1.s81c.com/common/v16/css/overlay.css" media="screen,projection" rel="stylesheet" title="www" type="text/css"/>
+
+<!-- dW-specific CSS -->
+<link href="//dw1.s81c.com/developerworks/css/dw-screen.css" media="screen,projection" rel="stylesheet" title="www" type="text/css"/>
+<link href="//dw1.s81c.com/developerworks/js/jquery/cluetip98/jquery.cluetip.css" media="screen,projection" rel="stylesheet"  title="www" type="text/css" />
+
+<script src="//dw1.s81c.com/common/js/ibmcommon.js" type="text/javascript">//</script>
+<script src="//dw1.s81c.com/common/js/dynamicnav.js" type="text/javascript">//</script>
+
+<!-- dW functional JS -->
+<script language="JavaScript" src="//dw1.s81c.com/developerworks/js/urltactic.js" type="text/javascript"></script>
+<!-- Rating_START -->
+<script language="JavaScript" src="//dw1.s81c.com/developerworks/js/artrating/artrating.js" type="text/javascript"></script>
+<style type="text/css">
+.metavalue {
+  display: none;
+}
+</style>
+<!-- Rating_END --><!-- RESERVED_HEADER_INCLUDE -->
+<script language="javascript" src="//dw1.s81c.com/developerworks/js/ajax1.js" type="text/javascript"></script>
+<script language="javascript" src="//dw1.s81c.com/developerworks/js/search_counter-maverick.js" type="text/javascript"></script>
+<script language="javascript" src="//dw1.s81c.com/developerworks/js/request_referer_capture-maverick.js" type="text/javascript"></script>
+<script language="JavaScript" type="text/javascript">
+ <!--
+ setDefaultQuery('');
+ //-->
+</script>
+<script language="JavaScript" type="text/javascript">
+ <!--
+ function openNewWindow(url,tar,arg){window.open(url,tar,arg);}
+ //-->
+</script>
+<!-- Include file support -->
+<script language="JavaScript" type="text/javascript">
+(function($) {
+	jQuery.extend({
+		getInc: function(u,d){
+			if(u==null)return;
+			jQuery.ajax({
+	    		type: "GET",
+			url: u,
+			dataType: "text",
+	        	success: function(t) {
+				jQuery(d).html(t);
+				ibmCommon.initShowHide(jQuery(d).children()[0]);			
+			},
+			async: true
+			});
+		}
+	});
+})(jQuery);
+</script>
+</head>
+
+<body id="ibm-com">
+<div id="ibm-top" class="ibm-landing-page">
+
+<!-- MASTHEAD_BEGIN -->
+<div class="ibm-access"><a href="#ibm-content">Skip to main content</a></div>
+<div id="ibm-masthead">
+<div id="ibm-logo"><a href="http://www.ibm.com/"><img height="50" src="//dw1.s81c.com/i/v16/t/ibm-logo.gif" width="110" alt="IBM®" /></a></div>
+<ul id="ibm-geo"><li id="ibm-country" class="ibm-first">Country/region</li><li id="ibm-change-country">[ <a href="http://www.ibm.com/developerworks/country/">select</a> ]</li></ul>
+  <form id="ibm-search-form" action="//www.ibm.com/developerworks/search/searchResults.jsp" method="get" name="form1"><input type="hidden" name="searchType" value="1"/><input type="hidden" name="searchSite" value="dW"/><p>
+<span id="ibm-search-scope">
+<label for="sn"><img src="//dw1.s81c.com/i/c.gif" width="1" height="1" alt="Search in:"/></label>
+<select name="searchScope" id="sn">
+<option value="dW" selected="selected">All of dW</option>
+<option value="dW">-----------------</option>
+<option value="aixunix">&nbsp;AIX and UNIX</option>
+<option value="db2">&nbsp;Information Mgmt</option>
+<option value="lotus">&nbsp;Lotus</option>
+<option value="rdd">&nbsp;Rational</option>
+<option value="tivoli">&nbsp;Tivoli</option>  
+<option value="WSDD">&nbsp;WebSphere</option>
+<option value="dW">-----------------</option> 
+<option value="javaZ">&nbsp;Java technology</option> 
+<option value="linuxZ">&nbsp;Linux</option> 
+<option value="opensrcZ">&nbsp;Open source</option>
+<option value="webservZ">&nbsp;SOA/Web services</option>
+<option value="webarchZ">&nbsp;Web development</option>  
+<option value="xmlZ">&nbsp;XML</option>
+<option value="dW">-----------------</option>
+<option value="forums">&nbsp;dW forums</option> 
+<option value="dW">-----------------</option>
+<option value="aI">University</option>
+<option value="dW">-----------------</option>
+<option value="aW">alphaWorks</option>
+<option value="dW">-----------------</option>
+<option value="all">All of IBM</option>
+</select>
+</span>
+
+<label for="q"><img alt="Search for:" height="1" width="1" src="//dw1.s81c.com/i/c.gif" /></label><input type="text" name="query" maxlength="100" id="q"/><input type="submit" id="ibm-search" class="ibm-btn-search" name="Search" value="Search" /></p></form>
+<div id="ibm-site-name">
+<!-- IBM site name container -->
+</div>
+<div id="ibm-universal-nav">
+<ul><li id="ibm-unav-home" class="ibm-first"><a href="http://www.ibm.com/">Home</a></li><li id="ibm-unav-solutions"><a href="http://www.ibm.com/solutions/">Solutions</a></li><li id="ibm-unav-services"><a href="http://www.ibm.com/technologyservices/">Services</a></li><li id="ibm-unav-products"><a href="http://www.ibm.com/products/">Products</a></li><li id="ibm-unav-support"><a href="http://www.ibm.com/support/">Support &amp; downloads</a></li><li id="ibm-unav-myibm"><a href="http://www.ibm.com/account/">My IBM</a></li></ul>
+</div>
+</div>
+<!-- MASTHEAD_END -->
+
+<div id="ibm-pcon">
+
+<!-- CONTENT_BEGIN -->
+<div id="ibm-content">
+
+<!-- Navigation_Trail_BEGIN -->
+<!-- &nbsp; -->
+      <div id="ibm-content-head"><ul id="ibm-navigation-trail"><li class="ibm-first"><a href="http://www.ibm.com/developerworks/">developerWorks</a></li><li><a href="http://www.ibm.com/developerworks/linux/">Linux</a></li><li><a href="http://www.ibm.com/developerworks/views/linux/library.jsp">Technical library</a></li></ul></div>
+<!-- Navigation_Trail_END -->
+
+<!-- dW_Summary Area_START -->
+<div id="dw-summary-article">
+
+<div class="dw-content-head">
+<h1>Common threads: POSIX threads explained, Part 3</h1><p><em>Improve efficiency with condition variables</em></p>
+</div>
+
+<div class="ibm-container-body ibm-two-column">
+
+<div class="ibm-column ibm-first">
+<div class="author"><a class="dwauthor" rel="#authortip1" href="#author1">Daniel Robbins</a> (<a href="mailto:drobbins@gentoo.org?subject=POSIX threads explained, Part 3">drobbins@gentoo.org</a>), President/CEO, Gentoo Technologies, Inc.</div><div id="authortip1" class="dwauthor-onload-state ibm-no-print">Daniel Robbins lives in Albuquerque, New Mexico. He is the
+President/CEO of Gentoo Technologies, Inc., the Chief Architect of the
+Gentoo Project and a contributing author to several books published by MacMillan: <i>Caldera OpenLinux Unleashed</i>, <i>SuSE Linux Unleashed</i>, and <i>Samba Unleashed</i>.  Daniel has been involved with computers
+in some fashion since the second grade, when he was first exposed to the Logo programming language as well as a potentially dangerous dose of Pac-Man.  This probably explains why he has since served as a Lead Graphic Artist at SONY Electronic Publishing/Psygnosis. Daniel enjoys spending time with his wife Mary, and his new baby daughter Hadassah. You can contact Daniel at <a href="mailto:drobbins@gentoo.org?cc=">drobbins@gentoo.org</a>.</div>
+<p></p>
+<p><b>Summary:</b>&nbsp; In this article, the last of a three-part series on POSIX threads, Daniel takes a good look at how to use condition variables. Condition variables are POSIX thread structures that allow you to "wake up" threads when certain conditions are met.  You can think of them as a thread-safe form of signalling.  Daniel wraps up the article by using all that you've learned so far to implement a multi-threaded work crew application.</p>
+
+<div id="dw-tag-content" class="ibm-no-print"></div><div id="dw-moretags-access" class="ibm-access"></div>
+<p class="ibm-no-print"><div id="dw-tag-this" class="ibm-no-print"><a class="ibm-external-link" onclick="jQuery.launchTagThisWindow(); return false;" href="#">Tag this!</a></div><div id="interestShow" class="ibm-no-print"></div></p>
+</div>
+
+<div class="ibm-column ibm-second">
+<p class="leading"><b>Date:</b>&nbsp; 01 Sep  2000
+<br /><b>Level: </b>&nbsp;Advanced
+
+<br /><b>Also available in:&nbsp;</b>
+
+
+
+&nbsp;<a href="http://www.ibm.com/developerworks/jp/linux/library/l-posix3/">Japanese</a> 
+
+
+
+<br />
+<br /><b>Activity:</b>&nbsp; 11667 views
+<br /><b>Comments:</b> &nbsp; <span id="nCmts"><img alt="" src="//dw1.s81c.com/developerworks/i/circle-preloader.gif" height="12" width="50" /><img alt="" src="//dw1.s81c.com/i/c.gif" height="14" width="1" /></span>
+<!-- Rating_Area_Begin -->
+<!-- Ensure that div id is based on input id and ends with -widget -->	
+<input id="art-rating" name="ratinga" type="hidden" value="0"/><div id="art-rating-widget"></div>
+<script language="JavaScript" type="text/javascript">
+// <![CDATA[
+   // widget div id and article id as args
+   window.artRating.init('art-rating-widget');
+// ]]>
+</script>
+<!-- Rating_Area_End -->
+</p>
+</div>
+
+</div>
+</div>
+<!-- dW_Summary_Area_END -->
+
+<!-- CONTENT_BODY -->
+<div id="ibm-content-body">
+
+<!-- MAIN_COLUMN_BEGIN -->
+<div id="ibm-content-main">
+
+<!-- Related_Searches_Area -->
+<!-- Related_Searches_Area_Begin -->
+<script type="text/javascript" language="javascript">
+	     capture_referrer();
+</script>
+
+<div id="dw-related-searches-article" style="display:none">
+<div class="ibm-container ibm-alternate-two">
+<div class="ibm-container-body">
+
+<!--  START : HTML FOR ARTICLE SEARCH -->
+  <div id="article_results" style="display:block"></div>
+<!--  END : HTML FOR ARTICLE SEARCH -->
+
+</div>
+</div>
+</div>
+<!-- Related_Searches_Area_End -->
+<!-- MAIN_COLUMN_CONTAINER_BEGIN -->
+<div class="ibm-container">
+
+<!-- MAIN_COLUMN_CONTENT_BEGIN -->
+<p><a name="h0"><span class="atitle">Condition variables explained</span></a></p><p>
+
+  I ended <a href="http://www.ibm.com/developerworks/library/l-posix2/index.html">my previous article</a> by describing a particular dilemma: how does
+    a thread deal with a situation where it is waiting for a specific
+    condition to become true?  It could repeatedly lock and unlock a
+    mutex, each time checking a shared data structure for a certain
+    value.  But this is a waste of time and resources, and this form
+    of busy polling is extremely inefficient.  The best way to do this
+    is to use the pthread_cond_wait() call to wait on a particular
+    condition to become true.</p><p>
+    It's important to understand what pthread_cond_wait() does -- it's
+    the heart of the POSIX threads signalling system, and also the
+    hardest part to understand.
+</p><p>
+    First, let's consider a scenario where a thread has locked a
+    mutex, in order to take a look at a linked list, and the list
+    happens to be empty.  This particular thread can't do anything --
+    it's designed to remove a node from the list, and there are no
+    nodes available.  So, this is what it does:
+</p><p>
+    While still holding the mutex lock, our thread will call
+    pthread_cond_wait(&amp;mycond,&amp;mymutex).  The pthread_cond_wait() call
+    is rather complex, so we'll step through each of its operations one at a
+    time.  
+</p><p>
+    The first thing pthread_cond_wait() does is simultaneously unlock
+    the mutex mymutex (so that other threads can modify the linked
+    list) and wait on the condition mycond (so that
+    pthread_cond_wait() will wake up when it is "signalled" by another
+    thread).  Now that the mutex is unlocked, other threads can access
+    and modify the linked list, possibly adding items.
+</p><p>
+    At this point, the pthread_cond_wait() call has not yet returned.
+    Unlocking the mutex happens immediately, but waiting on the
+    condition mycond is normally a blocking operation, meaning that
+    our thread will go to sleep, consuming no CPU cycles until it is
+    woken up.  This is exactly what we want to happen.  Our thread is
+    sleeping, waiting for a particular condition to become true,
+    without performing any kind of busy polling that would waste CPU
+    time.  From our thread's perspective, it's simply waiting for the
+    pthread_cond_wait() call to return.
+</p><p>
+    Now, to continue the explanation, let's say that another thread
+    (call it "thread 2") locks mymutex and adds an item to
+    our linked list.  Immediately after unlocking the mutex, thread 2 calls
+    the function pthread_cond_broadcast(&amp;mycond).  By doing so, thread
+    2 will cause all threads waiting on the mycond condition variable
+    to immediately wake up.  This means that our first thread (which
+    is in the middle of a pthread_cond_wait() call) will now wake up.
+</p><p>
+    Now, let's take a look at what happens to our first thread. After
+    thread 2 called pthread_cond_broadcast(&amp;mymutex) you might think
+    that thread 1's pthread_cond_wait() will immediately return.  Not
+    so!  Instead, pthread_cond_wait() will perform one last
+    operation: relock mymutex.  Once pthread_cond_wait() has the
+    lock, it will then return and allow thread 1 to continue
+    execution.  At that point, it can immediately check the list for
+    any interesting changes.
+</p><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h1"><span class="atitle">Stop and review!</span></a></p><br /><a name="N10071"><b>queue.h</b></a><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+    pthread_cond_t mycond;
+</pre></td></tr></table><br /><br /><a name="N1007A"><b>queue.c</b></a><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+    pthread_cond_t mycond;
+</pre></td></tr></table><br /><br /><a name="N10083"><b>control.h</b></a><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+    pthread_cond_t mycond;
+</pre></td></tr></table><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+    pthread_cond_init(&amp;mycond,NULL);
+</pre></td></tr></table><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+    pthread_cond_destroy(&amp;mycond);
+</pre></td></tr></table><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+    pthread_cond_wait(&amp;mycond, &amp;mymutex);
+</pre></td></tr></table><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+    pthread_cond_broadcast(&amp;mycond);
+</pre></td></tr></table><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+    pthread_cond_signal(&amp;mycond);
+</pre></td></tr></table><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+
+/* queue.h
+** Copyright 2000 Daniel Robbins, Gentoo Technologies, Inc.
+** Author: Daniel Robbins
+** Date: 16 Jun 2000
+*/
+typedef struct node {
+  struct node *next;
+} node;
+typedef struct queue {
+  node *head, *tail; 
+} queue;
+void queue_init(queue *myroot);
+void queue_put(queue *myroot, node *mynode);
+node *queue_get(queue *myroot);
+</pre></td></tr></table><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+
+/* queue.c
+** Copyright 2000 Daniel Robbins, Gentoo Technologies, Inc.
+** Author: Daniel Robbins
+** Date: 16 Jun 2000
+**
+** This set of queue functions was originally thread-aware.  I
+** redesigned the code to make this set of queue routines
+** thread-ignorant (just a generic, boring yet very fast set of queue
+** routines).  Why the change?  Because it makes more sense to have
+** the thread support as an optional add-on.  Consider a situation
+** where you want to add 5 nodes to the queue.  With the
+** thread-enabled version, each call to queue_put() would
+** automatically lock and unlock the queue mutex 5 times -- that's a
+** lot of unnecessary overhead.  However, by moving the thread stuff
+** out of the queue routines, the caller can lock the mutex once at
+** the beginning, then insert 5 items, and then unlock at the end.
+** Moving the lock/unlock code out of the queue functions allows for
+** optimizations that aren't possible otherwise.  It also makes this
+** code useful for non-threaded applications.
+**
+** We can easily thread-enable this data structure by using the
+** data_control type defined in control.c and control.h.  */
+#include &lt;stdio.h&gt;
+#include "queue.h"
+void queue_init(queue *myroot) {
+  myroot-&gt;head=NULL;
+  myroot-&gt;tail=NULL;
+}
+void queue_put(queue *myroot,node *mynode) {
+  mynode-&gt;next=NULL;
+  if (myroot-&gt;tail!=NULL)
+    myroot-&gt;tail-&gt;next=mynode;
+  myroot-&gt;tail=mynode;
+  if (myroot-&gt;head==NULL)
+    myroot-&gt;head=mynode;
+}
+node *queue_get(queue *myroot) {
+  //get from root
+  node *mynode;
+  mynode=myroot-&gt;head;
+  if (myroot-&gt;head!=NULL)
+    myroot-&gt;head=myroot-&gt;head-&gt;next;
+  return mynode;
+}
+</pre></td></tr></table><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+
+
+#include &lt;pthread.h&gt;
+typedef struct data_control {
+  pthread_mutex_t mutex;
+  pthread_cond_t cond;
+  int active;
+} data_control;
+</pre></td></tr></table><br /><br /><a name="N100AC"><b>control.c</b></a><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+
+/* control.c
+** Copyright 2000 Daniel Robbins, Gentoo Technologies, Inc.
+** Author: Daniel Robbins
+** Date: 16 Jun 2000
+**
+** These routines provide an easy way to make any type of
+** data-structure thread-aware.  Simply associate a data_control
+** structure with the data structure (by creating a new struct, for
+** example).  Then, simply lock and unlock the mutex, or
+** wait/signal/broadcast on the condition variable in the data_control
+** structure as needed.
+**
+** data_control structs contain an int called "active".  This int is
+** intended to be used for a specific kind of multithreaded design,
+** where each thread checks the state of "active" every time it locks
+** the mutex.  If active is 0, the thread knows that instead of doing
+** its normal routine, it should stop itself.  If active is 1, it
+** should continue as normal.  So, by setting active to 0, a
+** controlling thread can easily inform a thread work crew to shut
+** down instead of processing new jobs.  Use the control_activate()
+** and control_deactivate() functions, which will also broadcast on
+** the data_control struct's condition variable, so that all threads
+** stuck in pthread_cond_wait() will wake up, have an opportunity to
+** notice the change, and then terminate.
+*/
+#include "control.h"
+int control_init(data_control *mycontrol) {
+  int mystatus;
+  if (pthread_mutex_init(&amp;(mycontrol-&gt;mutex),NULL))
+    return 1;
+  if (pthread_cond_init(&amp;(mycontrol-&gt;cond),NULL))
+    return 1;
+  mycontrol-&gt;active=0;
+  return 0;
+}
+int control_destroy(data_control *mycontrol) {
+  int mystatus;
+  if (pthread_cond_destroy(&amp;(mycontrol-&gt;cond)))
+    return 1;
+  if (pthread_cond_destroy(&amp;(mycontrol-&gt;cond)))
+    return 1;
+  mycontrol-&gt;active=0;
+  return 0;
+}
+int control_activate(data_control *mycontrol) {
+  int mystatus;
+  if (pthread_mutex_lock(&amp;(mycontrol-&gt;mutex)))
+    return 0;
+  mycontrol-&gt;active=1;
+  pthread_mutex_unlock(&amp;(mycontrol-&gt;mutex));
+  pthread_cond_broadcast(&amp;(mycontrol-&gt;cond));
+  return 1;
+}
+int control_deactivate(data_control *mycontrol) {
+  int mystatus;
+  if (pthread_mutex_lock(&amp;(mycontrol-&gt;mutex)))
+    return 0;
+  mycontrol-&gt;active=0;
+  pthread_mutex_unlock(&amp;(mycontrol-&gt;mutex));
+  pthread_cond_broadcast(&amp;(mycontrol-&gt;cond));
+  return 1;
+}
+</pre></td></tr></table><br /><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h10"><span class="atitle">Debug time</span></a></p><p>
+
+	One more miscellaneous file before we get to the biggie.
+	Here's dbug.h:
+</p><br /><a name="N100BC"><b>dbug.h</b></a><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+
+#define dabort() \
+ {  printf("Aborting at line %d in source file %s\n",__LINE__,__FILE__); abort(); }
+</pre></td></tr></table><br /><p>
+	We use this code to handle unrecoverable errors in our work
+	crew code.
+</p><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h11"><span class="atitle">The work crew code</span></a></p><p>
+
+	Speaking of the work crew code, here it is:
+</p><br /><a name="N100CE"><b>workcrew.c&gt;</b></a><br /><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="code-outline"><pre class="displaycode">
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include "control.h"
+#include "queue.h"
+#include "dbug.h"
+/* the work_queue holds tasks for the various threads to complete. */
+struct work_queue {
+  data_control control;
+  queue work;
+} wq;
+/* I added a job number to the work node.  Normally, the work node
+   would contain additional data that needed to be processed. */
+typedef struct work_node {
+  struct node *next;
+  int jobnum;
+} wnode;
+/* the cleanup queue holds stopped threads.  Before a thread
+   terminates, it adds itself to this list.  Since the main thread is
+   waiting for changes in this list, it will then wake up and clean up
+   the newly terminated thread. */
+struct cleanup_queue {
+  data_control control;
+  queue cleanup;
+} cq;
+/* I added a thread number (for debugging/instructional purposes) and
+   a thread id to the cleanup node.  The cleanup node gets passed to
+   the new thread on startup, and just before the thread stops, it
+   attaches the cleanup node to the cleanup queue.  The main thread
+   monitors the cleanup queue and is the one that performs the
+   necessary cleanup. */
+typedef struct cleanup_node {
+  struct node *next;
+  int threadnum;
+  pthread_t tid;
+} cnode;
+void *threadfunc(void *myarg) {
+  wnode *mywork;
+  cnode *mynode;
+  mynode=(cnode *) myarg;
+  pthread_mutex_lock(&amp;wq.control.mutex);
+  while (wq.control.active) {
+    while (wq.work.head==NULL &amp;&amp; wq.control.active) {
+      pthread_cond_wait(&amp;wq.control.cond, &amp;wq.control.mutex);
+    }
+    if (!wq.control.active) 
+      break;
+    //we got something!
+    mywork=(wnode *) queue_get(&amp;wq.work);
+    pthread_mutex_unlock(&amp;wq.control.mutex);
+    //perform processing...
+    printf("Thread number %d processing job %d\n",mynode-&gt;threadnum,mywork-&gt;jobnum);
+    free(mywork);
+    pthread_mutex_lock(&amp;wq.control.mutex);
+  }
+  pthread_mutex_unlock(&amp;wq.control.mutex);
+  pthread_mutex_lock(&amp;cq.control.mutex);
+  queue_put(&amp;cq.cleanup,(node *) mynode);
+  pthread_mutex_unlock(&amp;cq.control.mutex);
+  pthread_cond_signal(&amp;cq.control.cond);
+  printf("thread %d shutting down...\n",mynode-&gt;threadnum);
+  return NULL;
+  
+}
+#define NUM_WORKERS 4
+int numthreads;
+void join_threads(void) {
+  cnode *curnode;
+  printf("joining threads...\n");
+  while (numthreads) {
+    pthread_mutex_lock(&amp;cq.control.mutex);
+    /* below, we sleep until there really is a new cleanup node.  This
+       takes care of any false wakeups... even if we break out of
+       pthread_cond_wait(), we don't make any assumptions that the
+       condition we were waiting for is true.  */
+    while (cq.cleanup.head==NULL) {
+      pthread_cond_wait(&amp;cq.control.cond,&amp;cq.control.mutex);
+    }
+    /* at this point, we hold the mutex and there is an item in the
+       list that we need to process.  First, we remove the node from
+       the queue.  Then, we call pthread_join() on the tid stored in
+       the node.  When pthread_join() returns, we have cleaned up
+       after a thread.  Only then do we free() the node, decrement the
+       number of additional threads we need to wait for and repeat the
+       entire process, if necessary */
+      curnode = (cnode *) queue_get(&amp;cq.cleanup);
+      pthread_mutex_unlock(&amp;cq.control.mutex);
+      pthread_join(curnode-&gt;tid,NULL);
+      printf("joined with thread %d\n",curnode-&gt;threadnum);
+      free(curnode);
+      numthreads--;
+  }
+}
+int create_threads(void) {
+  int x;
+  cnode *curnode;
+  for (x=0; x&lt;NUM_WORKERS; x++) {
+    curnode=malloc(sizeof(cnode));
+    if (!curnode)
+      return 1;
+    curnode-&gt;threadnum=x;
+    if (pthread_create(&amp;curnode-&gt;tid, NULL, threadfunc, (void *) curnode))
+      return 1;
+    printf("created thread %d\n",x);
+    numthreads++;
+  }
+  return 0;
+}
+void initialize_structs(void) {
+  numthreads=0;
+  if (control_init(&amp;wq.control))
+    dabort();
+  queue_init(&amp;wq.work);
+  if (control_init(&amp;cq.control)) {
+    control_destroy(&amp;wq.control);
+    dabort();
+  }
+  queue_init(&amp;wq.work);
+  control_activate(&amp;wq.control);
+}
+void cleanup_structs(void) {
+  control_destroy(&amp;cq.control);
+  control_destroy(&amp;wq.control);
+}
+int main(void) {
+  int x;
+  wnode *mywork;
+  initialize_structs();
+  /* CREATION */
+  
+  if (create_threads()) {
+    printf("Error starting threads... cleaning up.\n");
+    join_threads();
+    dabort();
+  }
+  pthread_mutex_lock(&amp;wq.control.mutex);
+  for (x=0; x&lt;16000; x++) {
+    mywork=malloc(sizeof(wnode));
+    if (!mywork) {
+      printf("ouch! can't malloc!\n");
+      break;
+    }
+    mywork-&gt;jobnum=x;
+    queue_put(&amp;wq.work,(node *) mywork);
+  }
+  pthread_mutex_unlock(&amp;wq.control.mutex);
+  pthread_cond_broadcast(&amp;wq.control.cond);
+  printf("sleeping...\n");
+  sleep(2);
+  printf("deactivating work queue...\n");
+  control_deactivate(&amp;wq.control);
+  /* CLEANUP  */
+  join_threads();
+  cleanup_structs();
+}
+</pre></td></tr></table><br /><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h12"><span class="atitle">Code walkthrough</span></a></p><p>
+
+Now it's time for a quick code walkthrough.  The first struct defined
+is called "wq", and contains a data_control and a queue header.  The
+data_control structure will be used to arbitrate access to the entire
+queue, including the nodes in the queue.  Our next job is to define the actual
+work nodes.  To keep the code lean to fit in this article, all that's contained here is a job number.
+</p><p>
+Next, we create the cleanup queue.  The comments explain how this
+works.  OK, now let's skip the threadfunc(), join_threads(),
+create_threads() and initialize_structs() calls, and jump down to
+main().  The first thing we do is initialize our structures -- this
+includes initializing our data_controls and queues, as well as
+activating our work queue.  
+</p><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h13"><span class="atitle">Cleanup special</span></a></p><p>
+
+Now it's time to initialize our threads.  If you look at our
+create_threads() call, everything will look pretty 
+normal -- except
+for one thing.  Notice that we are allocating a cleanup node, and
+initializing its threadnum and TID components.  We also pass a cleanup
+node to each new worker thread as an initial argument.  Why do we do
+this?</p><p> Because when a worker thread exits, it'll attach its
+cleanup node to the cleanup queue, and terminate.  Then, our main
+thread will detect this addition to the cleanup queue (by use of a
+condition variable) and dequeue the node.  Because the TID (thread id)
+is stored in the cleanup node, our main thread will know exactly which
+thread terminated. Then, our main thread will call pthread_join(tid),
+and join with the appropriate worker thread. If we didn't perform such
+bookkeeping, our main thread would need to join with worker threads in
+an arbitrary order, possibly in the order that they were created.
+Because the threads may not necessarily terminate in this order, our
+main thread could be waiting to join with one thread while it could
+have been joining with ten others.  Can you see how this design
+decision can really speed up our shutdown code, especially if we were
+to use hundreds of worker threads?</p><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h14"><span class="atitle">Creating work</span></a></p><p>
+
+ Now that we've started our
+worker threads (and they're off performing their threadfunc(), which
+we'll get to in a bit), our main thread begins inserting items into
+the work queue.  First, it locks wq's control mutex, and then
+allocates 16000 work packets, inserting them into the queue
+one-by-one.  After this is done, pthread_cond_broadcast() is called,
+so that any sleeping threads are woken up and able to do the work.
+Then, our main thread sleeps for two seconds, and then deactivates the
+work queue, telling our worker threads to terminate.  Then, our main
+thread calls the join_threads() function to clean up all the worker
+threads.  </p><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h15"><span class="atitle">threadfunc()</span></a></p><p>
+
+Time to look at threadfunc(), the code that each worker thread
+executes.  When a worker thread starts, it immediately locks the work
+queue mutex, gets one work node (if available) and processes it.  If
+no work is available, pthread_cond_wait() is called.  You'll notice
+that it's called in a very tight while() loop, and this is very
+important.  When you wake up from a pthread_cond_wait() call, you
+should never assume that your condition is definitely true -- it will <i>probably</i>
+be true, but it may not.  The while loop will cause
+pthread_cond_wait() to be called again if it so happens that the
+thread was mistakenly woken up and the list is empty.</p><p> If there's a work node, we simply print out its job number, free it, and
+exit.  Real code would do something more substantial.  At the end of
+the while() loop, we lock the mutex so we can check the active
+variable as well as checking for new work nodes at the top of the
+loop.  If you follow the code through, you'll find that if
+wq.control.active is 0, the while loop will be terminated and the
+cleanup code at the end of threadfunc() will begin.  </p><p> The worker thread's part of the 
+cleanup code is pretty interesting.  First, it unlocks the
+work_queue, since pthread_cond_wait() returns with the mutex locked.
+Then, it gets a lock on the cleanup queue, adds our cleanup node
+(containing our TID, which the main thread will use for its
+pthread_join() call), and then it unlocks the cleanup queue.  After
+that, it signals any cq waiters (pthread_cond_signal(&amp;cq.control.cond)) so that the
+main thread will know that there's a new node to process.  We don't use
+pthread_cond_broadcast() because it's not necessary -- only one thread
+(the main thread) is waiting for new entries in the cleanup queue.
+Our worker thread prints a shutdown message, and then terminates, waiting to
+be pthread_joined() by the main thread when it calls join_threads().
+</p><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h16"><span class="atitle">join_threads()</span></a></p><p>
+
+ If you want to see a simple
+example of how condition variables should be used, take a look at the
+join_threads() function.  While we still have worker threads in
+existence, join_threads() loops, waiting for new cleanup nodes in our
+cleanup queue.  If there is
+a new node, we dequeue the node, unlock the cleanup queue (so that other
+cleanup nodes can be added by our worker threads), join with our new
+thread (using the TID stored in the cleanup node), free the cleanup
+node, decrement the number of threads "out there", and continue.  </p><div class="ibm-alternate-rule"><hr/></div><p class="ibm-ind-link ibm-back-to-top"><a href="#ibm-pcon" class="ibm-anchor-up-link">Back to top</a></p><p><a name="h17"><span class="atitle">Wrapping it up</span></a></p><p>
+
+We've reached the end of the "POSIX threads explained" series, and I hope that you're now ready to begin adding multithreaded code to your own applications.  For more information, please see the <a href="#resources">Resources</a> section, which also contains a tarball of all the sources used in this article.  I'll see you next series!
+</p><!-- CMA ID: 11038 --> <!-- Site ID: 1 --><!--XSLT stylesheet used to transform this file: dw-document-html-6.0.xsl-->
+<br />
+<p><a name="resources"><span class="atitle">Resources</span></a></p><ul><li>A <a href="thread-3.tar.gz">tarball of the sources</a> used in this article is available.<br /><br /></li><li>Your friendly Linux pthread man pages ("man -k pthread") are an
+excellent resource.<br /><br /></li><li>For a thorough treatment of POSIX threads, I recommend this book:
+<a href="http://www.amazon.com/exec/obidos/ASIN/0201633922">
+<i>Programming with POSIX Threads</i>
+</a>, by David R. Butenhof (Addison-Wesley, 1997).  This is arguably the best POSIX threads book available.<br /><br /></li><li>POSIX threads are also covered in this book: <a href="http://search.borders.com/fcgi-bin/db2www/search/search.d2w/Details?&amp;mediaType=Book&amp;prodID=2362607">
+<i>UNIX Network Programming - Networking APIs: Sockets and XTI</i>
+</a>, by W. Richard Stevens
+(Prentice Hall, 1997).  This is a classic book, but it doesn't cover
+threads in as much detail as does <i>Programming with POSIX Threads</i>,
+above.<br /><br /></li><li>Refer to Daniel's previous articles in the POSIX threads series on <i>developerWorks</i>:
+<ul>
+<li>
+<a href="http://www.ibm.com/developerworks/library/l-posix1.html">POSIX threads explained</a> introduces POSIX threads and shows you exactly how to use threads in your code.</li>
+<li>
+<a href="http://www.ibm.com/developerworks/library/l-posix2/index.html">POSIX threads explained, Part 2</a> shows you how to protect the integrity of shared
+        data structures in your threaded code by using nifty little things called
+        mutexes.</li>
+</ul>
+<br /><br /></li><li>See documentation on <a href="http://metalab.unc.edu/pub/Linux/docs/faqs/Threads-FAQ/html/">Linux threads</a>, by Sean Walton, KB7rfa.<br /><br /></li><li>Take a POSIX threads <a href="http://www.math.arizona.edu/swig/pthreads/threads.html">tutorial</a> by Mark Hays at the University of Arizona.<br /><br /></li><li>In <a href="http://hwaci.com/sw/pttcl/pttcl.html">An Introduction to Pthreads-Tcl</a>, see changes to Tcl that enable it to be used with POSIX threads.<br /><br /></li><li>Refer to the home page for <a href="http://members.aa.net/~mtp/PCthreads.html">POSIX and DCE threads for Linux</a>.<br /><br /></li><li>See <a href="http://pauillac.inria.fr/~xleroy/linuxthreads/">The LinuxThreads library</a>.<br /><br /></li><li>
+<a href="http://www.users.itl.net.ua/~prool/proolix.html">Proolix</a> is a simple POSIX-compliant operating system for i8086+ under permanent development.<br /><br /></li></ul>
+<p><a name="author"><span class="atitle">About the author</span></a></p><div class="ibm-container ibm-portrait-module ibm-alternate-two"><div class="ibm-container-body"><p><a name="author1"></a>Daniel Robbins lives in Albuquerque, New Mexico. He is the
+President/CEO of Gentoo Technologies, Inc., the Chief Architect of the
+Gentoo Project and a contributing author to several books published by MacMillan: <i>Caldera OpenLinux Unleashed</i>, <i>SuSE Linux Unleashed</i>, and <i>Samba Unleashed</i>.  Daniel has been involved with computers
+in some fashion since the second grade, when he was first exposed to the Logo programming language as well as a potentially dangerous dose of Pac-Man.  This probably explains why he has since served as a Lead Graphic Artist at SONY Electronic Publishing/Psygnosis. Daniel enjoys spending time with his wife Mary, and his new baby daughter Hadassah. You can contact Daniel at <a href="mailto:drobbins@gentoo.org?cc=">drobbins@gentoo.org</a>.</p></div></div>
+<!-- MAIN_COLUMN_CONTENT_END -->
+
+<!-- INLINE_COMMENTS_START -->
+<p class="ibm-no-print"><span class="atitle"><a name="icomments">Comments</a></span></p>
+<div id="dw-icomments-container" class="ibm-no-print">
+<div class="ibm-alternate-rule"><hr /></div>
+<div class="ibm-alternate-rule"><hr /></div>
+<!-- Comment_Script -->
+<a id="comments" href="comments"></a>
+<script language="JavaScript" src="//dw1.s81c.com/developerworks/js/insertcomment.js" type="text/javascript">//</script>
+<div id="threadShow"></div>
+<script language="JavaScript" type="text/javascript">
+// <![CDATA[
+ jQuery('threadShow').insertComment('95%',5,'nCmts','icomments');
+// ]]>
+</script>
+</div>
+<!-- INLINE_COMMENTS_END -->
+
+<p class="ibm-ind-link ibm-back-to-top"><a class="ibm-anchor-up-link" href="#ibm-pcon">Back to top</a></p>
+<p><a href="http://www.ibm.com/developerworks/ibm/trademarks/">Trademarks</a> &nbsp;|&nbsp; <a href="https://www.ibm.com/developerworks/mydeveloperworks/terms/">My developerWorks terms and conditions</a></p>
+
+<!-- Overlays -->
+<!-- Zone/Leaf_Interest_Overlay_Start -->
+<div class="ibm-common-overlay ibm-no-print" id="dwmyinterestadd">
+<div class="ibm-head"><p><a class="ibm-common-overlay-close" href="#close">Close [x]</a></p></div>
+<div class="ibm-body">
+<div class="ibm-main">
+<a class="ibm-access" name="dwmyinterestaddhelp">Help: Update or add to My dW interests</a>   
+<div class="ibm-title"><h1>What's this?</h1></div>
+<div class="ibm-container ibm-alternate">
+<p>This little timesaver lets you update your My developerWorks profile with just one click!  The general subject of this content (AIX and UNIX, Information Management, Lotus, Rational, Tivoli, WebSphere, Java, Linux, Open source, SOA and Web services, Web development, or XML) will be added to the interests section of your profile, if it's not there already.  You only need to be logged in to My developerWorks.</p>
+<p>And what's the point of adding your interests to your profile?  That's how you find other users with the same interests as yours, and see what they're reading and contributing to the community.  Your interests also help us recommend relevant developerWorks content to you.</p>
+<p><a href="https://www.ibm.com/developerworks/mydeveloperworks/profiles/home.do?lang=en">View your My developerWorks profile</a></p>
+<p class="ibm-access"><a href="#interestShow">Return from help</a></p>
+</div> 
+</div>
+</div>
+<div class="ibm-footer"></div>
+</div>
+
+<div class="ibm-common-overlay ibm-no-print" id="dwmyinterestremove">
+<div class="ibm-head"><p><a class="ibm-common-overlay-close" href="#close">Close [x]</a></p></div>
+<div class="ibm-body">
+<div class="ibm-main">
+<a class="ibm-access" name="dwmyinterestremovehelp">Help: Remove from My dW interests</a> 
+<div class="ibm-title"><h1>What's this?</h1></div>
+<div class="ibm-container ibm-alternate">
+<p>Removing this interest does not alter your profile, but rather removes this piece of content from a list of all content for which you've indicated interest.  In a future enhancement to My developerWorks, you'll be able to see a record of that content.</p>
+<p><a href="https://www.ibm.com/developerworks/mydeveloperworks/profiles/home.do?lang=en">View your My developerWorks profile</a></p>
+<p class="ibm-access"><a href="#interestShow">Return from help</a></p>
+</div> 
+</div>
+</div>
+<div class="ibm-footer"></div>
+</div>
+<!-- Zone/Leaf_Interest_Overlay_End --></div>
+<!-- MAIN_COLUMN_CONTAINER_END -->
+
+<!-- Rating_Meta_BEGIN -->
+<!--Rating_Meta_BEGIN--><div class="metavalue">static.content.url=http://www.ibm.com/developerworks/js/artrating/</div><div class="metavalue">SITE_ID=1</div><div class="metavalue">Zone=Linux</div><div class="metavalue">ArticleID=11038</div><div class="metavalue">ArticleTitle=Common threads: POSIX threads explained, Part 3</div><div class="metavalue">publish-date=09012000</div><div class="metavalue">author1-email=drobbins@gentoo.org</div><div class="metavalue">author1-email-cc=</div><script language="javascript" type="text/javascript">document.write('<div class="metavalue">url='+location.href.replace('<', '%3C')+'</div>');</script><!--Rating_Meta_END-->
+<!-- Rating_Meta_END -->
+
+</div>
+<!-- MAIN_COLUMN_END-->
+
+<!-- RIGHT_COLUMN_BEGIN -->
+<div id="ibm-content-sidebar">
+<div id="ibm-social-tools-sidebar" class="ibm-share-this"></div>
+
+<!-- RIGHT_COLUMN_CONTENT_BEGIN --> 
+<div class="ibm-container"><h2>Table of contents</h2><div class="ibm-container-body"><img alt="" height="1" width="1" src="//www.ibm.com/i/c.gif"/><ul class="ibm-bullet-list"><li><a class="ibm-feature-link" href="#h0">Condition variables explained</a></li><li><a class="ibm-feature-link" href="#h1">Stop and review!</a></li><li><a class="ibm-feature-link" href="#h10">Debug time</a></li><li><a class="ibm-feature-link" href="#h11">The work crew code</a></li><li><a class="ibm-feature-link" href="#h12">Code walkthrough</a></li><li><a class="ibm-feature-link" href="#h13">Cleanup special</a></li><li><a class="ibm-feature-link" href="#h14">Creating work</a></li><li><a class="ibm-feature-link" href="#h15">threadfunc()</a></li><li><a class="ibm-feature-link" href="#h16">join_threads()</a></li><li><a class="ibm-feature-link" href="#h17">Wrapping it up</a></li><li><a class="ibm-feature-link" href="#resources">Resources</a></li><li><a class="ibm-feature-link" href="#author">About the author</a></li><li><a class="ibm-feature-link" href="#icomments">Comments</a></li></ul></div></div>
+<!--XSLT stylesheet used to transform this content: s-danube.xsl--><div class="ibm-container"><h2>Local resources</h2><div class="ibm-container-body"><img src="//www.ibm.com/developerworks/i/spot-danube.jpg" alt="" border="0" height="58" width="188"/><ul class="ibm-bullet-list"><li><a href="http://www.ibm.com/partnerworld/iic/europe/hursley.htm?S_TACT=105AGY81&amp;S_CMP=danube_gb_eu" class="ibm-feature-link">IBM Innovation Center -  United Kingdom: Hursley  </a></li><li><a href="http://www.ibm.com/partnerworld/iic/southbank.html?S_TACT=105AGY81&amp;S_CMP=danube_gb_eu" class="ibm-feature-link">IBM Innovation Center -  United Kingdom: South Bank  </a></li><li><a href="http://www.ibm.com/developerworks/views/global/techbriefing.jsp?end_no=100&amp;lcl_sort_order=desc&amp;sort_order=asc&amp;expand=Europe%2C+Middle+East%2C+Africa&amp;show_all=false&amp;start_no=1&amp;geo_by=All+Geographies&amp;sort_by=Date&amp;search_by=&amp;topic_by=All+Topics&amp;show_abstract=true?S_TACT=105AGY81&amp;S_CMP=danube_gb_eu" class="ibm-feature-link">Technical Briefings in Europe, Middle East and Africa</a></li></ul></div></div>
+<!--XSLT stylesheet used to transform this content: s-community.xsl--><div class="ibm-container"><h2>My developerWorks community</h2><div class="ibm-container-body"><p>Interact, share, and communicate with developers worldwide.</p><div class="ibm-rule"><hr/></div><ul class="ibm-bullet-list"><li><a href="https://www.ibm.com/developerworks/mydeveloperworks/homepage/web/getuserpref?ca=dma-" class="ibm-feature-link">My Home</a></li><li><a href="https://www.ibm.com/developerworks/mydeveloperworks/profiles/home.do?lang=en&amp;ca=dma-" class="ibm-feature-link">Profiles</a></li><li><a href="https://www.ibm.com/developerworks/mydeveloperworks/groups/service/html/allcommunities?ca=dma-" class="ibm-feature-link">Groups</a></li><li><a href="https://www.ibm.com/developerworks/mydeveloperworks/blogs/?ca=dma-" class="ibm-feature-link">Blogs</a></li><li><a href="https://www.ibm.com/developerworks/mydeveloperworks/bookmarks/?ca=dma-" class="ibm-feature-link">Bookmarks</a></li><li><a href="https://www.ibm.com/developerworks/mydeveloperworks/activities/service/html/mainpage?ca=dma-" class="ibm-feature-link">Activities</a></li><li><a href="http://www.ibm.com/developerworks/spaces/?ca=dma-" class="ibm-feature-link">Spaces</a></li><li><a href="http://www.ibm.com/developerworks/forums/index.html?ca=dma-" class="ibm-feature-link">Forums</a></li><li><a href="http://www.ibm.com/developerworks/wikis/dashboard.action?ca=dma-" class="ibm-feature-link">Wikis</a></li><li><a href="http://www.ibm.com/developerworks/podcast/?ca=dma-" class="ibm-feature-link">Podcasts</a></li><li><a href="http://www.ibm.com/developerworks/exchange/dw_index.jspa?ca=dma-" class="ibm-feature-link">Exchange</a></li></ul><div class="ibm-rule"><hr/></div><p class="ibm-ind-link"><a href="https://www.ibm.com/developerworks/mydeveloperworks/?ca=dma-" class="ibm-forward-link">My developerWorks overview</a></p></div></div>
+<!-- Tagging_Start -->
+<div id="dw-tag-cloud-container" class="ibm-container dw-hidetag"><h2>Tags</h2>
+<div id="dw-tag-help"><a class="dwauthor" rel="#tagtip" id="dwtagtip"><img alt="Help" height="16" width="16" align="top" src="//dw1.s81c.com/developerworks/i/help_icon.gif"/></a></div>
+<div id="tagtip" class="dwauthor-onload-state ibm-no-print">Use the <strong>search field</strong> to find all types of content in My developerWorks with that tag.<p>Use the <strong>slider bar</strong> to see more or fewer tags.</p><p>For articles in technology zones (such as Java technology, Linux, Open source, XML), <strong>Popular tags</strong> shows the top tags 
+for <em>all technology zones</em>.  For articles in product zones (such as Info Mgmt, Rational, WebSphere), <strong>Popular tags</strong> shows the top tags for <em>just that product zone</em>.</p><p>For articles in technology zones (such as Java technology, Linux, Open source, XML), <strong>My tags</strong> shows your tags for <em>all technology zones</em>.  For articles in product zones (such as Info Mgmt, Rational, WebSphere), <strong>My tags</strong> shows your tags for <em>just that product zone</em>.</p></div>
+<div class="ibm-access">Use the search field to find all types of content in My developerWorks with that tag.  <em>Popular tags</em> shows the top tags for this particular content zone (for example, Java technology, Linux, WebSphere).  <em>My tags</em> shows your tags for this particular content zone (for example, Java technology, Linux, WebSphere).</div>
+<div class="ibm-container-body">
+<div class="dw-tag-search"><form action="//www.ibm.com/developerworks/mydeveloperworks/bookmarks/html?lang=en" method="get" id="actualtagform" onsubmit="popupform(this, 'join')">
+<p><label for="tagfield"><strong>Search all tags</strong></label><input id="tagfield" name="tag" type="text" maxlength="20" size="17" />&nbsp;<input src="//dw1.s81c.com/i/v16/buttons/short-btn.gif" type="image" class="ibm-btn-view" alt="submit search" title="submit search" value="Search" /></p></form></div>
+<div class="ibm-rule"><hr/></div>
+<div id="dw-tag-select">
+<div id="dw-tag-select-popular"><p><strong>Popular article tags</strong>&nbsp;|&nbsp;<br /><a id="a-my" href="javascript:;">My article tags</a><a href="#dw-tag-access" class="ibm-access">Skip to tags list</a></p></div>
+<div id="dw-tag-select-my" class="dw-hidetag"><p><a id="a-popular" href="javascript:;">Popular article tags</a>&nbsp;|&nbsp;<br /><strong>My article tags</strong></p><a href="#dw-tag-access" class="ibm-access">Skip to tags list</a></div>
+<div id="dw-tag-cloud"></div>  
+</div>   
+</div>
+</div>
+<!-- Tagging_End -->
+<!-- Dig_Deeper -->
+<div class="ibm-container"><h2>Dig deeper into Linux on developerWorks</h2><div class="ibm-container-body"><ul class="ibm-link-list"><li class="ibm-first"><a href="http://www.ibm.com/developerworks/linux/" class="ibm-forward-link">Overview</a></li><li><a href="http://www.ibm.com/developerworks/linux/newto/" class="ibm-forward-link">New to Linux</a></li><li><a href="http://www.ibm.com/developerworks/views/linux/downloads.jsp" class="ibm-forward-link">Downloads and products</a></li><li><a href="http://www.ibm.com/developerworks/views/linux/projects.jsp" class="ibm-forward-link">Open source projects</a></li><li><a href="http://www.ibm.com/developerworks/views/linux/library.jsp" class="ibm-forward-link">Technical library (articles, tutorials, training, and more)</a></li><li><a href="http://www.ibm.com/developerworks/forums/dw_lforums.jsp" class="ibm-forward-link">Forums</a></li><li><a href="http://www.ibm.com/developerworks/views/linux/events.jsp" class="ibm-forward-link">Events</a></li><li><a href="http://www.ibm.com/developerworks/newsletter/" class="ibm-forward-link">Newsletter</a></li></ul></div></div>
+<!-- High_Visibility_Offer -->
+<!--XSLT stylesheet used to transform this content: s-highvisibilityoffer.xsl--><div class="ibm-container"><h2>The ultimate agile development solution</h2><div class="ibm-container-body"><img width="188" height="70" border="0" alt="Rational Team Concert Exp-C" src="//www.ibm.com/developerworks/i/hivis-w-etcec.jpg"/><p class="ibm-ind-link"><a href="http://www.ibm.com/developerworks/downloads/r/rtcexpressc/learn.html?ca=dti-ratcexpc" class="ibm-forward-link">Free for up to 10 developers - Rational Team Concert Express-C</a></p></div></div>
+<!-- Special_Offers -->
+<div class="ibm-container"><h2>Special offers</h2><div class="ibm-container-body"><p class="dw-special-offers"><a href="http://www.ibm.com/developerworks/offers/lp/demos/?ca=dti-dwdemos"><img src="//www.ibm.com/developerworks/i/tile_v16_ondemanddemos.gif" width="158" height="50" border="0" alt="On demand demos: An easy way to watch and learn" /></a></p><p class="dw-special-offers"><a href="http://www.ibm.com/developerworks/rational/kits/tester/?ca=dti-rattstrekit"><img src="//www.ibm.com/developerworks/i/tile_v16_testing.gif" width="158" height="50" border="0" alt="Rational tester eKit for building quality testing apps" /></a></p><p class="dw-special-offers"><a href="http://www.ibm.com/developerworks/downloads/im/cognosbi/learn.html?ca=dti-imcognosBItrial"><img src="//www.ibm.com/developerworks/i/tile_v16_cognos8bi.gif" width="158" height="50" border="0" alt="Try Cognos 8 Business Intelligence" /></a></p><div class="ibm-rule"><hr/></div><p class="ibm-ind-link"><a class="ibm-forward-link" href="http://www.ibm.com/developerworks/downloads/?ca=dti-tilemoreoffers">Trial software offers</a></p></div></div>
+<!-- RIGHT_COLUMN_CONTENT_END -->
+
+</div>
+<!-- RIGHT_COLUMN_END -->
+
+<!-- CONTENT_BODY_END -->
+</div>
+
+</div>
+<!-- CONTENT_END -->
+
+ <!-- END_IBM-PCON -->
+</div>
+
+<!-- FOOTER_BEGIN -->
+<div id="ibm-page-tools">
+<!-- IBM page tools container -->
+</div>
+<div id="ibm-footer">
+<ul>
+<li class="ibm-first"><a href="http://www.ibm.com/ibm/">About IBM</a></li>
+<li><a href="http://www.ibm.com/privacy/">Privacy</a></li>
+<li><a href="http://www.ibm.com/contact/">Contact</a></li>
+<li><a href="http://www.ibm.com/legal/">Terms of use</a></li>
+</ul>
+</div>
+<!-- FOOTER_END -->
+
+ <!-- END_IBM-TOP -->
+</div>
+ 
+ <!-- SCRIPTS_INCLUDE_BEGIN -->
+<!-- JQuery start -->
+<script type="text/javascript" language="JavaScript" src="//dw1.s81c.com/developerworks/js/jquery/cluetip98/jquery.dimensions-1.2.js"></script>
+<script type="text/javascript" language="JavaScript" src="//dw1.s81c.com/developerworks/js/jquery/cluetip98/jquery.hoverIntent.minified.js"></script>
+<script type="text/javascript" language="JavaScript" src="//dw1.s81c.com/developerworks/js/jquery/cluetip98/jquery.cluetip.js"></script>
+<script type="text/javascript" language="JavaScript" src="//dw1.s81c.com/developerworks/js/jquery/tagging/ui.core-1.7.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="//dw1.s81c.com/developerworks/js/jquery/tagging/ui.slider-1.7.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="//dw1.s81c.com/developerworks/js/jquery/tagging/dwjquerytags.js"></script>
+<script type="text/javascript" language="JavaScript">
+	jQuery.noConflict();     
+	// Put all your code in your document ready area
+	jQuery(document).ready(function(jQuery) {
+	// Do jQuery stuff using jQuery 
+	jQuery('a.dwauthor').cluetip({
+		local: true,
+		showTitle: false,
+		positionBy: 'bottomTop',
+		sticky: true,	
+		mouseOutClose: true,
+		closeText: '<img src="//dw1.s81c.com/developerworks/js/jquery/cluetip98/i/x.gif" alt="Close" />',
+		arrows: false,
+		dropShadow: true,
+		cluetipClass: 'dwbasic'
+		});
+
+		//tagging
+		login="false";
+		userid="";
+		whichTags = "init";
+		pCont = "";
+		mCont = "";
+		signInMCont = "";
+		accessCont = "";
+		pValue = 0;
+		mValue = 0;
+
+		rBHash = null;
+		rBHash = new Object();
+		rBHash['viperLang'] = 'en';
+		rBHash['urlLang'] = 'en';
+		rBHash['tagThisWinTitle'] = 'Tagit';
+		rBHash['pTags1'] = 'Popular tags';
+		rBHash['pTags2'] = 'End of Popular tags';
+		rBHash['mTags1'] = 'My tags';
+		rBHash['mTags2'] = 'End of My tags';
+		rBHash['alt1'] = 'Loading Content';
+		rBHash['noATags'] = 'No active tags';
+		rBHash['signIn1'] = 'Please ';
+		rBHash['signIn2'] = 'sign in';
+		rBHash['signIn3'] = ' to access';
+		rBHash['signIn4'] = 'My Tags';
+		rBHash['signIn5'] = 'To access My Tags, please ';
+		rBHash['signIn6'] = 'sign in';
+		rBHash['signIn7'] = 'Read Popular tags';
+
+		zoneHash = new Object();
+		zoneHash['aix'] = 'AIX and UNIX zone';
+		zoneHash['data'] = 'Information Management zone';
+		zoneHash['lotus'] = 'Lotus zone';
+		zoneHash['rational'] = 'Rational zone';
+		zoneHash['tivoli'] = 'Tivoli zone';
+		zoneHash['websphere'] = 'WebSphere zone';
+		zoneHash['architecture'] = 'Technical library';
+		zoneHash['autonomic'] = 'Technical library';
+		zoneHash['java'] = 'Technical library';
+		zoneHash['cloud'] = 'Technical library';
+		zoneHash['industry'] = 'Technical library';
+		zoneHash['library'] = 'Technical library';
+		zoneHash['linux'] = 'Technical library';
+		zoneHash['opensource'] = 'Technical library';
+		zoneHash['power'] = 'Technical library';
+		zoneHash['webservices'] = 'Technical library';
+		zoneHash['web'] = 'Technical library';
+		zoneHash['xml'] = 'Technical library';
+		zoneHash['wireless'] = 'Technical library';
+		jQuery.checkRB();
+		jQuery.getPopularTags("/developerworks/dwtags/dwjquerytabtags?lang=" + rBHash['viperLang'] + "&base=" + jQuery.getNormalizedZoneUrl(location.href));
+		jQuery.getUserTags();
+		if(jQuery.isTutorial(location.href) == "true") {
+			jQuery.getTagsForContent("/developerworks/tagging/UseCaseServlet?lang=" + rBHash['viperLang'] + "&format=maverick&cType=tutorials&use_case=geturltags&action=gettags&url=" + jQuery.normalizeUrl(location.href));
+		}
+		else {
+			jQuery.getTagsForContent("/developerworks/tagging/UseCaseServlet?lang=" + rBHash['viperLang'] + "&format=maverick&cType=articles&use_case=geturltags&action=gettags&url=" + jQuery.normalizeUrl(location.href));
+
+		}
+	});
+ </script>
+ <!-- JQuery end -->
+ <!-- Overlay js -->
+<script language="JavaScript" src="//dw1.s81c.com/common/js/overlay.js" type="text/javascript"></script>
+<!-- My dW Interest article -->
+<script language="JavaScript" src="//dw1.s81c.com/developerworks/js/showinterest.js" type="text/javascript">//</script>
+<script language="JavaScript" type="text/javascript">
+        // <![CDATA[
+			var contentId = '';
+			var contentAreas = '';
+			var caArr = [];
+			contentId = '11038';
+			contentAreas = 'linux';
+			if(contentAreas != ''){caArr = contentAreas.split(',');}
+			var loginLink = 'https://www.ibm.com/developerworks/dwwi/DWAuthRouter?m=loginpage&d=' + encodeURIComponent(window.location);jQuery('interestShow').showInterest(contentId,'dw-article',{'int_tops':[16,87],'int_prods':[], 'int_prod_fam':[],'int_cont_area':caArr},
+'<div id="dw-interest-anon"><a id="intAnonBtn" class="ibm-external-link" href="">Update My dW interests</a> (<a class="dw-interest" href="' + loginLink + '">Log in</a> | <a class="dw-interest" href="#overlay" onclick="ibmCommon.Overlays.show(\'dwmyinterestadd\', this);return false;">What\'s this?</a>) <a class="ibm-access" href="#dwmyinterestaddhelp">Skip to help for Update My dW interests</a></div>',
+'<div id="dw-interest-add"><a id="intSelectBtn" class="ibm-external-link" href="">Add to My dW interests</a> (<a class="dw-interest" href="#overlay" onclick="ibmCommon.Overlays.show(\'dwmyinterestadd\', this);return false;">What\'s this?</a>) <a class="ibm-access" href="#dwmyinterestaddhelp">Skip to help for Add to My dW interests</a></div>',
+'<div id="dw-interest-remove">Added to My dW interests (<a class="dw-interest" href="https://www.ibm.com/developerworks/mydeveloperworks/profiles/html/myProfileView.do?lang=en">Edit</a>)</div>'
+);
+// ]]>
+</script>
+<!-- BEGIN: Use this section to set page specific variables for the Unica Page Tag -->
+<script language="JavaScript">var NTPT_PGEXTRA="ibmSkillLevel=4&ibmAdoptPhase=-&ibmRole=-";</script>
+<!--END --><!-- SCRIPTS_INCLUDE_END -->
+
+<div id="ibm-metrics">
+<script src="//dw1.s81c.com/common/stats/stats.js" type="text/javascript">//</script>
+</div>
+
+</body>
+</html>
