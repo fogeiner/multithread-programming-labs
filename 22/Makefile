@@ -1,15 +1,15 @@
 #/usr/bin/make -f
 
 APP = bin
-OBJ = source.o ../libs/Mutex/Mutex.o ../libs/Thread/Thread.o
+OBJ = source.o ../libs/Semaphore/Semaphore.o ../libs/Thread/Thread.o
 CXXFLAGS = -lpthread -pthread -g
 CC = g++
 
 $(APP): $(OBJ)
 	$(CC) $(CXXFLAGS) $(OBJ) -o $(APP)
 
-../libs/Mutex/Mutex.o: ../libs/Mutex/Mutex.cpp ../libs/Mutex/Mutex.h
-	g++ $(CXXFLAGS) -c -o ../libs/Mutex/Mutex.o ../libs/Mutex/Mutex.cpp
+../libs/Semaphore/Semaphore.o: ../libs/Semaphore/Semaphore.cpp ../libs/Semaphore/Semaphore.h
+	g++ $(CXXFLAGS) -c -o ../libs/Semaphore/Semaphore.o ../libs/Semaphore/Semaphore.cpp
 
 ../libs/Thread/Thread.o: ../libs/Thread/Thread.cpp ../libs/Thread/Thread.h
 	g++ $(CXXFLAGS) -c -o ../libs/Thread/Thread.o ../libs/Thread/Thread.cpp
