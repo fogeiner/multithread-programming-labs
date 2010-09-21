@@ -35,30 +35,31 @@ void *cp_dir(void *p) {
 
 	if (mkdir(std->to, std->access_mode) == -1) {
 		ERR("\nmkdir: ");
-			ERR(std->to);
-			return NULL;
+		ERR(std->to);
+		return NULL;
 	}
 
 	DIR *dir;
 
-mark:
-	dir = opendir(std->from);
+	for(;;){
+		dir = opendir(std->from);
 
-	if (dir == NULL) {
+		if (dir == NULL) {
 
-		if (errno == EMFILE){
-			goto mark;
-		}
+			if (errno == EMFILE){
+				continue;
+			}
 
-		ERR("\nopendir: ")
+			ERR("\nopendir: ");
 			ERR(std->from);
 			free_std(std);
-		return NULL;
+			return NULL;
+		}
+		break;
 	}
-
 	struct dirent *result;
 	struct dirent *entry = (struct dirent*) malloc(offsetof(struct dirent, d_name) +
-		pathconf(std->from, _PC_NAME_MAX) + 1);
+			pathconf(std->from, _PC_NAME_MAX) + 1);
 
 	while (!readdir_r(dir, entry, &result)) {
 		if (result == NULL) {
@@ -98,32 +99,36 @@ void *cp_file(void *p) {
 	// file descriptors
 	int from_d, to_d;
 
-mark:
-	from_d = open(std->from, O_RDONLY);
-	if (from_d == -1) {
-		if (errno == EMFILE) {
-			sleep(SLEEP_TIME);
-			goto mark;
-		}
+	for(;;) {
+		from_d = open(std->from, O_RDONLY);
+		if (from_d == -1) {
+			if (errno == EMFILE) {
+				sleep(SLEEP_TIME);
+				continue;
+			}
 
-		ERR("\nopen src file: ");
+			ERR("\nopen src file: ");
 			ERR(std->from);
 			free_std(std);
-		return NULL;
-	}
-
-	to_d = open(std->to, O_CREAT | O_WRONLY, std->access_mode);
-	if (to_d == -1) {
-		close(from_d);
-		if (errno == EMFILE) {
-			sleep(SLEEP_TIME);
-			goto mark;
+			return NULL;
 		}
 
-		ERR("\nopen dst file: ");
+		to_d = open(std->to, O_CREAT | O_WRONLY, std->access_mode);
+
+		if (to_d == -1) {
+			close(from_d);
+			if (errno == EMFILE) {
+				sleep(SLEEP_TIME);
+				continue;
+			}
+
+			ERR("\nopen dst file: ");
 			ERR(std->to);
 			free_std(std);
-		return NULL;
+			return NULL;
+		}
+
+		break;
 	}
 
 	char buf[BUFSIZ];
@@ -132,8 +137,8 @@ mark:
 	while (bytes_read = read(from_d, buf, sizeof (buf))) {
 		if (write(to_d, buf, bytes_read) != bytes_read) {
 			ERR("\nwrite dst file: ");
-				ERR(std->to);
-				break;
+			ERR(std->to);
+			break;
 		}
 	}
 
@@ -200,7 +205,6 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Usage: %s src_dir dst_dir\n", argv[0]);
 		exit(1);
 	}
-
 
 	struct stat stat;
 	lstat(argv[1], &stat);
