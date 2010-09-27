@@ -2,20 +2,24 @@
 #include "../libs/Thread/Thread.h"
 #include <cstdio>
 
-Mutex m1, m2, m3;
+Mutex m(Mutex::ERRORCHECK_MUTEX);
+int counter;
 
 void *child(void *ptr = NULL) {
     try {
-        for (int i = 0; i < 10; ++i) {
-            m1.lock();
-            m3.lock();
-            m2.lock();
+		int i = 0;
+		while(i < 10){
+            m.lock();
            
-            printf("%d child\n", i);
+			if((counter % 2) != 1){
+				m.unlock();
+				continue;
+			}
 
-            m2.unlock();
-            m1.unlock();
-            m3.unlock();
+            printf("%d child\n", i++);
+
+			counter = 0;
+            m.unlock();
 
         }
     } catch (std::exception &ex) {
@@ -25,17 +29,17 @@ void *child(void *ptr = NULL) {
 
 void *parent(void *ptr = NULL) {
     try {
-        for (int i = 0; i < 10; ++i) {
-            m1.lock();
-            m2.lock();
-            m3.lock();
+		int i = 0;
+        while(i < 10) {
+            m.lock();
+			if((counter % 2) != 0){
+				m.unlock();
+				continue;
+			}
 
-            printf("%d parent\n", i);
-
-            m3.unlock();
-            m1.unlock();
-            m2.unlock();
-
+            printf("%d parent\n", i++);
+			counter = 1;
+            m.unlock();
         }
     } catch (std::exception &ex) {
         fprintf(stderr, "Exception: %s", ex.what());
