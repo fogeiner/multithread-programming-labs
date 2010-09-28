@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 
 		if(ret != 0){
 			threads[i].valid = 0;
-			fprintf(stderr, "Error creating thread: %s", strerror_r(ret));
+			fprintf(stderr, "Error creating thread: %s", strerror(ret));
 		}
 	}
 

@@ -4,34 +4,10 @@
 #include <cerrno>
 #include <cstring>
 #include <unistd.h>
-pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t m2 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
 
-void *child(void *ptr) {
-    pthread_mutex_lock(&m1);
-
-    for (int i = 0; i < 10; ++i) {
-
-        printf("%d child\n", i);
-        pthread_cond_wait(&cv, &m1);
-        pthread_mutex_unlock(&m2);
-    }
-
-
-}
-
-void *parent(void *ptr) {
-
-    for (int i = 0; i < 10; ++i) {
-        pthread_mutex_lock(&m1);
-        pthread_mutex_lock(&m2);
-        printf("%d parent\n", i);
-        pthread_cond_signal(&cv);
-    }
-
-
-}
+int counter = 1;
 
 void check_error(int retv) {
     if (retv != 0) {
@@ -41,11 +17,44 @@ void check_error(int retv) {
     }
 }
 
+void *child(void *ptr) {
+
+    for (int i = 0; i < 10;) {
+
+		check_error(pthread_mutex_lock(&m));
+		while(counter != 0){
+			check_error(pthread_cond_wait(&cv, &m));
+		}
+        printf("%d child\n", i++);
+		counter = 1;
+        check_error(pthread_cond_signal(&cv));
+        check_error(pthread_mutex_unlock(&m));
+    }
+
+
+}
+
+void *parent(void *ptr) {
+
+    for (int i = 0; i < 10;) {
+		check_error(pthread_mutex_lock(&m));
+		while(counter != 1){
+			check_error(pthread_cond_wait(&cv, &m));
+		}
+        printf("%d parent\n", i++);
+		counter = 0;
+        check_error(pthread_cond_signal(&cv));
+		check_error(pthread_mutex_unlock(&m));
+    }
+
+
+}
+
+
 int main(int argc, char *argv[]) {
 
     pthread_t tid;
     check_error(pthread_create(&tid, NULL, child, NULL));
-    ::sleep(1);
     parent(NULL);
     check_error(pthread_join(tid, NULL));
     pthread_exit(NULL);

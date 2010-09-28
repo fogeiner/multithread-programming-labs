@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 #include <signal.h>
 
 static int time_to_stop = 0;
@@ -54,7 +55,7 @@ int main(int argc, char *argv[]) {
 		ret = pthread_create(&threads[i].tid, NULL, &part_sum, &threads[i]);
 		if(ret != 0){
 			threads[i].valid = 0;
-			fprintf(stderr, "Error creating thread: %s", strerror_r(ret));
+			fprintf(stderr, "Error creating thread: %s", strerror(ret));
 		}
 	}
 

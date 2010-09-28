@@ -118,6 +118,6 @@ int food_on_table() {
 void down_forks(int f1, int f2) {
     pthread_mutex_unlock(&forks[f1]);
     pthread_mutex_unlock(&forks[f2]);
-    
+
     pthread_cond_signal(&cv);
 }
