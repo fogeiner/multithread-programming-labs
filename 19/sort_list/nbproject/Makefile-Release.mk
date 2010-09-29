@@ -30,7 +30,8 @@ include Makefile
 OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
-OBJECTFILES=
+OBJECTFILES= \
+	${OBJECTDIR}/_ext/_DOTDOT/source.o
 
 # C Compiler Flags
 CFLAGS=
@@ -54,7 +55,12 @@ LDLIBSOPTIONS=
 
 dist/Release/GNU-Linux-x86/sort_list: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/sort_list ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/sort_list ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/_ext/_DOTDOT/source.o: nbproject/Makefile-${CND_CONF}.mk ../source.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/_DOTDOT
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/_DOTDOT/source.o ../source.cpp
 
 # Subprojects
 .build-subprojects:
