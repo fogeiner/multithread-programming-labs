@@ -6,15 +6,13 @@
 
 using namespace std;
 
-
 class List {
 private:
 
     class Node {
         friend class List;
     private:
-        pthread_mutex_t mutex;
-        pthread_rw
+        pthread_rwlock_t rwlock;
     public:
         string data;
         Node *next;
@@ -28,22 +26,26 @@ private:
             n1->data.swap(n2->data);
         }
 
-        void lock(){
-            pthread_mutex_lock(&mutex);
+        void rdlock() {
+            pthread_rwlock_rdlock(&rwlock);
         }
-        
-        void unlock(){
-            pthread_mutex_unlock(&mutex);
+
+        void wrlock() {
+            pthread_rwlock_wrlock(&rwlock);
+        }
+
+        void unlock() {
+            pthread_rwlock_unlock(&rwlock);
         }
 
         Node(string data, Node *next, Node *prev) :
         data(data), next(next), prev(prev) {
 
-            pthread_mutex_init(&mutex, NULL);
+            pthread_rwlock_init(&rwlock, NULL);
         }
 
         ~Node() {
-            pthread_mutex_destroy(&mutex);
+            pthread_rwlock_destroy(&rwlock);
         }
     };
 
@@ -52,18 +54,18 @@ private:
     Node *head;
     int list_size;
 
-    static void *auto_sort(void *ptr){
+    static void *auto_sort(void *ptr) {
         List *list = static_cast<List*> (ptr);
-           
+
         const static int SLEEP_TIME = 1;
-        
+
         for (;;) {
             sleep(SLEEP_TIME);
 
             if (list->head == NULL) {
                 break;
             }
-     
+
             list->sort_list();
         }
 
@@ -87,25 +89,25 @@ private:
         if (list_size <= 1)
             return;
 
-		bool swapped;
+        bool swapped;
 
         for (int i = list_size - 1; i > 0; --i) {
             for (int j = 0; j < i; ++j) {
-				swapped = false;
+                swapped = false;
                 Node *n1 = getNodeIndexOf(j);
                 Node *n2 = getNodeIndexOf(j + 1);
-                n1->lock();
-                n2->lock();
-                if (Node::compare(n1, n2) > 0){
+                n1->wrlock();
+                n2->wrlock();
+                if (Node::compare(n1, n2) > 0) {
                     Node::swap(n1, n2);
-					swapped = true;
-				}
+                    swapped = true;
+                }
                 n2->unlock();
                 n1->unlock();
 
-				if(swapped){
-					sleep(1);
-				}
+                if (swapped) {
+                    sleep(1);
+                }
             }
         }
     }
@@ -126,9 +128,9 @@ public:
         head = NULL;
         pthread_cancel(sort_tid);
         pthread_join(sort_tid, NULL);
-        
-        head_ptr->lock();
-        
+
+        head_ptr->wrlock();
+
         for (Node *n = head_ptr->next; n != head_ptr;) {
             Node *t = n->next;
             delete n;
@@ -145,27 +147,27 @@ public:
     }
 
     void push_back(string s) {
-        head->lock();
-        if(head->prev != head){
-            head->prev->lock();
+        head->wrlock();
+        if (head->prev != head) {
+            head->prev->wrlock();
         }
-        
+
         Node *n = new Node(s, head, head->prev);
         head->prev->next = n;
         head->prev = n;
 
         list_size++;
 
-        if(n->prev != head){
+        if (n->prev != head) {
             n->prev->unlock();
         }
         head->unlock();
     }
 
     void push_front(string s) {
-        head->lock();
-        if(head->next != head){
-            head->next->lock();
+        head->wrlock();
+        if (head->next != head) {
+            head->next->wrlock();
         }
 
         Node *n = new Node(s, head->next, head);
@@ -174,10 +176,10 @@ public:
 
         list_size++;
 
-        if(n->next != head){
+        if (n->next != head) {
             n->next->unlock();
         }
-        
+
         head->unlock();
     }
 
@@ -187,14 +189,13 @@ public:
 
 
         for (Node *n = head->next; n != head; n = n->next) {
-            n->lock();
+            n->rdlock();
             cout << "Entry " << counter << "\t" << n->data << endl;
             n->unlock();
             counter++;
         }
     }
 };
-
 
 int main(int argc, char *argv[]) {
 
@@ -204,7 +205,7 @@ int main(int argc, char *argv[]) {
     for (;;) {
         getline(cin, s);
 
-        if (cin.eof()){
+        if (cin.eof()) {
             break;
         } else if (s.empty()) {
             list.print_list();
