@@ -26,9 +26,7 @@ static void *child(void *ptr){
 				write(STDOUT_FILENO, &buf[i], 1);
 			}
 		}
-
 	}
-
 }
 
 int main(int argc, char *argv[]){

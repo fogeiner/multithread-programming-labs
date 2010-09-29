@@ -24,9 +24,9 @@ struct src_to_dest {
 };
 
 struct src_to_dest *make_std(char *from, char *to, mode_t access_mode);
+void free_std(struct src_to_dest *std);
 void *cp_dir(void *p);
 void *cp_file(void *p);
-void free_std(struct src_to_dest *std);
 void *cp(void *p);
 
 void *cp_dir(void *p) {
@@ -36,6 +36,7 @@ void *cp_dir(void *p) {
 	if (mkdir(std->to, std->access_mode) == -1) {
 		ERR("\nmkdir: ");
 		ERR(std->to);
+		free_std(std);
 		return NULL;
 	}
 
@@ -47,6 +48,7 @@ void *cp_dir(void *p) {
 		if (dir == NULL) {
 
 			if (errno == EMFILE){
+				sleep(SLEEP_TIME);
 				continue;
 			}
 
@@ -197,7 +199,6 @@ void free_std(struct src_to_dest *std) {
 	free(std->to);
 	free(std);
 }
-
 
 int main(int argc, char *argv[]) {
 

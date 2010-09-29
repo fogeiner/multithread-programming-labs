@@ -6,16 +6,16 @@
 struct data{
 	pthread_t tid;
 	int valid;
-	int start;
+	int start_index;
 	int num_of_steps;
 	double result;
 };
 
 
-void *part_sum(void *arg){
-	struct data *data = arg;
+void *part_sum(void *str_data_arg){
+	struct data *data = str_data_arg;
 
-	for (int i = data->start; i < data->num_of_steps ; i++) {
+	for (int i = data->start_index; i < data->num_of_steps ; i++) {
 		data->result += 1.0/(i*4.0 + 1.0);
 		data->result -= 1.0/(i*4.0 + 3.0);
 	}
@@ -44,11 +44,11 @@ int main(int argc, char *argv[]) {
 	struct data *threads = malloc(sizeof(struct data)*num_of_threads);
 
 	for(int i = 0; i < num_of_threads; ++i){
-		threads[i].start = i * num_of_steps;
+		threads[i].start_index = i * num_of_steps;
 		threads[i].num_of_steps = num_of_steps;
 		threads[i].result = 0;
-		ret = pthread_create(&threads[i].tid, NULL, part_sum, &threads[i]);
 		threads[i].valid = 1;
+		ret = pthread_create(&threads[i].tid, NULL, part_sum, &threads[i]);
 
 		if(ret != 0){
 			threads[i].valid = 0;
