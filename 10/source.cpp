@@ -2,49 +2,61 @@
 #include "../libs/Thread/Thread.h"
 #include <cstdio>
 
-Mutex m[3];
+Mutex m1(Mutex::ERRORCHECK_MUTEX), m2(Mutex::ERRORCHECK_MUTEX), m3(Mutex::ERRORCHECK_MUTEX);
+Mutex m[3] = {m1, m2, m3};
+Mutex mflag(Mutex::ERRORCHECK_MUTEX);
+int flag = 0;
 
-const int PRINT_TIMES = 10;
-int printed_flag = 0;
-
-void *print(void *str) {
+void *print(void *p_str) {
+	char *str = static_cast<char*>(p_str);
+	const int NUM_OF_PRINTS = 10;
     try {
+		// init: [P][P][C]
+		int k;
 		
-		int k = 1;
-		m[2].lock();	
-		if(printed_flag == 1){
-			m[0].unlock();
-		}
-        for (int i = 0; i < PRINT_TIMES * 3; ++i) {
-            m[k].lock();
-            k = (k + 1) % 3;
-            m[k].unlock();
-            if(k == 2){
-				printf("%d %s", i/3, static_cast<char*>(str));
-				printed_flag = 1;
+		if (str[0] == 'c'){
+			m[0].lock();
+			for(;;){
+				mflag.lock();
+				if(flag == 1){
+					mflag.unlock();
+					break;	
+				}
+				mflag.unlock();
 			}
+			k = 0;
+		}
+		
+		if(str[0] == 'p'){
+			m[1].lock();
+			k = 1;
+		}
+		
+        for (int i = 0; i != NUM_OF_PRINTS;) {
 			k = (k + 1) % 3;
+			m[k].lock();
+			if(k == 2){
+				printf("%d %s\n", i, str);
+				i++;
+				mflag.lock();
+				flag = 1;
+				mflag.unlock();
+			}
+			m[(k - 1 + 3) % 3].unlock();
         }
         
-        m[2].unlock();
+        m[k].unlock();
     } catch (std::exception &ex) {
         fprintf(stderr, "Exception: %s", ex.what());
     }
-    return NULL;
 }
 
-
 int main(int argc, char *argv[]) {
-
-    m[0].lock();
     try {
-		char child_msg[] = "child\n";
-		char parent_msg[] = "parent\n";
+		char *child_msg = "child";
+		char *parent_msg = "parent";
         Thread chld(print, child_msg);
         chld.run();
-        while(printed_flag == 0){
-			sched_yield();
-		}
         print(parent_msg);
         chld.join();
         Thread::exit();
