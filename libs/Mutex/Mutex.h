@@ -40,14 +40,13 @@ private:
     Mutex & operator=(const Mutex& other) {
     }
 
-    Mutex(const Mutex& other) {
-    }
 public:
     static const enum mutex_type FAST_MUTEX = PTHREAD_FAST_MUTEX;
     static const enum mutex_type RECURSIVE_MUTEX = PTHREAD_RECURSIVE_MUTEX;
     static const enum mutex_type ERRORCHECK_MUTEX = PTHREAD_ERRORCHECK_MUTEX;
 
     Mutex(enum mutex_type type = FAST_MUTEX);
+	Mutex(const Mutex& other);
     ~Mutex();
 
     void lock();

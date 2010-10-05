@@ -10,11 +10,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sstream>
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <cstdlib>
-
-int get_terminal_width_height(int fd, int *width, int *height);
+#include "terminal.h"
 
 class host_not_found_exception : public std::exception {
 private:
@@ -128,7 +124,7 @@ public:
         if (ret_val == -1) throw netconnection_exception(strerror(errno));
     }
 
-    void process_request() {
+    void GET_request() {
         char get_request[] = "GET";
         char http_ver[] = "HTTP/1.0";
         char host_header[] = "Host:";
@@ -233,42 +229,11 @@ public:
                         break;
                     }
                 }
-
             }
-
-
         }
-
         close(sock);
     }
 };
-
-int get_terminal_width_height(int fd, int *width, int *height) {
-    struct winsize win = {0, 0, 0, 0};
-    int ret = ioctl(fd, TIOCGWINSZ, &win);
-
-    if (height) {
-        if (!win.ws_row) {
-            char *s = getenv("LINES");
-            if (s) win.ws_row = atoi(s);
-        }
-        if (win.ws_row <= 1 || win.ws_row >= 30000)
-            win.ws_row = 24;
-        *height = (int) win.ws_row;
-    }
-
-    if (width) {
-        if (!win.ws_col) {
-            char *s = getenv("COLUMNS");
-            if (s) win.ws_col = atoi(s);
-        }
-        if (win.ws_col <= 1 || win.ws_col >= 30000)
-            win.ws_col = 80;
-        *width = (int) win.ws_col;
-    }
-
-    return ret;
-}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -279,7 +244,7 @@ int main(int argc, char *argv[]) {
     try {
         http_connection hc(argv[1]);
         hc.connect();
-        hc.process_request();
+        hc.GET_request();
     } catch (std::exception &ex) {
         std::cerr << ex.what() << std::endl;
     }

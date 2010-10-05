@@ -10,17 +10,25 @@ void Mutex::error_check(int retv) {
 }
 
 Mutex::Mutex(enum mutex_type type) {
-    Mutex::error_check(pthread_mutexattr_init(&_mattrid));
+    error_check(pthread_mutexattr_init(&_mattrid));
     error_check(pthread_mutexattr_settype(&_mattrid, type));
     error_check(pthread_mutex_init(&_mid, &_mattrid));
     locks = 0;
+}
+
+Mutex::Mutex(const Mutex& other){
+	error_check(pthread_mutexattr_init(&_mattrid));
+	int type;
+	error_check(pthread_mutexattr_gettype(&other._mattrid, &type));
+	error_check(pthread_mutexattr_settype(&_mattrid, type));
+	error_check(pthread_mutex_init(&_mid, &_mattrid));
+	locks = 0;
 }
 
 Mutex::~Mutex() {
     while(locks-- > 0){
         // not unlock, because we don't want to get exception in destructor
         pthread_mutex_unlock(&_mid);
-
     }
     error_check(pthread_mutex_destroy(&_mid));
     error_check(pthread_mutexattr_destroy(&_mattrid));
