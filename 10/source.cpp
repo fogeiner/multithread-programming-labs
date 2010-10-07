@@ -2,23 +2,27 @@
 #include "../libs/Thread/Thread.h"
 #include <cstdio>
 
+#define CAPTURED 1
+#define NOT_CAPTURED 0
+
 Mutex m1(Mutex::ERRORCHECK_MUTEX), m2(Mutex::ERRORCHECK_MUTEX), m3(Mutex::ERRORCHECK_MUTEX);
 Mutex m[3] = {m1, m2, m3};
 Mutex mflag(Mutex::ERRORCHECK_MUTEX);
-int flag = 0;
+
+int flag = NOT_CAPTURED;
 
 void *print(void *p_str) {
 	char *str = static_cast<char*>(p_str);
 	const int NUM_OF_PRINTS = 10;
     try {
-		// init: [P][P][C]
+		// init: [C][P][ ]
 		int k;
 		
 		if (str[0] == 'c'){
 			m[0].lock();
 			for(;;){
 				mflag.lock();
-				if(flag == 1){
+				if(flag == CAPTURED){
 					mflag.unlock();
 					break;	
 				}
@@ -39,7 +43,7 @@ void *print(void *p_str) {
 				printf("%d %s\n", i, str);
 				i++;
 				mflag.lock();
-				flag = 1;
+				flag = CAPTURED;
 				mflag.unlock();
 			}
 			m[(k - 1 + 3) % 3].unlock();

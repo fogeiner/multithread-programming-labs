@@ -73,8 +73,8 @@ void *philosopher(void *num) {
 
 		printf("Philosopher %d: eating.\n", id);
 		wait(f); 
-		pthread_mutex_unlock(&forks[max(left_fork, right_fork)]);
-		pthread_mutex_unlock(&forks[min(left_fork, right_fork)]);
+		pthread_mutex_unlock(&forks[left_fork]);
+		pthread_mutex_unlock(&forks[right_fork]);
 	}
 	printf("Philosopher %d is done eating.\n", id);
 	return (NULL);
