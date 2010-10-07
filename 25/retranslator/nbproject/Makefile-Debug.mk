@@ -31,6 +31,7 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/source2.o \
 	${OBJECTDIR}/_ext/_DOTDOT/source.o
 
 # C Compiler Flags
@@ -56,6 +57,11 @@ LDLIBSOPTIONS=
 dist/Debug/GNU-Linux-x86/retranslator: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/retranslator ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/source2.o: nbproject/Makefile-${CND_CONF}.mk source2.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/source2.o source2.cpp
 
 ${OBJECTDIR}/_ext/_DOTDOT/source.o: nbproject/Makefile-${CND_CONF}.mk ../source.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/_DOTDOT
