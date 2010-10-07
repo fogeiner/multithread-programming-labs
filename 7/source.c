@@ -3,11 +3,14 @@
 #include <string.h>
 #include <pthread.h>
 
+#define TRUE 1
+#define FALSE 0
+
 struct data{
 	pthread_t tid;
-	int valid;
+	int is_valid;
 	int start_index;
-	int num_of_steps;
+	int steps_count;
 	double result;
 };
 
@@ -15,7 +18,7 @@ struct data{
 void *part_sum(void *str_data_arg){
 	struct data *data = str_data_arg;
 
-	for (int i = data->start_index; i < data->num_of_steps ; i++) {
+	for (int i = data->start_index; i < data->steps_count ; i++) {
 		data->result += 1.0/(i*4.0 + 1.0);
 		data->result -= 1.0/(i*4.0 + 3.0);
 	}
@@ -26,39 +29,40 @@ void *part_sum(void *str_data_arg){
 int main(int argc, char *argv[]) {
 
 	if(argc < 2 || argc > 3){
-		printf("Usage: %s num_of_threads [num_of_iters]", argv[0]);
+		printf("Usage: %s threads_count [num_of_iters]", argv[0]);
 		return 1;
 	}
 
 	int ret;
-	int num_of_threads;
-	int num_of_steps = 20;
+	int threads_count;
+	int steps_count = 20;
 
-	num_of_threads = atoi(argv[1]);
+	threads_count = atoi(argv[1]);
 
 	if(argc == 3){
-		num_of_steps = atoi(argv[2]);
+		steps_count = atoi(argv[2]);
 	}
 
 	double pi = 0;
-	struct data *threads = malloc(sizeof(struct data)*num_of_threads);
+	struct data *threads = malloc(sizeof(struct data)*threads_count);
 
-	for(int i = 0; i < num_of_threads; ++i){
-		threads[i].start_index = i * num_of_steps;
-		threads[i].num_of_steps = num_of_steps;
-		threads[i].result = 0;
-		threads[i].valid = 1;
+	for(int i = 0; i < threads_count; ++i){
+		threads[i].start_index = i * steps_count;
+		threads[i].steps_count = steps_count;
+		threads[i].result = 0.0;
+
+		threads[i].is_valid = TRUE;
 		ret = pthread_create(&threads[i].tid, NULL, part_sum, &threads[i]);
 
 		if(ret != 0){
-			threads[i].valid = 0;
+			threads[i].is_valid = FALSE;
 			fprintf(stderr, "Error creating thread: %s", strerror(ret));
 		}
 	}
 
 
-	for(int i = 0; i < num_of_threads; ++i){
-		if(threads[i].valid == 1){
+	for(int i = 0; i < threads_count; ++i){
+		if(threads[i].is_valid == 1){
 			pthread_join(threads[i].tid, NULL);
 		}
 		pi += threads[i].result;
