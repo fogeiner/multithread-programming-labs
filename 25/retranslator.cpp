@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <iostream>
 
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -13,6 +14,7 @@
 #include <list>
 
 #define DEBUG
+#undef DEBUG
 
 #include "../libs/Fd_set/Fd_set.h"
 #include "Forwarded_connection/Forwarded_connection.h"
@@ -161,6 +163,15 @@ int add_client_connection(int listening_socket, sockaddr_in &remote_addr, std::l
 }
 
 int main(int argc, char* argv[]) {
+	
+	struct sigaction act;
+
+	// ignore SIGPIPE
+	act.sa_handler=SIG_IGN;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags=0;
+	sigaction(SIGPIPE, &act, NULL); 
+	
     u_int16_t remote_port;
     u_int16_t local_port;
     char *remote_host;
@@ -244,21 +255,21 @@ int main(int argc, char* argv[]) {
         for (std::list<Forwarded_connection*>::iterator i = connections.begin();
                 i != connections.end(); ++i) {
             Forwarded_connection *fc = *i;
-
-            if (readfds.isset(fc->client_socket())) {
-                fc->client_read();
-            }
-
-            if (readfds.isset(fc->server_socket())) {
-                fc->server_read();
-            }
-
+            
             if (writefds.isset(fc->client_socket())) {
                 fc->client_write();
             }
 
             if (writefds.isset(fc->server_socket())) {
                 fc->server_write();
+            }
+            
+            if (readfds.isset(fc->client_socket())) {
+                fc->client_read();
+            }
+
+            if (readfds.isset(fc->server_socket())) {
+                fc->server_read();
             }
         }
         

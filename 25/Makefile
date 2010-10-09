@@ -2,7 +2,7 @@
 
 APP = retranslator
 OBJ = retranslator.o Forwarded_connection/Forwarded_connection.o
-CXXFLAGS = 
+CXXFLAGS =
 CC = g++
 
 $(APP): $(OBJ)

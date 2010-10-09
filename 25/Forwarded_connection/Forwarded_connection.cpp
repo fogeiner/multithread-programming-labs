@@ -1,78 +1,143 @@
 #include "Forwarded_connection.h"
 
-void Forwarded_connection::_close_connection(int &sock, Buffer **buf) {
-    if(sock != CLOSED_SOCKET){
-		close(sock);
-		sock = CLOSED_SOCKET;
-		delete *buf;
-		*buf = NULL;
-	}
+void Forwarded_connection::_close_connection(int &sock, Buffer *&buf) {
+	close(sock);
+	sock = CLOSED_SOCKET;
+	delete buf;
+	buf = NULL;
 }
 
-int Forwarded_connection::_socket_read(int &sock, Buffer *buf_to_add, Buffer *buf_to_delete) {
-
+int Forwarded_connection::client_read() {
+#ifdef DEBUG
+    std::clog << "client_read " << "client_socket: " << _client_socket << std::endl;
+#endif
+    //_socket_read(_client_socket, _client_to_server_buf, _server_to_client_buf);
+    if(_client_socket == CLOSED_SOCKET){
+		return -1;
+	}
+    
     char b[BUFFER_SIZE];
     int read;
-    read = ::read(sock, b, sizeof (b));
-
-	if(read == -1){
-		std::cerr << "Read failure" << std::endl;
-		_close_connection(sock, &buf_to_delete);
+    read = ::read(_client_socket, b, sizeof(b));
+    
+    if(read == -1){
+		std::cerr << "Read failure: " << strerror(errno) << std::endl;
+		_close_connection(_client_socket, _server_to_client_buf);
 		return -1;
 	}
-
-#ifdef DEBUG
-    std::clog << "Read " << read << " bytes" << std::endl;
-#endif
-    if (read != CONNECTION_END) {
-        Chunk *chunk = new Chunk(b, read);
-        buf_to_add->push_back(chunk);
-    } else {
-        _close_connection(sock, &buf_to_delete);
-    }
-
-    return read;
+	
+	if ((read != CONNECTION_END) && (_server_socket != CLOSED_SOCKET)){
+		Chunk *chunk = new Chunk(b, read);
+		_client_to_server_buf->push_back(chunk);
+	} else {
+		_close_connection(_client_socket, _server_to_client_buf);
+	}
+	
+	return read;
 }
 
-int Forwarded_connection::_socket_write(int &sock, int &other_sock, Buffer **buf) {
-	if(sock == CLOSED_SOCKET){
+int Forwarded_connection::server_read() {
+#ifdef DEBUG
+    std::clog << "server_read " << "server_socket: " << _server_socket << std::endl;
+#endif
+//    _socket_read(_server_socket, _client_socket ,_server_to_client_buf, _client_to_server_buf);
+	if(_server_socket == CLOSED_SOCKET){
 		return -1;
 	}
-	// clients socket was closed due to an error
-	if(*buf == NULL){
-		_close_connection(sock, buf);
+	
+	char b[BUFFER_SIZE];
+    int read;
+    read = ::read(_server_socket, b, sizeof(b));
+    
+    if(read == -1){
+		std::cerr << "Read failure: " << strerror(errno) << std::endl;
+		_close_connection(_server_socket, _client_to_server_buf);
 		return -1;
 	}
+	
+	if ((read != CONNECTION_END) && (_client_socket != CLOSED_SOCKET)){
+		Chunk *chunk = new Chunk(b, read);
+		_server_to_client_buf->push_back(chunk);
+	} else {
+		_close_connection(_server_socket, _client_to_server_buf);
+	}
+	
+	return read;
+}
 
+
+
+int Forwarded_connection::client_write() {
+#ifdef DEBUG
+    std::clog << "client_write " << "client_socket: " << _client_socket << std::endl;
+#endif
+//    _socket_write(_client_socket ,_server_sco, server_client_buf);
+	if(_client_socket == CLOSED_SOCKET){
+		return -1;
+	}
+	int wrote;
+	
+	Chunk *chunk = _server_to_client_buf->pop_front();
+	const char *b = chunk->buf();
+	int size = chunk->size();
+	wrote = ::write(_client_socket, b, size);
+	
+	if(wrote == -1){
+		std::cerr << "Write failure: " << strerror(errno) << std::endl;
+		_close_connection(_client_socket, _server_to_client_buf);
+		return wrote;
+	}
+	
+	if(wrote < size){
+		Chunk *new_chunk = new Chunk((b + wrote), size - wrote);
+		_server_to_client_buf->push_front(new_chunk);
+	}
+	
+	delete chunk;
+	
+	if((_server_socket == CLOSED_SOCKET) && (_server_to_client_buf->size() == 0)){
+		_close_connection(_client_socket, _server_to_client_buf);
+	}
+	
+	return wrote;
+}
+
+int Forwarded_connection::server_write() {
+#ifdef DEBUG
+    std::clog << "server_write " << "server_socket: " << _server_socket << std::endl;
+#endif
+    //_socket_write(_server_socket, _client_socket, &_client_to_server_buf);
+    if(_server_socket == CLOSED_SOCKET){
+		return -1;
+	}
     int wrote;
-
-    Chunk *chunk = (*buf)->pop_front();
-    const char *b = chunk->buf();
-    int size = chunk->size();
-    wrote = ::write(sock, b, size);
-    
-    if(wrote == -1){
-		std::cerr << "Write failure" << std::endl;
-		_close_connection(sock, buf);
-		return -1;
+	
+	Chunk *chunk = _client_to_server_buf->pop_front();
+	const char *b = chunk->buf();
+	int size = chunk->size();
+	wrote = ::write(_server_socket, b, size);
+	
+	if(wrote == -1){
+		std::cerr << "Write failure " << strerror(errno) << std::endl;
+		_close_connection(_server_socket, _client_to_server_buf);
+		return wrote;
 	}
-    
-#ifdef DEBUG
-    std::clog << "Wrote " << wrote << " bytes" << std::endl;
-#endif
-    if (wrote < size) {
-        Chunk *new_chunk = new Chunk((b + wrote), size - wrote);
-        (*buf)->push_front(new_chunk);
-    }
-
-    delete chunk;
-
-    if ((other_sock == Forwarded_connection::CLOSED_SOCKET) && ((*buf)->size() == 0)) {
-        _close_connection(sock, buf);
-    }
-
-    return wrote;
+	
+	if(wrote < size){
+		Chunk *new_chunk = new Chunk((b + wrote), size - wrote);
+		_client_to_server_buf->push_front(new_chunk);
+	}
+	
+	delete chunk;
+	
+	if((_client_socket == CLOSED_SOCKET) && (_client_to_server_buf->size() == 0)){
+		_close_connection(_server_socket, _client_to_server_buf);
+	}
+	
+	return wrote;
 }
+
+
 
 Forwarded_connection::Forwarded_connection(int server_sock, int client_sock, int buffer_size) :
 BUFFER_SIZE(buffer_size),
@@ -98,34 +163,9 @@ int Forwarded_connection::server_socket() const {
     return _server_socket;
 }
 
-void Forwarded_connection::client_read() {
-#ifdef DEBUG
-    std::clog << "client_read " << "client_socket: " << _client_socket << std::endl;
-#endif
-    _socket_read(_client_socket, _client_to_server_buf, _server_to_client_buf);
-}
 
-void Forwarded_connection::server_read() {
-#ifdef DEBUG
-    std::clog << "server_read " << "server_socket: " << _server_socket << std::endl;
-#endif
-    _socket_read(_server_socket, _server_to_client_buf, _client_to_server_buf);
-}
 
-void Forwarded_connection::client_write() {
-#ifdef DEBUG
-    std::clog << "client_write " << "client_socket: " << _client_socket << std::endl;
-#endif
-    _socket_write(_client_socket, _server_socket, &_server_to_client_buf);
 
-}
-
-void Forwarded_connection::server_write() {
-#ifdef DEBUG
-    std::clog << "server_write " << "server_socket: " << _server_socket << std::endl;
-#endif
-    _socket_write(_server_socket, _client_socket, &_client_to_server_buf);
-}
 
 int Forwarded_connection::client_to_server_msgs_count() const {
     if (_client_to_server_buf != NULL) {

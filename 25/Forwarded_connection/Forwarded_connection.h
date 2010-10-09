@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <iostream>
 #include "../../libs/Buffer/Buffer.h"
-
+#include <cerrno>
 class Forwarded_connection {
 private:
 
@@ -16,15 +16,12 @@ private:
     Buffer *_client_to_server_buf;
     Buffer *_server_to_client_buf;
 
-    void _close_connection(int &sock, Buffer **buf);
-
-    int _socket_read(int &sock, Buffer *buf_to_add, Buffer *buf_to_delete);
-
-    int _socket_write(int &sock, int &other_sock, Buffer **buf);
+    void _close_connection(int &sock, Buffer *&buf);
 
     Forwarded_connection(const Forwarded_connection&);
 
     Forwarded_connection & operator=(const Forwarded_connection&);
+    
 public:
     const static int CLOSED_SOCKET = -1;
 
@@ -34,12 +31,12 @@ public:
 
     int client_socket() const;
     int server_socket() const;
-    void client_read();
+    int client_read();
 
-    void server_read();
+    int server_read();
 
-    void client_write();
-    void server_write();
+    int client_write();
+    int server_write();
 
     int client_to_server_msgs_count() const;
 
