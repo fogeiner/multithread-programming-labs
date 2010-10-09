@@ -31,9 +31,7 @@ public:
 
     Chunk(const char *buf, int size) : _size(size) {
         _buffer = new char[size];
-        for (int i = 0; i < size; ++i) {
-            _buffer[i] = buf[i];
-        }
+		memcpy(_buffer, buf, size);
     }
 
     ~Chunk() {
@@ -99,7 +97,7 @@ public:
 class Forwarded_connection {
 private:
 
-    const static int DEFAULT_BUFFER_SIZE = 1024;
+    const static int DEFAULT_BUFFER_SIZE = 8*1024;
     const static int CONNECTION_END = 0;
     const int BUFFER_SIZE;
     int _client_socket;
