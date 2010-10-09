@@ -1,16 +1,25 @@
 #include "Forwarded_connection.h"
 
 void Forwarded_connection::_close_connection(int &sock, Buffer **buf) {
-    close(sock);
-    sock = CLOSED_SOCKET;
-    delete *buf;
-    *buf = NULL;
+    if(sock != CLOSED_SOCKET){
+		close(sock);
+		sock = CLOSED_SOCKET;
+		delete *buf;
+		*buf = NULL;
+	}
 }
 
 int Forwarded_connection::_socket_read(int &sock, Buffer *buf_to_add, Buffer *buf_to_delete) {
+
     char b[BUFFER_SIZE];
     int read;
     read = ::read(sock, b, sizeof (b));
+
+	if(read == -1){
+		std::cerr << "Read failure" << std::endl;
+		_close_connection(sock, &buf_to_delete);
+		return -1;
+	}
 
 #ifdef DEBUG
     std::clog << "Read " << read << " bytes" << std::endl;
@@ -26,12 +35,28 @@ int Forwarded_connection::_socket_read(int &sock, Buffer *buf_to_add, Buffer *bu
 }
 
 int Forwarded_connection::_socket_write(int &sock, int &other_sock, Buffer **buf) {
+	if(sock == CLOSED_SOCKET){
+		return -1;
+	}
+	// clients socket was closed due to an error
+	if(*buf == NULL){
+		_close_connection(sock, buf);
+		return -1;
+	}
+
     int wrote;
 
     Chunk *chunk = (*buf)->pop_front();
     const char *b = chunk->buf();
     int size = chunk->size();
     wrote = ::write(sock, b, size);
+    
+    if(wrote == -1){
+		std::cerr << "Write failure" << std::endl;
+		_close_connection(sock, buf);
+		return -1;
+	}
+    
 #ifdef DEBUG
     std::clog << "Wrote " << wrote << " bytes" << std::endl;
 #endif

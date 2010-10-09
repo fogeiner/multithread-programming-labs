@@ -261,6 +261,13 @@ int main(int argc, char* argv[]) {
                 fc->server_write();
             }
         }
+        
+        // making cyclic shift
+        if(connections.size() > 1){
+			Forwarded_connection *fc = connections.front();
+			connections.pop_front();
+			connections.push_back(fc);
+		}
 
     }
     return (EXIT_SUCCESS);

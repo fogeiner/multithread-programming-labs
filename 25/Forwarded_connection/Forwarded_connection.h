@@ -1,12 +1,13 @@
 #ifndef FORWARDED_CONNECTION_H
 #define FORWARDED_CONNECTION_H
 #include <unistd.h>
+#include <iostream>
 #include "../../libs/Buffer/Buffer.h"
 
 class Forwarded_connection {
 private:
 
-    const static int DEFAULT_BUFFER_SIZE = 1024;
+    const static int DEFAULT_BUFFER_SIZE = 4*1024;
     const static int CONNECTION_END = 0;
     const int BUFFER_SIZE;
     int _client_socket;
