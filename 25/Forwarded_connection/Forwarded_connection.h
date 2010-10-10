@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <iostream>
 #include "../../libs/Buffer/Buffer.h"
+#include <sys/socket.h>
 #include <cerrno>
 class Forwarded_connection {
 private:

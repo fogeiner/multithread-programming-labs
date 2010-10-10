@@ -18,7 +18,7 @@ int Forwarded_connection::client_read() {
     
     char b[BUFFER_SIZE];
     int read;
-    read = ::read(_client_socket, b, sizeof(b));
+    read = ::recv(_client_socket, b, sizeof(b), 0);
     
     if(read == -1){
 		std::cerr << "Read failure: " << strerror(errno) << std::endl;
@@ -47,7 +47,7 @@ int Forwarded_connection::server_read() {
 	
 	char b[BUFFER_SIZE];
     int read;
-    read = ::read(_server_socket, b, sizeof(b));
+    read = ::recv(_server_socket, b, sizeof(b), 0);
     
     if(read == -1){
 		std::cerr << "Read failure: " << strerror(errno) << std::endl;
@@ -80,7 +80,7 @@ int Forwarded_connection::client_write() {
 	Chunk *chunk = _server_to_client_buf->pop_front();
 	const char *b = chunk->buf();
 	int size = chunk->size();
-	wrote = ::write(_client_socket, b, size);
+	wrote = ::send(_client_socket, b, size, 0);
 	
 	if(wrote == -1){
 		std::cerr << "Write failure: " << strerror(errno) << std::endl;
@@ -115,7 +115,7 @@ int Forwarded_connection::server_write() {
 	Chunk *chunk = _client_to_server_buf->pop_front();
 	const char *b = chunk->buf();
 	int size = chunk->size();
-	wrote = ::write(_server_socket, b, size);
+	wrote = ::send(_server_socket, b, size, 0);
 	
 	if(wrote == -1){
 		std::cerr << "Write failure " << strerror(errno) << std::endl;

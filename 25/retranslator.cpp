@@ -40,9 +40,9 @@ int parse_arguments(int argc, char *argv[], u_int16_t &local_port, u_int16_t &re
 }
 
 int init_tcp_socket() {
-    int listening_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    return listening_socket;
+    return socket;
 }
 
 void init_local_sockaddr(sockaddr_in &local_addr, u_int16_t local_port) {
