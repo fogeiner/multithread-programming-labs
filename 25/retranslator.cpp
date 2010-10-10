@@ -243,7 +243,6 @@ int main(int argc, char* argv[]) {
         if (readfds.isset(listening_socket)) {
             if (-1 == add_client_connection(listening_socket, remote_addr, connections)) {
                 std::cerr << "initing new connection: " << strerror(errno) << std::endl;
-                exit(EXIT_FAILURE);
             }
         }
 
