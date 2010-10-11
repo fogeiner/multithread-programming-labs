@@ -50,12 +50,20 @@ class Buffer {
 		}
 
 		Chunk* pop_back() {
+			if(_chunks.size() == 0){
+				return NULL;
+			}
+
 			Chunk *ret_chunk_ptr = _chunks.back();
 			_chunks.pop_back();
 			return ret_chunk_ptr;
 		}
 
 		Chunk* pop_front() {
+			if(_chunks.size() == 0){
+				return NULL;
+			}
+
 			Chunk *ret_chunk_ptr = _chunks.front();
 			_chunks.pop_front();
 			return ret_chunk_ptr;
