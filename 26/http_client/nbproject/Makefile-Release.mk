@@ -31,6 +31,7 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/_DOTDOT/terminal.o \
 	${OBJECTDIR}/_ext/_DOTDOT/source.o
 
 # C Compiler Flags
@@ -56,6 +57,11 @@ LDLIBSOPTIONS=
 dist/Release/GNU-Linux-x86/http_client: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/http_client ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/_ext/_DOTDOT/terminal.o: nbproject/Makefile-${CND_CONF}.mk ../terminal.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/_DOTDOT
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/_DOTDOT/terminal.o ../terminal.cpp
 
 ${OBJECTDIR}/_ext/_DOTDOT/source.o: nbproject/Makefile-${CND_CONF}.mk ../source.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/_DOTDOT

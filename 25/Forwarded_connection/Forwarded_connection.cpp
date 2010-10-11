@@ -85,7 +85,7 @@ int Forwarded_connection::client_write() {
 		return wrote;
 	}
 
-	_server_to_client_buf->put_back(chunk, wrote);
+	_server_to_client_buf->put_back_front(chunk, wrote);
 
 	if((_server_socket == CLOSED_SOCKET) && (_server_to_client_buf->size() == 0)){
 		_close_connection(_client_socket, _server_to_client_buf);
@@ -114,7 +114,7 @@ int Forwarded_connection::server_write() {
 		return wrote;
 	}
 	
-	_client_to_server_buf->put_back(chunk, wrote);
+	_client_to_server_buf->put_back_front(chunk, wrote);
 	
 	if((_client_socket == CLOSED_SOCKET) && (_client_to_server_buf->size() == 0)){
 		_close_connection(_server_socket, _client_to_server_buf);

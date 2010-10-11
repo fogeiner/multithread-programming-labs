@@ -1,251 +1,247 @@
 #include <iostream>
-#include <exception>
 #include <string>
+#include <cerrno>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <strings.h>
+
 #include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <sstream>
+
 #include "terminal.h"
+#include "../libs/Buffer/Buffer.h"
+#include "../libs/Fd_set/Fd_set.h"
 
-class host_not_found_exception : public std::exception {
-private:
-    std::string cause;
-public:
+#define DEBUG
 
-    host_not_found_exception(char *s) throw () : cause(s) {
+int init_tcp_socket() {
+    int socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    return socket;
+}
 
+int init_remote_host_sockaddr(sockaddr_in &remote_addr, const char *remote_host, u_int16_t remote_port) {
+    // in static memory, no need to call free
+
+    bzero(&remote_addr, sizeof (remote_addr));
+
+    struct hostent *remote_hostent = gethostbyname(remote_host);
+
+    if (remote_hostent == NULL) {
+        return -1;
     }
 
-    const char *what() const throw () {
-        return cause.c_str();
+    remote_addr.sin_addr = *((in_addr *) remote_hostent->h_addr_list[0]);
+    remote_addr.sin_family = AF_INET;
+    remote_addr.sin_port = remote_port;
+    return 0;
+}
+
+int parse_arguments(std::string url, std::string &host, std::string &path) {
+    // starts with http://
+
+    if (url.substr(0, 7) != "http://") {
+        std::cerr << "URL required" << std::endl;
+        return -1;
     }
 
-    ~host_not_found_exception() throw () {
-    }
-};
+    url = url.substr(7, url.length());
+    int slash_index = url.find_first_of('/', 0);
 
-class malformed_http_url_exception : public std::exception {
-private:
-    std::string cause;
-public:
-
-    malformed_http_url_exception(char *s) throw () : std::exception(), cause(s) {
-
+    if (slash_index != -1) {
+        host = url.substr(0, slash_index);
+        path = url.substr(slash_index, url.length());
+    } else {
+        host = url;
+        path = '/';
     }
 
-    const char *what() const throw () {
-        return cause.c_str();
-    }
+#ifdef DEBUG
+    std::clog << "Host: " << host << "\tPath: " << path << std::endl;
+#endif
+}
 
-    ~malformed_http_url_exception() throw () {
-    }
-};
+void print_screen(Buffer &buf, bool &screen_full, int rows, int cols) {
 
-class netconnection_exception : public std::exception {
-private:
-    std::string cause;
-public:
+    static const char msg_to_press_key[] = "Press enter to scroll...";
+    static int cur_row = 0, cur_col = 0;
 
-    netconnection_exception(char *s) throw () : std::exception(), cause(s) {
+    for (;;) {
+        Chunk *chunk = buf.pop_front();
 
-    }
-
-    const char *what() const throw () {
-        return cause.c_str();
-    }
-
-    ~netconnection_exception() throw () {
-    }
-};
-
-class http_connection {
-private:
-    std::string host;
-    std::string path;
-    int sock;
-    u_int16_t port;
-    const static int BUFSIZE = 1024;
-public:
-
-    http_connection(char *c_url, int port = 80) {
-        this->port = port;
-
-        std::string url(c_url);
-        // starts with http://
-
-        if (url.substr(0, 7) != "http://") {
-            throw malformed_http_url_exception("No http resource identifier");
-        } else {
-            url = url.substr(7, url.length());
+        // no info to display
+        if (chunk == NULL) {
+                return;
         }
 
-        int slash_index = url.find_first_of('/', 0);
+        int chunk_size = chunk->size();
+        const char *b = chunk->buf();
 
-        if (slash_index != -1) {
-            this->host = url.substr(0, slash_index);
-            this->path = url.substr(slash_index, url.length());
-        } else {
-            this->host = url;
-            path = '/';
-        }
-
-     //   std::cout << this->host << "\n" << this->path << std::endl;
-    }
-
-    void connect() {
-        sockaddr_in remote_addr;
-
-        this->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-        if (this->sock == -1) throw netconnection_exception(strerror(errno));
-
-        // in static memory, no need to call free
-        struct hostent *remote_hostent = gethostbyname(host.c_str());
-
-        if (remote_hostent == NULL) throw netconnection_exception("Remote host not found");
-
-        if (remote_hostent->h_addr_list[0] == NULL) {
-            throw host_not_found_exception("Remote host is not accessible");
-        }
-
-        remote_addr.sin_addr = *((in_addr *) remote_hostent->h_addr_list[0]);
-        remote_addr.sin_family = AF_INET;
-        remote_addr.sin_port = htons(port);
-
-        int ret_val;
-
-        ret_val = ::connect(this->sock, (const sockaddr *) & remote_addr, sizeof (remote_addr));
-
-        if (ret_val == -1) throw netconnection_exception(strerror(errno));
-    }
-
-    void GET_request() {
-        char get_request[] = "GET";
-        char http_ver[] = "HTTP/1.0";
-        char host_header[] = "Host:";
-
-        std::stringstream sstr;
-
-        sstr << get_request << " "
-                << path << " "
-                << http_ver << "\r\n"
-                << host_header << " "
-                << host << "\r\n"
-                << "\n";
-
-        //    std::cout << sstr.str() << std::endl;
-
-        send(sock, sstr.str().c_str(), strlen(sstr.str().c_str()), 0);
-
-        sstr.ignore();
-
-        std::stringbuf buf;
-
-        int recv_bytes;
-        char sock_buf[BUFSIZE];
-
-        int rows, cols;
-        int cur_row = 0, cur_col = 0;
-
-        if (get_terminal_width_height(1, &cols, &rows) == -1) {
-            std::cerr << "get_terminal_width_height: " << strerror(errno) <<
-                    "\nUsing default values for terminal width and height" << std::endl;
-        }
-
-        bool connection_is_closed = false;
-        bool fist_screen = true;
-        fd_set readfds;
-
-        while (1) {
-            if (connection_is_closed && (buf.in_avail() == 0)) {
-                break;
-            }
-
-            FD_ZERO(&readfds);
-            FD_SET(STDIN_FILENO, &readfds);
-
-            if (!connection_is_closed)
-                FD_SET(sock, &readfds);
-
-            if (select(connection_is_closed ? STDIN_FILENO + 1 : sock + 1,
-                    &readfds, NULL, NULL, NULL) == -1) {
-            }
-
-            if (!connection_is_closed && FD_ISSET(sock, &readfds)) {
-                recv_bytes = recv(sock, sock_buf, sizeof (sock_buf), 0);
-
-                // end of transmission
-                if (recv_bytes == 0) {
-                    connection_is_closed = true;
-                }
-
-                buf.sputn(sock_buf, recv_bytes);
-            }
-
-            if (fist_screen || FD_ISSET(STDIN_FILENO, &readfds)) {
-                if(!fist_screen)
-                    read(STDIN_FILENO, sock_buf, sizeof (sock_buf));
-                fist_screen = false;
-               
-                while (true) {
-                    char next_char;
-
-                    next_char = (char) buf.sbumpc();
-
-                    
-
-                    if (next_char == '\t')
-                        continue;
-
-                    std::cout << next_char;
-
-                    if (next_char == '\n') {
-                        cur_row++;
-                        cur_col = 0;
-                    }
-
+        for (int i = 0; i < chunk_size; ++i) {
+            switch (b[i]) {
+                case '\n':
+                    cur_row++;
+                    cur_col = 0;
+                    break;
+                default:
                     cur_col++;
+            }
 
-                    if (cur_col == cols) {
-                        cur_row++;
-                        cur_col = 0;
-                        std::cout << "\n";
-                    }
+            std::cout << b[i];
 
-                    if (cur_row == rows - 1) {
-                        std::cout << "Press enter to scroll...";
-                        std::cout.flush();
-                        cur_row = 0;
-                        break;
-                    }
+            if (cur_col == cols) {
+                cur_col = 0;
+                cur_row++;
+            }
 
-                    if (buf.in_avail() == 0){
-                        std::cout << "Press enter to scroll...";
-                        break;
-                    }
-                }
+            if (cur_row == rows - 1) {
+                cur_row = cur_col = 0;
+                std::cout << msg_to_press_key;
+                std::cout.flush();
+                screen_full = true;
+                buf.put_back_front(chunk, i);
+                return;
             }
         }
-        close(sock);
+
+        delete chunk;
     }
-};
+}
+
+int GET_send_request(int &socket, std::string &url, std::string &host) {
+
+    std::string request = "GET " + url + " HTTP/1.0\nHost: " + host + "\r\n\r\n";
+#ifdef DEBUG
+    std::clog << "Sending request:\n" << request << std::endl;
+#endif
+
+    int send_size = request.length();
+    int sent;
+
+    sent = ::send(socket, request.c_str(), send_size, 0);
+
+    if (sent != send_size) {
+        return -1;
+    }
+}
+
+int GET_recv_answer(int &socket, Buffer &recv_buf) {
+    const int BUFSIZE = 4 * 1024;
+    char b[BUFSIZE];
+    int read;
+    read = ::recv(socket, b, sizeof (b), 0);
+
+    if (read > 0) {
+        recv_buf.push_back(b, read);
+    }
+
+    return read;
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " url" << std::endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    try {
-        http_connection hc(argv[1]);
-        hc.connect();
-        hc.GET_request();
-    } catch (std::exception &ex) {
-        std::cerr << ex.what() << std::endl;
+
+    const int HTTP_DEFAULT_PORT = 80;
+    const int CLOSED_SOCKET = -1;
+    const int BUFSIZE = 512;
+    const int DEFAULT_SCREEN_WIDTH = 24;
+    const int DEFAUL_SCREEN_HEIGHT = 80;
+    int screen_rows_count, screen_cols_count;
+
+    if (get_terminal_width_height(STDOUT_FILENO, &screen_cols_count, &screen_rows_count) == -1) {
+        screen_rows_count = DEFAUL_SCREEN_HEIGHT;
+        screen_cols_count = DEFAULT_SCREEN_WIDTH;
+    }
+
+#ifdef DEBUG
+    std::clog << "Terminal size: " << screen_rows_count << "x" << screen_cols_count << std::endl;
+#endif
+
+    int serv_socket = init_tcp_socket();
+
+    if (serv_socket == -1) {
+        std::cerr << strerror(errno) << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    Buffer recv_buf;
+    std::string host, path, url(argv[1]);
+
+    if (parse_arguments(url, host, path) == -1) {
+        return EXIT_FAILURE;
+    }
+
+    sockaddr_in remote_addr;
+
+    if (init_remote_host_sockaddr(remote_addr, host.c_str(), htons(HTTP_DEFAULT_PORT)) == -1) {
+        std::cerr << "Getting remote_host info: " << hstrerror(h_errno) << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (connect(serv_socket, (const sockaddr*) & remote_addr, sizeof (remote_addr)) == -1) {
+        std::cerr << strerror(errno) << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (GET_send_request(serv_socket, url, host) == -1) {
+        std::cerr << strerror(errno) << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    bool screen_full = false;
+    Fd_set readfds;
+
+    for (;;) {
+
+        if ((serv_socket == CLOSED_SOCKET) && (recv_buf.size() == 0)) {
+            break;
+        }
+
+        readfds.zero();
+
+        if (serv_socket != CLOSED_SOCKET) {
+            readfds.set(serv_socket);
+        }
+
+
+        readfds.set(STDIN_FILENO);
+
+
+        int availible_fds = select(readfds.max_fd() + 1, &readfds.fdset(), NULL, NULL, NULL);
+
+        if (availible_fds == -1) {
+            std::cerr << strerror(errno) << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        if (readfds.isset(serv_socket)) {
+            int ret = GET_recv_answer(serv_socket, recv_buf);
+            if (ret == -1) {
+                std::cerr << strerror(errno) << std::endl;
+                return EXIT_FAILURE;
+            }
+
+            if (ret == 0) {
+                close(serv_socket);
+                serv_socket = CLOSED_SOCKET;
+            }
+        }
+
+        if (screen_full == true && readfds.isset(STDIN_FILENO)) {
+            char b[BUFSIZE];
+            ::read(STDIN_FILENO, b, sizeof (b));
+            screen_full = false;
+        }
+
+        if (screen_full == false) {
+            print_screen(recv_buf, screen_full, screen_rows_count, screen_cols_count);
+        }
+
     }
 }

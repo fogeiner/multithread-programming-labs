@@ -38,7 +38,7 @@ class Buffer {
 		}
 
 		void push_front(Chunk *chunk) {
-			_chunks.push_back(chunk);
+			_chunks.push_front(chunk);
 		}
 
 		void push_back(const char *buf, int size) {
@@ -69,7 +69,7 @@ class Buffer {
 			return ret_chunk_ptr;
 		}
 
-		int put_back(Chunk *&chunk, int bytes_used){
+		int put_back_front(Chunk *&chunk, int bytes_used){
 			if(bytes_used == 0){
 				push_front(chunk);
 				return chunk->size();
