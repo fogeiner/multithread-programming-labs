@@ -97,7 +97,9 @@ public:
     }
 
     int size() const {
+        pthread_mutex_lock(&mutex);
         return list_size;
+        pthread_mutex_unlock(&mutex);
     }
 
     void push_back(string s) {

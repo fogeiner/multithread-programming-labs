@@ -1,5 +1,5 @@
 #pragma once
-#include "Semaphore.h"
+#include "../Semaphore/Semaphore.h"
 #include <list>
 
 

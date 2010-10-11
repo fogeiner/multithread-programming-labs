@@ -1,5 +1,6 @@
 #ifndef CHUNK_H
 #define CHUNK_H
+#include <cstring>
 
 class Chunk {
 private:
@@ -18,9 +19,7 @@ public:
 
     Chunk(const char *buf, int size) : _size(size) {
         _buffer = new char[size];
-        for (int i = 0; i < size; ++i) {
-            _buffer[i] = buf[i];
-        }
+        memcpy(_buffer, buf, size);
     }
 
     ~Chunk() {

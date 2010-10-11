@@ -140,7 +140,9 @@ public:
     }
 
     int size() const {
+        head->lock();
         return list_size;
+        head->unlock();
     }
 
     void push_back(string s) {

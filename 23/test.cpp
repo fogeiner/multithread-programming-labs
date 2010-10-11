@@ -23,9 +23,9 @@ mymsqdestroy должна вызываться после того, как бу�
 #include <cstdio>
 #include <iostream>
 
-#include "Semaphore.h"
-#include "MsgQueue.h"
-#include "Thread.h"
+#include "../libs/Semaphore/Semaphore.h"
+#include "../libs/MsgQueue/MsgQueue.h"
+#include "../libs/Thread/Thread.h"
 
 int stop_flag = 0;
 const int size = 256;
