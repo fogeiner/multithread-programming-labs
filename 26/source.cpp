@@ -69,12 +69,11 @@ void print_screen(Buffer &buf, bool &screen_full, int rows, int cols) {
     static int cur_row = 0, cur_col = 0;
 
     for (;;) {
-        Chunk *chunk = buf.pop_front();
+		if(buf.is_empty()){
+			return;
+		}
 
-        // no info to display
-        if (chunk == NULL) {
-                return;
-        }
+        Chunk *chunk = buf.pop_front();
 
         int chunk_size = chunk->size();
         const char *b = chunk->buf();
@@ -128,7 +127,7 @@ int GET_send_request(int &socket, std::string &url, std::string &host) {
 }
 
 int GET_recv_answer(int &socket, Buffer &recv_buf) {
-    const int BUFSIZE = 4 * 1024;
+    const int BUFSIZE = 4*1024;
     char b[BUFSIZE];
     int read;
     read = ::recv(socket, b, sizeof (b), 0);
