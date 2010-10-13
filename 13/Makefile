@@ -2,8 +2,8 @@
 
 APPS = semaphore mutex
 OBJ1 = ../libs/Semaphore/Semaphore.o ../libs/Thread/Thread.o semaphore.o
-OBJ2 =  ../libs/Mutex/Mutex.o ../libs/Thread/Thread.o mutex.o
-CXXFLAGS = -lpthread -pthread -g
+OBJ2 =  ../libs/Mutex/Mutex.o ../libs/Thread/Thread.o mutex_analogue.o
+CXXFLAGS = -lpthread -pthread 
 CC = g++
 
 all: $(APPS)
@@ -14,8 +14,8 @@ semaphore: $(OBJ1)
 mutex: $(OBJ2) 
 	$(CC) $(CXXFLAGS) $(OBJ2) -o mutex 
 
-mutex.o: mutex.cpp
-	$(CC) $(CXXFLAGS) -c mutex.cpp -o mutex.o
+mutex_analogue.o: mutex_analogue.cpp
+	$(CC) $(CXXFLAGS) -c mutex_analogue.cpp -o mutex_analogue.o
 
 semaphore.o: semaphore.cpp
 	$(CC) $(CXXFLAGS) -c semaphore.cpp -o semaphore.o

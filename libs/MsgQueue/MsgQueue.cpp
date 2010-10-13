@@ -55,6 +55,7 @@ void MsgQueue::drop() {
     dropped = true;
 
     _mutex--;
+	// allowing all threads waiting for semaphores to unlock
     _free++;
     _taken++;
 

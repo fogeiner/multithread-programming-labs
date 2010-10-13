@@ -9,6 +9,7 @@ pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
 
 int counter = 1;
 
+// producer
 void *child(void *ptr) {
 
     for (int i = 0; i < 10;) {
@@ -25,6 +26,7 @@ void *child(void *ptr) {
 	return NULL;
 }
 
+// consumer
 void *parent(void *ptr) {
 
     for (int i = 0; i < 10;) {

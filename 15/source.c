@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
             break;
             // error
         case -1:
-            error_check(pid);
+            error_check(errno);
             // parent
         default:
             parent();

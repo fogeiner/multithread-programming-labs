@@ -1,23 +1,3 @@
-/*
- * 23. Производитель-потребитель
-
-void mymsginit(queue *);
- * void mymsqdrop(queue *);
- * void mymsgdestroy(queue *);
- * int mymsgput(queue *, char * msg);
- * int mymsgget(queue *, char * buf, size_t bufsize);
-mymsgput принимает в качестве параметра ASCIIZ строку символов, обрезает ее до 80 символов (если это необходимо) и помещает ее в очередь.
- * Если очередь содержит более 10 записей, mymsgput блокируется. Функция возвращает количество переданных символов.
-mymsgget возвращает первую запись из очереди, обрезая ее до размера пользовательского буфера (если это необходимо).
- * В любом случае, запись извлекается из очереди полностью. Если очередь пуста, mymsgget блокируется. Функция возвращает количество прочитанных символов.
-mymsgdrop должна приводить к разблокированию ожидающих операций get и put. Ожидавшие вызовы и все последующие вызовы get и put должны возвращать 0.
-mymsqdestroy должна вызываться после того, как будет известно, что ни одна нить больше не попытается выполнять операции над очередью.
-
-Необходимо продемонстрировать работу очереди с двумя производителями и двумя потребителями.
-
-Для синхронизации доступа к очереди используйте семафоры-счетчики.
- * */
-
 #include <pthread.h>
 #include <signal.h>
 #include <cstdio>
@@ -68,7 +48,7 @@ void *f3(void *arg) {
             break;
 
         int r = m->get(buf, sizeof (buf));
-        std::cout << "f3 read " << r << " symbols: " << buf;
+		fprintf(stdout, "f3 read %d symbols: %s", r, buf);
         sleep(2);
     }
     return NULL;
@@ -83,7 +63,7 @@ void *f4(void *arg) {
 
 
         int r = m->get(buf, sizeof (buf));
-        std::cout << "f4 read " << r << " symbols: " << buf;
+		fprintf(stdout, "f4 read %d symbols: %s", r, buf);
         sleep(1);
     }
     return NULL;
@@ -103,14 +83,14 @@ int main(int argc, char *argv[]) {
         }
 
         signal(SIGINT, stop);
-
         pause();
 
         for (int i = 0; i < sizeof (threads) / sizeof (Thread); ++i) {
-            threads[i].join(NULL);
+            threads[i].join();
         }
         delete msgq;
-        pthread_exit(NULL);
+
+		Thread::exit(NULL);
     } catch (std::exception &ex) {
         std::cerr << ex.what();
     }

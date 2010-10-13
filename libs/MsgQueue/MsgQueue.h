@@ -7,8 +7,11 @@ class MsgQueue {
 private:
     bool dropped;
 
+	// mutex = i.e. binary semaphore
     Semaphore _mutex;
+	// number of taken slots
     Semaphore _taken;
+	// number of free slots
     Semaphore _free;
 
     std::list<std::string> _msgs;
@@ -23,7 +26,7 @@ public:
     }
     ~MsgQueue();
 
-    int get(char *buf, size_t bufsize) ;
+    int get(char *buf, size_t bufsize);
     int put(const char *msg);
     void drop();
 };
