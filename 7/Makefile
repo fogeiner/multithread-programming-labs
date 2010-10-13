@@ -2,7 +2,7 @@
 
 APP = bin
 OBJ = source.o
-FLAGS = -std=c99 -lpthread -pthread
+FLAGS = -std=c99 -lpthread -pthread -lm
 CC = gcc
 
 $(APP): $(OBJ)

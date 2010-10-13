@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#define __USE_GNU
+#include <math.h>
+#undef __USE_GNU
 
 #define TRUE 1
 #define FALSE 0
@@ -11,7 +14,7 @@ struct data{
 	int is_valid;
 	int start_index;
 	int steps_count;
-	double result;
+	long double result;
 };
 
 
@@ -43,7 +46,8 @@ int main(int argc, char *argv[]) {
 		steps_count = atoi(argv[2]);
 	}
 
-	double pi = 0;
+	long double PI_MULTIPLIER = 4.0;
+	long double pi = 0;
 	struct data *threads = malloc(sizeof(struct data)*threads_count);
 
 	for(int i = 0; i < threads_count; ++i){
@@ -70,8 +74,8 @@ int main(int argc, char *argv[]) {
 
 	free(threads);
 
-	pi = pi * 4.0;
-	printf("pi done - %.15g \n", pi);    
+	pi = pi * PI_MULTIPLIER;
+	printf("pi\t\t%.15Lg\nM_PIl-pi:\t%Lg\n", pi, M_PIl - pi);    
 
 	return (EXIT_SUCCESS);
 }
