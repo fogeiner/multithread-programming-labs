@@ -1,8 +1,8 @@
 #! /usr/bin/make -f
 
 APP = retranslator
-OBJ = retranslator.o Forwarded_connection/Forwarded_connection.o
-CXXFLAGS =
+OBJ = retranslator.o Forwarded_connection/Forwarded_connection.o ../libs/Mutex/Mutex.o
+CXXFLAGS = -lpthread -pthread
 CC = g++
 
 $(APP): $(OBJ)
@@ -13,6 +13,9 @@ retranslator.o: retranslator.cpp ../libs/Fd_set/Fd_set.h ../libs/Buffer/Buffer.h
 
 Forwarded_connection/Forwarded_connection.o: Forwarded_connection/Forwarded_connection.cpp Forwarded_connection/Forwarded_connection.h
 	$(CC) -o Forwarded_connection/Forwarded_connection.o -c $(CXXFLAGS) Forwarded_connection/Forwarded_connection.cpp
+
+../libs/Mutex/Mutex.o: ../libs/Mutex/Mutex.cpp ../libs/Mutex/Mutex.h
+	$(CC) -o ../libs/Mutex/Mutex.o ../libs/Mutex/Mutex.cpp -c $(CXXFLAGS)
 
 clean:
 	rm -rf core $(APP) $(OBJ)
