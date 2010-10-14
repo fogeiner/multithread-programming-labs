@@ -6,6 +6,9 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <sys/stat.h>        /* For mode constants */
 #include <semaphore.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 
 const char *sem_name1 = "/lab15_1";
 const char *sem_name2 = "/lab15_2";
