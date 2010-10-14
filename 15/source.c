@@ -22,7 +22,6 @@ void error_check(int retv) {
 void child(sem_t *sid1, sem_t *sid2) {
 
 	for (int i = 0; i < 10; ++i) {
-		sleep(1);
 		error_check(sem_wait(sid1));
 		printf("%d child\n", i);
 		error_check(sem_post(sid2));
@@ -72,6 +71,7 @@ int main(int argc, char *argv[]) {
 			error_check(sem_close(sid2));
 			error_check(sem_unlink(sem_name1));
 			error_check(sem_unlink(sem_name2));
+			waitpid(pid, NULL, 0);
 			break;
 	}
 }
