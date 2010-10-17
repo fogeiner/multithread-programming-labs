@@ -165,10 +165,10 @@ int add_client_connection(int listening_socket, sockaddr_in &remote_addr, std::l
 #endif
 	return 0;
 }
-
 int main(int argc, char* argv[]) {
 	
 	struct sigaction act;
+	signal(SIGINT, exit);
 
 	// ignore SIGPIPE
 	act.sa_handler=SIG_IGN;

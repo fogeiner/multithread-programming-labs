@@ -118,7 +118,7 @@ void *recv_thread(void *conn_ptr){
 
 	for(;;){
 		read = ::recv(con->socket, b, sizeof(b), 0);
-		
+
 		if(read == -1){
 			print_error(errno);
 			::close(con->socket);
@@ -165,6 +165,9 @@ void *print_thread(void *conn_ptr){
 	const char msg_to_press_key[] = "Press enter to scroll...";
 	bool can_print = true;
 	int cur_row = 0, cur_col = 0;
+	int next_tab_position;
+	const int DEFAULT_TAB_WIDTH = 8;
+
 
 	for (;;) {
 		pthread_mutex_lock(&con->cm);
@@ -191,6 +194,14 @@ void *print_thread(void *conn_ptr){
 
 			for (int i = 0; i < chunk_size; ++i) {
 				switch (b[i]) {
+					case '\t':
+						next_tab_position = DEFAULT_TAB_WIDTH * 
+							((cur_col + DEFAULT_TAB_WIDTH)/DEFAULT_TAB_WIDTH);
+						if (next_tab_position <= cols){
+							cur_col += next_tab_position;
+							break;
+						}
+
 					case '\n':
 						cur_row++;
 						cur_col = 0;
@@ -208,7 +219,7 @@ void *print_thread(void *conn_ptr){
 
 				if (cur_row == rows - 1) {
 					cur_row = cur_col = 0;
-					puts(msg_to_press_key);
+					fputs(msg_to_press_key, stdout);
 					fflush(stdout);
 					can_print = false;
 					con->buf.put_back_front(chunk, i);
