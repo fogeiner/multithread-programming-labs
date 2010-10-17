@@ -19,6 +19,8 @@
 #include "../libs/Fd_set/Fd_set.h"
 #include "Forwarded_connection/Forwarded_connection.h"
 
+typedef uint16_t u_int16_t;
+
 inline int max(int v1, int v2) {
     return v1 > v2 ? v1 : v2;
 }

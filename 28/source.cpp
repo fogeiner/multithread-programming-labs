@@ -67,7 +67,7 @@ int parse_arguments(std::string url, std::string &host, std::string &path) {
 
 int GET_send_request(int &socket, std::string &url, std::string &host) {
 
-	std::string request = "GET " + url + " HTTP/1.0\nHost: " + host + "\r\n\r\n";
+	std::string request = "GET " + url + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
 #ifdef DEBUG
 	fprintf(stdout, "Sending request: %s\n", request.c_str()) ;
 #endif

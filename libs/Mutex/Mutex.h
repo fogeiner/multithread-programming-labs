@@ -29,23 +29,20 @@ private:
     pthread_mutex_t _mid;
     pthread_mutexattr_t _mattrid;
 
-    enum mutex_type {
-        PTHREAD_FAST_MUTEX = ::PTHREAD_MUTEX_FAST_NP,
-        PTHREAD_RECURSIVE_MUTEX = ::PTHREAD_MUTEX_RECURSIVE_NP,
-        PTHREAD_ERRORCHECK_MUTEX = ::PTHREAD_MUTEX_ERRORCHECK_NP
-    };
-
     void error_check(int retv);
 
     Mutex & operator=(const Mutex& other) {
     }
 
 public:
-    static const enum mutex_type FAST_MUTEX = PTHREAD_FAST_MUTEX;
-    static const enum mutex_type RECURSIVE_MUTEX = PTHREAD_RECURSIVE_MUTEX;
-    static const enum mutex_type ERRORCHECK_MUTEX = PTHREAD_ERRORCHECK_MUTEX;
+    enum mutex_type {
+        NORMAL_MUTEX = PTHREAD_MUTEX_NORMAL,
+        RECURSIVE_MUTEX = PTHREAD_MUTEX_RECURSIVE,
+        ERRORCHECK_MUTEX = PTHREAD_MUTEX_ERRORCHECK,
+		DEFAULT_MUTEX = PTHREAD_MUTEX_DEFAULT
+    };
 
-    Mutex(enum mutex_type type = FAST_MUTEX);
+    Mutex(enum mutex_type type = NORMAL_MUTEX);
 	Mutex(const Mutex& other);
     ~Mutex();
 

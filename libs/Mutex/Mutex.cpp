@@ -1,10 +1,10 @@
 #include "Mutex.h"
 
-void Mutex::error_check(int retv) {
+inline void Mutex::error_check(int retv) {
 
-    char buf[256];
-    ::strerror_r(errno, buf, sizeof (buf));
     if (retv != 0) {
+		char buf[256];
+	    ::strerror_r(errno, buf, sizeof (buf));
         throw MutexException(buf);
     }
 }

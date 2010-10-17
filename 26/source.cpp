@@ -111,7 +111,7 @@ void print_screen(Buffer &buf, bool &screen_full, int rows, int cols) {
 
 int GET_send_request(int &socket, std::string &url, std::string &host) {
 
-    std::string request = "GET " + url + " HTTP/1.0\nHost: " + host + "\r\n\r\n";
+    std::string request = "GET " + url + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
 #ifdef DEBUG
     std::clog << "Sending request:\n" << request << std::endl;
 #endif
