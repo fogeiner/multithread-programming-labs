@@ -1,12 +1,13 @@
 #include "Mutex.h"
 
 inline void Mutex::error_check(int retv) {
-
+#ifdef DEBUG
     if (retv != 0) {
 		char buf[256];
 	    ::strerror_r(errno, buf, sizeof (buf));
         throw MutexException(buf);
     }
+#endif
 }
 
 Mutex::Mutex(enum mutex_type type) {

@@ -11,8 +11,8 @@ private:
     const static int DEFAULT_BUFFER_SIZE = 4*1024;
     const static int CONNECTION_END = 0;
     const int BUFFER_SIZE;
-    int _client_socket;
     int _server_socket;
+    int _client_socket;
 
     Buffer *_client_to_server_buf;
     Buffer *_server_to_client_buf;

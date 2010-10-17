@@ -25,7 +25,7 @@ inline int max(int v1, int v2) {
     return v1 > v2 ? v1 : v2;
 }
 
-int parse_arguments(int argc, char *argv[], u_int16_t &local_port, u_int16_t &remote_port, char **remote_host) {
+int parse_arguments(int argc, char *argv[], u_int16_t &local_port, u_int16_t &remote_port, char *&remote_host) {
     const int NUM_OF_EXPECTED_ARGUMENTS = 4;
     if (argc != NUM_OF_EXPECTED_ARGUMENTS) {
         return -1;
@@ -33,12 +33,13 @@ int parse_arguments(int argc, char *argv[], u_int16_t &local_port, u_int16_t &re
 
     local_port = htons(atoi(argv[1]));
     remote_port = htons(atoi(argv[3]));
-    *remote_host = argv[2];
+    remote_host = argv[2];
 #ifdef DEBUG
     std::clog << "local port in n.rep.: " << local_port << "\n"
             << "remote port in n.rep.: " << remote_port << "\n"
             << "remote host: " << remote_host << std::endl;
 #endif
+	return 0;
 }
 
 int init_tcp_socket() {
@@ -162,6 +163,7 @@ int add_client_connection(int listening_socket, sockaddr_in &remote_addr, std::l
             << " client socket: " << client_sock << std::endl;
     std::clog << "Total forwarded connections: " << connections.size() << std::endl;
 #endif
+	return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -185,7 +187,7 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    if (-1 == parse_arguments(argc, argv, local_port, remote_port, &remote_host)) {
+    if (-1 == parse_arguments(argc, argv, local_port, remote_port, remote_host)) {
         std::cerr << "Usage: " << argv[0] << " local_port {remote_hostname|remote_ip} remote_port" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -238,7 +240,11 @@ int main(int argc, char* argv[]) {
 
         if (-1 == avaliable_sockets) {
             std::cerr << "select(): " << strerror(errno) << std::endl;
-            exit(EXIT_FAILURE);
+
+			if(errno == EINTR)
+				continue;
+			else
+				exit(EXIT_FAILURE);
         }
 
         // new client connecting
