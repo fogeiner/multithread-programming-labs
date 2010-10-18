@@ -2,7 +2,7 @@
 
 APP = retranslator
 OBJ = retranslator.o Forwarded_connection/Forwarded_connection.o ../libs/Mutex/Mutex.o
-CXXFLAGS = -pthread -O4 -Wall -lpthread
+CXXFLAGS = -pthread -lpthread
 CC = g++
 
 $(APP): $(OBJ)

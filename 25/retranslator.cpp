@@ -14,7 +14,7 @@
 #include <list>
 
 #define DEBUG
-#undef DEBUG
+//#undef DEBUG
 
 #include "../libs/Fd_set/Fd_set.h"
 #include "Forwarded_connection/Forwarded_connection.h"
@@ -165,6 +165,8 @@ int add_client_connection(int listening_socket, sockaddr_in &remote_addr, std::l
 #endif
 	return 0;
 }
+
+
 int main(int argc, char* argv[]) {
 	
 	struct sigaction act;
@@ -263,20 +265,20 @@ int main(int argc, char* argv[]) {
                 i != connections.end(); ++i) {
             Forwarded_connection *fc = *i;
             
-            if (writefds.isset(fc->client_socket())) {
-                fc->client_write();
-            }
-
-            if (writefds.isset(fc->server_socket())) {
-                fc->server_write();
-            }
-            
             if (readfds.isset(fc->client_socket())) {
                 fc->client_read();
             }
 
             if (readfds.isset(fc->server_socket())) {
                 fc->server_read();
+            }
+
+            if (writefds.isset(fc->client_socket())) {
+                fc->client_write();
+            }
+
+            if (writefds.isset(fc->server_socket())) {
+                fc->server_write();
             }
         }
         

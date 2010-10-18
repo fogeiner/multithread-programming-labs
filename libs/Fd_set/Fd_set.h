@@ -22,6 +22,7 @@ public:
 
     void zero() {
         FD_ZERO(&_fdset);
+		_max_fd = -1;
     }
 
     void set(int fd) {
@@ -33,7 +34,7 @@ public:
 
     void clr(int fd) {
         FD_CLR(fd, &_fdset);
-        // actually have to update _max_fd
+        // IMPROVEMENT: update _max_fd
     }
 
     int isset(int fd) {
@@ -45,3 +46,4 @@ public:
     }
 };
 #endif
+

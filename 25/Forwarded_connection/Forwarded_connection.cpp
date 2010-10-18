@@ -31,7 +31,7 @@ int Forwarded_connection::client_read() {
 	} else {
 		_close_connection(_client_socket, _server_to_client_buf);
 	}
-	
+
 	return read;
 }
 

@@ -1,10 +1,16 @@
 #include "Semaphore.h"
 
 void Semaphore::error_check(int retv) {
-    char buf[256];
-    ::strerror_r(errno, buf, sizeof(buf));
     if (retv == -1) {
-        throw SemaphoreException(buf);
+		char buf[256];
+#ifdef __GNU
+		char *msg_ptr;
+		msg_ptr = ::strerror_r(errno, buf, sizeof(buf));
+        throw SemaphoreException(msg_ptr);
+#else
+		::strerror_r(errno, buf, sizeof(buf));
+		throw SemaphoreException(buf);
+#endif
     }
 }
 

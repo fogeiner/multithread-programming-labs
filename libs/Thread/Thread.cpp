@@ -12,10 +12,16 @@ Thread::Thread(const Thread& orig) {
 }
 
 void Thread::error_check(int retv) {
-    char buf[256];
-    ::strerror_r(errno, buf, sizeof (buf));
     if (retv != 0) {
-        throw ThreadException(buf);
+		char buf[256];
+#ifdef __GNU
+		char *msg_ptr;
+		msg_ptr = ::strerror_r(retv, buf, sizeof (buf));
+        throw ThreadException(msg_ptr);
+#else
+		::strerror_r(retv, buf, sizeof(buf));
+		throw ThreadException(buf);
+#endif
     }
 }
 

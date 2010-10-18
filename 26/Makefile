@@ -1,5 +1,5 @@
 APP = bin
-OBJ = source.o ../libs/Terminal/terminal.o ../libs/Mutex/Mutex.o
+OBJ = source.o ../libs/Terminal/terminal.o
 CXXFLAGS = -lpthread
 CC = g++
 
@@ -11,9 +11,6 @@ source.o: source.cpp ../libs/Buffer/Buffer.h
 
 ../libs/Terminal/terminal.o: ../libs/Terminal/terminal.h ../libs/Terminal/terminal.cpp
 	$(CC) -o ../libs/Terminal/terminal.o -c ../libs/Terminal/terminal.cpp $(CXXFLAGS)
-
-../libs/Mutex/Mutex.o: ../libs/Mutex/Mutex.h ../libs/Mutex/Mutex.cpp
-	$(CC) -o ../libs/Mutex/Mutex.o -c ../libs/Mutex/Mutex.cpp $(CXXFLAGS)
 
 clean:
 	rm -rf $(APP) $(OBJ) core
