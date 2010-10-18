@@ -69,6 +69,11 @@ int Forwarded_connection::client_write() {
 #ifdef DEBUG
     std::clog << "client_write " << "client_socket: " << _client_socket << std::endl;
 #endif
+
+	if((_server_socket == CLOSED_SOCKET) && (_server_to_client_buf->size() == 0)){
+		_close_connection(_client_socket, _server_to_client_buf);
+	}
+	
 	if(_client_socket == CLOSED_SOCKET){
 		return -1;
 	}
@@ -86,11 +91,7 @@ int Forwarded_connection::client_write() {
 	}
 
 	_server_to_client_buf->put_back_front(chunk, wrote);
-
-	if((_server_socket == CLOSED_SOCKET) && (_server_to_client_buf->size() == 0)){
-		_close_connection(_client_socket, _server_to_client_buf);
-	}
-	
+// was here
 	return wrote;
 }
 
@@ -98,6 +99,11 @@ int Forwarded_connection::server_write() {
 #ifdef DEBUG
     std::clog << "server_write " << "server_socket: " << _server_socket << std::endl;
 #endif
+
+	if((_client_socket == CLOSED_SOCKET) && (_client_to_server_buf->size() == 0)){
+		_close_connection(_server_socket, _client_to_server_buf);
+	}
+
     if(_server_socket == CLOSED_SOCKET){
 		return -1;
 	}
@@ -116,10 +122,7 @@ int Forwarded_connection::server_write() {
 	
 	_client_to_server_buf->put_back_front(chunk, wrote);
 	
-	if((_client_socket == CLOSED_SOCKET) && (_client_to_server_buf->size() == 0)){
-		_close_connection(_server_socket, _client_to_server_buf);
-	}
-	
+// was here	
 	return wrote;
 }
 

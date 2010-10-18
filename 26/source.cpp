@@ -15,7 +15,6 @@
 #include "../libs/Fd_set/Fd_set.h"
 #include "../libs/Terminal/terminal.h"
 
-typedef uint16_t u_int16_t;
 #define DEBUG
 
 int init_tcp_socket() {
@@ -23,7 +22,7 @@ int init_tcp_socket() {
 	return socket;
 }
 
-int init_remote_host_sockaddr(sockaddr_in &remote_addr, const char *remote_host, u_int16_t remote_port) {
+int init_remote_host_sockaddr(sockaddr_in &remote_addr, const char *remote_host, unsigned short remote_port) {
 	// in static memory, no need to call free
 
 	bzero(&remote_addr, sizeof (remote_addr));

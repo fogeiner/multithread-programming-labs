@@ -253,11 +253,11 @@ void *print_thread(void *conn_ptr){
 
 			pthread_mutex_unlock(&con->cm);
 		}
-	} catch(...){
+	} catch(std::exception &ex){
 		if(term_canon_off() == -1){
 			print_error(errno);
 		}
-		throw;
+		exit(EXIT_FAILURE);
 	}	
 
 	return NULL;
