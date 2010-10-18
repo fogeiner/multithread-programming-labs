@@ -91,7 +91,7 @@ int Forwarded_connection::client_write() {
 	}
 
 	_server_to_client_buf->put_back_front(chunk, wrote);
-// was here
+
 	return wrote;
 }
 
@@ -122,7 +122,6 @@ int Forwarded_connection::server_write() {
 	
 	_client_to_server_buf->put_back_front(chunk, wrote);
 	
-// was here	
 	return wrote;
 }
 
