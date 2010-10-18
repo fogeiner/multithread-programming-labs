@@ -155,7 +155,7 @@ void *recv_thread(void *conn_ptr){
 	}
 	return NULL;
 }
-extern "C"{
+
 void *print_thread(void *conn_ptr){
 
 	struct connection *con = static_cast<struct connection*>(conn_ptr);
@@ -193,6 +193,9 @@ void *print_thread(void *conn_ptr){
 
 			while(con->buf.is_empty()){
 				if(con->socket == connection::CLOSED_SOCKET){
+					if(term_canon_off() == -1){
+						print_error(errno);
+					}
 					pthread_exit(NULL);
 				}
 				pthread_cond_wait(&con->cv, &con->cm);
@@ -258,7 +261,6 @@ void *print_thread(void *conn_ptr){
 	}	
 
 	return NULL;
-}
 }
 int main(int argc, char *argv[]) {
 	if (argc != 2) {

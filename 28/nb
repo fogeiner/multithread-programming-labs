@@ -1,0 +1,17 @@
+I give you a rough picture, because the posix people usually claim that
+they've never heard of C++:
+
+Some implementations of pthreads support cleanup of C++ stackframes
+during cancellation. They basically throw a hidden exception back to
+the routine that launched the thread procedure, thereby invoking all
+destructors. catch(...) catches this exception, of course, may perform
+cleanup, but must rethrow the exception, because flowing out out the
+handler would mean that the cancellation is cancelled, which isn't
+supported.
+
+So for you, this is correct:
+catch(...)
+{
+printf("Inside catch...\n");
+throw;
+}
