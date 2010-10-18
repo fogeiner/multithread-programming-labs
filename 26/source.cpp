@@ -105,7 +105,7 @@ void print_screen(Buffer &buf, bool &screen_full, int rows, int cols) {
 				cur_row++;
 			}
 
-			if (cur_row == rows - 1) {
+			if (cur_row == rows) {
 				cur_row = cur_col = 0;
 				std::cout << msg_to_press_key;
 				std::cout.flush();

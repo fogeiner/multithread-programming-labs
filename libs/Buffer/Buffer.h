@@ -2,6 +2,7 @@
 #define BUFFER_H
 
 #include "Chunk/Chunk.h"
+#include <assert.h>
 
 #ifdef MT_BUFFER
 	#include "../Mutex/Mutex.h"
@@ -21,7 +22,10 @@ class Buffer {
 		}
 
 		Buffer(const Buffer&){}
-		Buffer& operator=(const Buffer&){}
+		Buffer& operator=(const Buffer&){
+			assert(false);
+			return *this;		
+		}
 	public:
 
 		Buffer() {

@@ -19,13 +19,12 @@
 #include "../libs/Fd_set/Fd_set.h"
 #include "Forwarded_connection/Forwarded_connection.h"
 
-typedef uint16_t u_int16_t;
 
 inline int max(int v1, int v2) {
     return v1 > v2 ? v1 : v2;
 }
 
-int parse_arguments(int argc, char *argv[], u_int16_t &local_port, u_int16_t &remote_port, char *&remote_host) {
+int parse_arguments(int argc, char *argv[], unsigned short &local_port, unsigned short &remote_port, char *&remote_host) {
     const int NUM_OF_EXPECTED_ARGUMENTS = 4;
     if (argc != NUM_OF_EXPECTED_ARGUMENTS) {
         return -1;
@@ -48,13 +47,13 @@ int init_tcp_socket() {
     return socket;
 }
 
-void init_local_sockaddr(sockaddr_in &local_addr, u_int16_t local_port) {
+void init_local_sockaddr(sockaddr_in &local_addr, unsigned short local_port) {
     local_addr.sin_family = AF_INET;
     local_addr.sin_port = local_port;
     local_addr.sin_addr.s_addr = INADDR_ANY;
 }
 
-int init_remote_host_sockaddr(sockaddr_in &remote_addr, char *remote_host, u_int16_t remote_port) {
+int init_remote_host_sockaddr(sockaddr_in &remote_addr, char *remote_host, unsigned short remote_port) {
     // in static memory, no need to call free
     struct hostent *remote_hostent = gethostbyname(remote_host);
 
@@ -178,8 +177,8 @@ int main(int argc, char* argv[]) {
 	act.sa_flags=0;
 	sigaction(SIGPIPE, &act, NULL); 
 	
-    u_int16_t remote_port;
-    u_int16_t local_port;
+    unsigned short remote_port;
+    unsigned short local_port;
     char *remote_host;
 
 #ifdef DEBUG

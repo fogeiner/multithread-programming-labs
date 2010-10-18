@@ -5,6 +5,8 @@
 #include <exception>
 #include <cstring>
 
+#include <assert.h>
+
 class MutexException : public std::exception {
 private:
     std::string _err;
@@ -31,6 +33,8 @@ private:
     void error_check(int retv);
 
     Mutex & operator=(const Mutex& other) {
+		assert(false);
+		return *this;
     }
 
 public:
