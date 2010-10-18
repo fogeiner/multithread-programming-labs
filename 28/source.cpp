@@ -14,7 +14,9 @@
 
 #define DEBUG
 
+#define MT_BUFFER
 #include "../libs/Buffer/Buffer.h"
+#undef MT_BUFFER
 #include "../libs/Fd_set/Fd_set.h"
 #include "../libs/Terminal/terminal.h"
 
@@ -24,7 +26,7 @@ int init_tcp_socket() {
 	return socket;
 }
 
-int init_remote_host_sockaddr(sockaddr_in &remote_addr, const char *remote_host, u_int16_t remote_port) {
+int init_remote_host_sockaddr(sockaddr_in &remote_addr, const char *remote_host, unsigned short remote_port) {
 	// in static memory, no need to call free
 
 	bzero(&remote_addr, sizeof (remote_addr));
@@ -65,9 +67,9 @@ int parse_arguments(std::string url, std::string &host, std::string &path) {
 #endif
 }
 
-int GET_send_request(int &socket, std::string &url, std::string &host) {
+int GET_send_request(int &socket, std::string &url, std::string &path, std::string &host) {
 
-	std::string request = "GET " + url + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
+	std::string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
 #ifdef DEBUG
 	fprintf(stdout, "Sending request: %s\n", request.c_str()) ;
 #endif
@@ -85,8 +87,15 @@ int GET_send_request(int &socket, std::string &url, std::string &host) {
 void print_error(int err){
 	const int BUFSIZE = 256;
 	char b[BUFSIZE];
-	strerror_r(err, b, sizeof(b));
-	fprintf(stderr, "Error: %s\n", b);
+	const char *fmt_str = "Error: %s\n";
+#ifdef __GNU
+	char *msg_ptr;
+	msg_ptr = ::strerror_r(err, b, sizeof(b));
+	fprintf(stderr, fmt_str, msg_ptr);
+#else
+	::strerror_r(err, b, sizeof(b));
+	fprintf(stderr, fmt_str, b); 
+#endif
 }
 
 struct connection{
@@ -96,8 +105,8 @@ struct connection{
 	pthread_cond_t cv;
 	Buffer buf;
 
-	connection(int socket){
-		this->socket = socket;
+	connection(int sock){
+		this->socket = sock;
 		pthread_mutex_init(&cm, NULL);
 		pthread_cond_init(&cv, NULL);
 	}
@@ -124,7 +133,7 @@ void *recv_thread(void *conn_ptr){
 			::close(con->socket);
 			con->socket = connection::CLOSED_SOCKET;
 #ifdef DEBUG
-			fprintf(stdout, "Recv thread finished");
+			fprintf(stdout, "Recv thread finished\n");
 #endif
 			pthread_exit(NULL);
 		}
@@ -133,7 +142,7 @@ void *recv_thread(void *conn_ptr){
 			::close(con->socket);
 			con->socket = connection::CLOSED_SOCKET;
 #ifdef DEBUG
-			fprintf(stdout, "Recv thread finished");
+			fprintf(stdout, "Recv thread finished\n");
 #endif
 			pthread_exit(NULL);
 		}
@@ -144,96 +153,113 @@ void *recv_thread(void *conn_ptr){
 		pthread_cond_signal(&con->cv);
 		pthread_mutex_unlock(&con->cm);
 	}
+	return NULL;
 }
-
+extern "C"{
 void *print_thread(void *conn_ptr){
+
 	struct connection *con = static_cast<struct connection*>(conn_ptr);
 
-	const int DEFAULT_SCREEN_WIDTH = 24;
-	const int DEFAUL_SCREEN_HEIGHT = 80;
 	int rows, cols;
 
 	if (get_terminal_width_height(STDOUT_FILENO, &cols, &rows) == -1) {
-		rows = DEFAUL_SCREEN_HEIGHT;
-		cols = DEFAULT_SCREEN_WIDTH;
+		print_error(errno);
 	}
 
 #ifdef DEBUG
 	fprintf(stdout, "Terminal size: %dx%d\n", cols, rows);
 #endif
 
-	const char msg_to_press_key[] = "Press enter to scroll...";
-	bool can_print = true;
-	int cur_row = 0, cur_col = 0;
-	int next_tab_position;
-	const int DEFAULT_TAB_WIDTH = 8;
-
-
-	for (;;) {
-		pthread_mutex_lock(&con->cm);
-
-		while(con->buf.is_empty()){
-			if(con->socket == connection::CLOSED_SOCKET){
-				pthread_exit(NULL);
-			}
-			pthread_cond_wait(&con->cv, &con->cm);
-		}
-
-		if(!can_print){
-			// input from user
-			const int BUFSIZE = 512;
-			char b[BUFSIZE];
-			::read(STDIN_FILENO, b, sizeof (b));
-			can_print = true;
-		} else {
-
-			Chunk *chunk = con->buf.pop_front();
-
-			int chunk_size = chunk->size();
-			const char *b = chunk->buf();
-
-			for (int i = 0; i < chunk_size; ++i) {
-				switch (b[i]) {
-					case '\t':
-						next_tab_position = DEFAULT_TAB_WIDTH * 
-							((cur_col + DEFAULT_TAB_WIDTH)/DEFAULT_TAB_WIDTH);
-						if (next_tab_position <= cols){
-							cur_col += next_tab_position;
-							break;
-						}
-
-					case '\n':
-						cur_row++;
-						cur_col = 0;
-						break;
-					default:
-						cur_col++;
-				}
-
-				putchar(b[i]);
-
-				if (cur_col == cols) {
-					cur_col = 0;
-					cur_row++;
-				}
-
-				if (cur_row == rows - 1) {
-					cur_row = cur_col = 0;
-					fputs(msg_to_press_key, stdout);
-					fflush(stdout);
-					can_print = false;
-					con->buf.put_back_front(chunk, i);
-					break;
-				}
-			}
-
-			delete chunk;
-		}
-
-		pthread_mutex_unlock(&con->cm);
+	if(!isatty(STDIN_FILENO)){
+		fprintf(stderr, "Standard input device is not a terminal\n");
+		exit(EXIT_FAILURE);
 	}
-}
 
+	try{
+		if(term_canon_on() == -1){
+			print_error(errno);
+			exit(EXIT_FAILURE);
+		}
+
+		const char msg_to_press_key[] = "Press enter to scroll...";
+		bool can_print = true;
+		int cur_row = 0, cur_col = 0;
+		int next_tab_position;
+		const int DEFAULT_TAB_WIDTH = 8;
+
+
+		for (;;) {
+			pthread_mutex_lock(&con->cm);
+
+			while(con->buf.is_empty()){
+				if(con->socket == connection::CLOSED_SOCKET){
+					pthread_exit(NULL);
+				}
+				pthread_cond_wait(&con->cv, &con->cm);
+			}
+
+			if(!can_print){
+				// input from user
+				char b;
+				::read(STDIN_FILENO, &b, sizeof (b));
+				can_print = true;
+			} else {
+
+				Chunk *chunk = con->buf.pop_front();
+
+				int chunk_size = chunk->size();
+				const char *b = chunk->buf();
+
+				for (int i = 0; i < chunk_size; ++i) {
+					switch (b[i]) {
+						case '\t':
+							next_tab_position = DEFAULT_TAB_WIDTH * 
+								((cur_col + DEFAULT_TAB_WIDTH)/DEFAULT_TAB_WIDTH);
+							if (next_tab_position <= cols){
+								cur_col += next_tab_position;
+								break;
+							}
+
+						case '\n':
+							cur_row++;
+							cur_col = 0;
+							break;
+						default:
+							cur_col++;
+					}
+
+					putchar(b[i]);
+
+					if (cur_col == cols - 1) {
+						cur_col = 0;
+						cur_row++;
+					}
+
+					if (cur_row == rows) {
+						cur_row = cur_col = 0;
+						fputs(msg_to_press_key, stdout);
+						fflush(stdout);
+						can_print = false;
+						con->buf.put_back_front(chunk, i);
+						break;
+					}
+				}
+
+				delete chunk;
+			}
+
+			pthread_mutex_unlock(&con->cm);
+		}
+	} catch(...){
+		if(term_canon_off() == -1){
+			print_error(errno);
+		}
+		throw;
+	}	
+
+	return NULL;
+}
+}
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		fprintf(stderr,  "Usage: %s  url\n", argv[0]);
@@ -269,7 +295,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (GET_send_request(serv_socket, url, host) == -1) {
+	if (GET_send_request(serv_socket, url, path, host) == -1) {
 		print_error(errno);
 		return EXIT_FAILURE;
 	}
@@ -279,7 +305,7 @@ int main(int argc, char *argv[]) {
 	pthread_t recv_tid;
 	int ret;
 
-	if((ret = pthread_create(&recv_tid, NULL, recv_thread, &con)) != 0){
+	if((ret = pthread_create(&recv_tid, NULL, &recv_thread, &con)) != 0){
 		print_error(ret);
 		return EXIT_FAILURE;
 	}
@@ -287,7 +313,7 @@ int main(int argc, char *argv[]) {
 	print_thread(&con);
 
 	if((ret = pthread_join(recv_tid, NULL)) != 0){
-		print_error(errno);
+		print_error(ret);
 		return NULL;
 	}
 

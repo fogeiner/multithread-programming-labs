@@ -119,9 +119,9 @@ void print_screen(Buffer &buf, bool &screen_full, int rows, int cols) {
 	}
 }
 
-int GET_send_request(int &socket, std::string &url, std::string &host) {
+int GET_send_request(int &socket, std::string &url, std::string &path, std::string &host) {
 
-	std::string request = "GET " + url + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
+	std::string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
 #ifdef DEBUG
 	std::clog << "Sending request:\n" << request << std::endl;
 #endif
@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
 			return EXIT_FAILURE;
 		}
 
-		if (GET_send_request(serv_socket, url, host) == -1) {
+		if (GET_send_request(serv_socket, url, path, host) == -1) {
 			std::cerr << strerror(errno) << std::endl;
 			return EXIT_FAILURE;
 		}
