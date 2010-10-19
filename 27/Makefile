@@ -1,6 +1,6 @@
 APP = bin
 OBJ = source.o ../libs/Terminal/terminal.o
-CXXFLAGS = -lpthread
+CXXFLAGS =  -lrt
 CC = g++
 
 $(APP): $(OBJ)

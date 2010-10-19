@@ -2,6 +2,7 @@
 #include <string>
 #include <cerrno>
 
+#include <aio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -118,42 +119,13 @@ void print_screen(Buffer &buf, bool &screen_full, int rows, int cols) {
 	}
 }
 
-int GET_send_request(int &socket, std::string &url, std::string &path, std::string &host) {
-
-	std::string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
-#ifdef DEBUG
-	std::clog << "Sending request:\n" << request << std::endl;
-#endif
-
-	int send_size = request.length();
-	int sent;
-
-	sent = ::send(socket, request.c_str(), send_size, 0);
-
-	if (sent != send_size) {
-		return -1;
-	}
-}
-
-int GET_recv_answer(int &socket, Buffer &recv_buf) {
-	const int BUFSIZE = 4*1024;
-	char b[BUFSIZE];
-	int read;
-	read = ::recv(socket, b, sizeof (b), 0);
-
-	if (read > 0) {
-		recv_buf.push_back(b, read);
-	}
-
-	return read;
-}
-
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		std::cerr << "Usage: " << argv[0] << " url" << std::endl;
 		return EXIT_FAILURE;
 	}
 
+	const int BUFSIZE = 1024;
 	const int HTTP_DEFAULT_PORT = 80;
 	const int CLOSED_SOCKET = -1;
 	int screen_rows_count, screen_cols_count;
@@ -167,28 +139,11 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	// saving current state of the terminal
-	struct termios saved_tty, changed_tty;
-	if(tcgetattr(STDIN_FILENO, &saved_tty) == -1){
+	if(term_canon_off() == -1){
 		std::cerr << strerror(errno) << std::endl;
-		return EXIT_FAILURE;
+		return NULL;
 	}
-
 	try{
-
-		// making changes
-		changed_tty = saved_tty;
-		changed_tty.c_lflag &= ~(ICANON);
-		changed_tty.c_cc[VMIN] = 1;
-		changed_tty.c_cc[VTIME] = 0;
-
-		// applying it to a device
-		if(tcsetattr(STDIN_FILENO, TCSANOW, &changed_tty) == -1){
-			std::cerr << strerror(errno) << std::endl;
-			return EXIT_FAILURE;
-		}
-
-
 #ifdef DEBUG
 		std::clog << "Terminal size: " << screen_rows_count << "x" << screen_cols_count << std::endl;
 #endif
@@ -200,7 +155,6 @@ int main(int argc, char *argv[]) {
 			return EXIT_FAILURE;
 		}
 
-		Buffer recv_buf;
 		std::string host, path, url(argv[1]);
 
 		if (parse_arguments(url, host, path) == -1) {
@@ -219,63 +173,149 @@ int main(int argc, char *argv[]) {
 			return EXIT_FAILURE;
 		}
 
-		if (GET_send_request(serv_socket, url, path, host) == -1) {
-			std::cerr << strerror(errno) << std::endl;
-			return EXIT_FAILURE;
-		}
 
+		Buffer recv_buf;
+		std::string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
+		
+		int request_length = request.length() + 1;
+
+		char request_str[request_length - 1];
+		request_str[request_length] = '\0';
+		for(int i = 0; i < request_length - 1; ++i){
+			request_str[i] = request[i];
+		}
+		
+		int request_offset = 0;
+
+		static struct aiocb socket_writerq;
+		bool socket_writerq_inprogress = false;
+
+		static struct aiocb socket_readrq;
+		bool socket_readrq_inprogress = false;
+		
+		static struct aiocb stdin_readrq;
+		bool stdin_readrq_inprogress = false;
+
+		static struct aiocb *const rq_list[3] = {&socket_writerq, &socket_readrq, &stdin_readrq};
+
+		int ret;
+
+		char symbol;
+		char buf[BUFSIZE];
 		bool screen_full = false;
-		Fd_set readfds;
+		bool GET_sent = false;
 
 		for (;;) {
-
+			// all is read, all is shown
 			if ((serv_socket == CLOSED_SOCKET) && (recv_buf.size() == 0)) {
 				break;
 			}
 
-			readfds.zero();
 
-			if (serv_socket != CLOSED_SOCKET) {
-				readfds.set(serv_socket);
+			bzero(&socket_writerq, sizeof(socket_writerq));
+			bzero(&socket_readrq, sizeof(socket_readrq));
+			bzero(&stdin_readrq, sizeof(stdin_readrq));
+
+	
+			// initing requests
+			if(!stdin_readrq_inprogress){
+				stdin_readrq.aio_fildes = STDIN_FILENO;
+				stdin_readrq.aio_buf = &symbol;
+				stdin_readrq.aio_nbytes = 1;
 			}
 
-			readfds.set(STDIN_FILENO);
-
-			int availible_fds = select(readfds.max_fd() + 1, &readfds.fdset(), NULL, NULL, NULL);
-
-			if (availible_fds == -1) {
-				std::cerr << strerror(errno) << std::endl;
-				return EXIT_FAILURE;
+			if ((GET_sent == false) && (!socket_writerq_inprogress)){
+				socket_writerq.aio_fildes = serv_socket;
+				socket_writerq.aio_buf = request_str + request_offset;
+				socket_writerq.aio_nbytes = request_length - request_offset;
+				socket_writerq.aio_lio_opcode = LIO_WRITE;
 			}
 
-			if (serv_socket != CLOSED_SOCKET && readfds.isset(serv_socket)) {
-				int ret = GET_recv_answer(serv_socket, recv_buf);
-				if (ret == -1) {
-					std::cerr << strerror(errno) << std::endl;
-					return EXIT_FAILURE;
+			if ((serv_socket != CLOSED_SOCKET) && (!socket_readrq_inprogress)){
+				socket_readrq.aio_fildes = serv_socket;
+				socket_readrq.aio_buf = buf;
+				socket_readrq.aio_nbytes = sizeof(buf);
+				socket_readrq.aio_lio_opcode = LIO_READ;
+			}
+
+			lio_listio(LIO_NOWAIT, rq_list, sizeof(rq_list)/sizeof(rq_list[0]), NULL);
+			
+			// testing results
+			// GET sending
+			if(GET_sent == false){
+				ret = aio_error(&socket_writerq);
+				if(ret == EINPROGRESS){
+					socket_writerq_inprogress = true;
+				} else if(ret == 0) {
+					socket_writerq_inprogress = false;
+				} else {
+					std::cerr << strerror(ret) << std::endl;
+					break;
 				}
+			}
 
-				if (ret == 0) {
+
+			// reply receiving
+			if(serv_socket != CLOSED_SOCKET){
+				ret = aio_error(&socket_readrq);
+				if(ret == EINPROGRESS){
+					socket_readrq_inprogress = true;
+				} else if(ret == 0) {
+					socket_readrq_inprogress = false;
+				} else {
+					std::cerr << strerror(ret) << std::endl;
+					break;
+				}
+			}
+
+			// stdin reading; looks pretty stupid
+			ret = aio_error(&stdin_readrq);
+			if(ret == EINPROGRESS){
+				stdin_readrq_inprogress = true;
+			} else if(ret == 0) {
+				stdin_readrq_inprogress = false;
+			} else {
+				std::cerr << strerror(ret) << std::endl;
+				break;
+			}
+
+			if(serv_socket != CLOSED_SOCKET && socket_readrq_inprogress == false){
+				int read;
+				read = aio_return(&socket_readrq);
+				if(read == 0){
+					// connection is closed
 					close(serv_socket);
 					serv_socket = CLOSED_SOCKET;
+				} else {
+					recv_buf.push_back(buf, read);
 				}
 			}
 
-			if (screen_full == true && readfds.isset(STDIN_FILENO)) {
-				char b;
-				::read(STDIN_FILENO, &b, sizeof (b));
+			if(!stdin_readrq_inprogress){
+				aio_return(&stdin_readrq);
 				screen_full = false;
 			}
 
-			if (screen_full == false) {
+			if(GET_sent == false && !socket_writerq_inprogress){
+				int wrote = aio_return(&socket_writerq);
+				request_offset += wrote;
+				if(request_offset == request.length() - 1){
+					GET_sent = true;
+				}
+			}
+
+
+			if (screen_full == false && !recv_buf.is_empty()) {
 				print_screen(recv_buf, screen_full, screen_rows_count, screen_cols_count);
 			}
+
 		}
 	} catch(...){
-		if(tcsetattr(STDIN_FILENO, TCSANOW, &saved_tty) == -1){
+		if(term_canon_on() == -1){
 			std::cerr << strerror(errno) << std::endl;
-			return EXIT_FAILURE;
 		}
+		return EXIT_FAILURE;
 	}
 }
+
 
