@@ -167,11 +167,27 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	if(term_canon_off() == -1){
+	// saving current state of the terminal
+	struct termios saved_tty, changed_tty;
+	if(tcgetattr(STDIN_FILENO, &saved_tty) == -1){
 		std::cerr << strerror(errno) << std::endl;
 		return EXIT_FAILURE;
 	}
+
 	try{
+
+		// making changes
+		changed_tty = saved_tty;
+		changed_tty.c_lflag &= ~(ICANON);
+		changed_tty.c_cc[VMIN] = 1;
+		changed_tty.c_cc[VTIME] = 0;
+
+		// applying it to a device
+		if(tcsetattr(STDIN_FILENO, TCSANOW, &changed_tty) == -1){
+			std::cerr << strerror(errno) << std::endl;
+			return EXIT_FAILURE;
+		}
+
 
 #ifdef DEBUG
 		std::clog << "Terminal size: " << screen_rows_count << "x" << screen_cols_count << std::endl;
@@ -256,7 +272,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	} catch(...){
-		if(term_canon_on() == -1){
+		if(tcsetattr(STDIN_FILENO, TCSANOW, &saved_tty) == -1){
 			std::cerr << strerror(errno) << std::endl;
 			return EXIT_FAILURE;
 		}

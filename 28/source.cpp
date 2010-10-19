@@ -176,7 +176,7 @@ void *print_thread(void *conn_ptr){
 	}
 
 	try{
-		if(term_canon_on() == -1){
+		if(term_canon_off() == -1){
 			print_error(errno);
 			exit(EXIT_FAILURE);
 		}
@@ -193,7 +193,7 @@ void *print_thread(void *conn_ptr){
 
 			while(con->buf.is_empty()){
 				if(con->socket == connection::CLOSED_SOCKET){
-					if(term_canon_off() == -1){
+					if(term_canon_on() == -1){
 						print_error(errno);
 					}
 					pthread_exit(NULL);
@@ -254,7 +254,7 @@ void *print_thread(void *conn_ptr){
 			pthread_mutex_unlock(&con->cm);
 		}
 	} catch(std::exception &ex){
-		if(term_canon_off() == -1){
+		if(term_canon_on() == -1){
 			print_error(errno);
 		}
 		exit(EXIT_FAILURE);
