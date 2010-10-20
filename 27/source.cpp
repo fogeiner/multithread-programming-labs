@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 	const int BUFSIZE = 1024;
 	const int HTTP_DEFAULT_PORT = 80;
 	const int CLOSED_SOCKET = -1;
-	const char msg_to_press_key[] = "Press space to scroll...";
+	const char msg_to_press_key[] = "Press space to scroll...\n";
 	const int DEFAULT_TAB_WIDTH = 8;
 
 
@@ -155,6 +155,8 @@ int main(int argc, char *argv[]) {
 		char recv_buf[BUFSIZE];
 		char print_buf[BUFSIZE];
 		bool screen_full = false;
+		bool stdout_writerq_active = false;
+		Chunk *chunk = NULL;
 
 		for (;;) {
 			// all is read, all is shown
@@ -163,7 +165,6 @@ int main(int argc, char *argv[]) {
 			}
 
 			int rq_list_index = 0;
-			Chunk *chunk = NULL;
 			bzero(rq_list, sizeof (rq_list));
 
 			// initing requests
@@ -175,48 +176,47 @@ int main(int argc, char *argv[]) {
 
 				if (aio_read(&stdin_readrq) == -1) {
 					std::cerr << strerror(errno) << std::endl;
-					return EXIT_FAILURE;
+					break;
 				}
 			}
 			rq_list[rq_list_index++] = &stdin_readrq;
 
 			if (!screen_full && !recv_Buf.is_empty() && !stdout_writerq_inprogress) {
 				// forming new print_buf
-				int cur_col_v = cur_col;
-				int cur_row_v = cur_row;
 
 				chunk = recv_Buf.pop_front();
 
 				const char *buf = chunk->buf();
 				const int chunk_size = chunk->size();
-
+				stdout_writerq_active = true;
 				int i;
 				for (i = 0; i < chunk_size; ++i) {
 					switch (buf[i]) {
 						case '\t':
 							next_tab_position = DEFAULT_TAB_WIDTH *
-								((cur_col_v + DEFAULT_TAB_WIDTH) / DEFAULT_TAB_WIDTH);
+								((cur_col + DEFAULT_TAB_WIDTH) / DEFAULT_TAB_WIDTH);
 							if (next_tab_position <= cols) {
-								cur_col_v += next_tab_position;
+								cur_col += next_tab_position;
 								break;
 							}
 						case '\n':
-							cur_row_v++;
-							cur_col_v = 0;
+							cur_row++;
+							cur_col = 0;
 							break;
 						default:
-							cur_col_v++;
+							cur_col++;
 					}
 
 					print_buf[i] = buf[i];
 
-					if (cur_col_v == cols) {
-						cur_col_v = 0;
-						cur_row_v++;
+					if (cur_col == cols) {
+						cur_col = 0;
+						cur_row++;
 					}
 
-					if (cur_row_v == rows - 1) {
+					if (cur_row == rows - 2) {
 						screen_full = true;
+						cur_col = cur_row = 0;
 						break;
 					}
 				}
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
 				rq_list[rq_list_index++] = &stdout_writerq;
 				if (aio_write(&stdout_writerq) == -1) {
 					std::cerr << strerror(errno) << std::endl;
-					return EXIT_FAILURE;
+					break;
 				}
 			} else if (stdout_writerq_inprogress) {
 				rq_list[rq_list_index++] = &stdout_writerq;
@@ -244,7 +244,7 @@ int main(int argc, char *argv[]) {
 
 				if (aio_read(&socket_readrq) == -1) {
 					std::cerr << strerror(errno) << std::endl;
-					return EXIT_FAILURE;
+					break;
 				}
 			} else if (socket_readrq_inprogress) {
 				rq_list[rq_list_index++] = &socket_readrq;
@@ -288,11 +288,12 @@ int main(int argc, char *argv[]) {
 			}
 
 
-			if (chunk) {
+			if (stdout_writerq_active) {
 				ret = aio_error(&stdout_writerq);
 				if (ret == EINPROGRESS) {
 					stdout_writerq_inprogress = true;
 				} else if (ret == 0) {
+					stdout_writerq_active = false;
 					stdout_writerq_inprogress = false;
 					int wrote;
 					wrote = aio_return(&stdout_writerq);
@@ -301,6 +302,9 @@ int main(int argc, char *argv[]) {
 						std::cout.flush();
 					}
 					recv_Buf.put_back_front(chunk, wrote);
+				} else {
+					std::cerr << strerror(ret) << std::endl;
+					break;
 				}
 			}
 		}
@@ -310,4 +314,10 @@ int main(int argc, char *argv[]) {
 		}
 		return EXIT_FAILURE;
 	}
+
+	if (term_canon_on() == -1) {
+		std::cerr << strerror(errno) << std::endl;
+	}
+
+	return EXIT_SUCCESS;
 }
