@@ -82,9 +82,9 @@ int main(int argc, char *argv[]) {
         threads[i].run();
     }
 
-    for(int i = 0; i < sizeof(threads)/sizeof(Thread); ++i){
-        threads[i].join();
-    }
+//    for(int i = 0; i < sizeof(threads)/sizeof(Thread); ++i){
+  //      threads[i].join();
+//    }
 
     Thread::exit();
 }

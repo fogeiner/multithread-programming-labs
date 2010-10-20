@@ -2,7 +2,7 @@
 
 APP = bin
 OBJ = source.o ../libs/Mutex/Mutex.o ../libs/Thread/Thread.o
-CXXFLAGS = -lpthread -pthread -g
+CXXFLAGS = -lpthread -pthread
 CC = g++
 
 $(APP): $(OBJ)
