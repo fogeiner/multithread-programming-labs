@@ -1,11 +1,11 @@
 #include <list>
 
-#include "MsgQueue.h"
+#include "SemMsgQueue.h"
 
-MsgQueue::~MsgQueue() {
+SemMsgQueue::~SemMsgQueue() {
 }
 
-int MsgQueue::get(char *buf, size_t bufsize) {
+int SemMsgQueue::get(char *buf, size_t bufsize) {
 
     _taken--;
     _mutex--;
@@ -32,7 +32,7 @@ int MsgQueue::get(char *buf, size_t bufsize) {
     return i;
 }
 
-int MsgQueue::put(const char *msg) {
+int SemMsgQueue::put(const char *msg) {
     _free--;
     _mutex--;
 
@@ -51,7 +51,7 @@ int MsgQueue::put(const char *msg) {
     return str.length();
 }
 
-void MsgQueue::drop() {
+void SemMsgQueue::drop() {
     dropped = true;
 
     _mutex--;

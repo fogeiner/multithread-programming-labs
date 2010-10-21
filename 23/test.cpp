@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "../libs/Semaphore/Semaphore.h"
-#include "../libs/MsgQueue/MsgQueue.h"
+#include "../libs/MsgQueue/SemMsgQueue.h"
 #include "../libs/Thread/Thread.h"
 
 int stop_flag = 0;
@@ -61,7 +61,6 @@ void *f4(void *arg) {
         if (stop_flag)
             break;
 
-
         int r = m->get(buf, sizeof (buf));
 		fprintf(stdout, "f4 read %d symbols: %s", r, buf);
         sleep(1);
@@ -75,7 +74,7 @@ void stop(int sig) {
 
 int main(int argc, char *argv[]) {
     try {
-        MsgQueue *msgq = new MsgQueue(10);
+        MsgQueue *msgq = new SemMsgQueue(10);
         Thread threads[] = {Thread(f1, msgq),
             Thread(f2, msgq), Thread(f3, msgq), Thread(f4, msgq)};
         for (int i = 0; i < sizeof (threads) / sizeof (Thread); ++i) {
