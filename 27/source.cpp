@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!isatty(STDIN_FILENO)) {
-		perror("Standard input device is not a terminal");
+		perror("isatty");
 		return EXIT_FAILURE;
 	}
 
@@ -140,17 +140,20 @@ int main(int argc, char *argv[]) {
 		int cur_row = 0, cur_col = 0;
 
 		struct aiocb socket_readrq;
-		bool socket_readrq_inprogress = false;
-
 		struct aiocb stdin_readrq;
-		bool stdin_readrq_inprogress = false;
-
 		struct aiocb stdout_writerq;
-		bool stdout_writerq_inprogress = false;
+		
+//		bool socket_readrq_inprogress = false;
+//		bool stdin_readrq_inprogress = false;
+//		bool stdout_writerq_inprogress = false;
 
-		bzero(&stdout_writerq, sizeof (stdout_writerq));
-		bzero(&socket_readrq, sizeof (socket_readrq));
-		bzero(&stdin_readrq, sizeof (stdin_readrq));
+		bool socket_readrq_done = true;
+		bool stdin_readrq_done = true;
+		bool stdout_writerq_done = true;
+
+		memset(&stdout_writerq, 0, sizeof(stdout_writerq));
+		memset(&stdin_readrq, 0, sizeof(stdin_readrq));
+		memset(&socket_readrq, 0, sizeof(socket_readrq));
 
 		struct aiocb * rq_list[3] = {NULL, NULL, NULL};
 
