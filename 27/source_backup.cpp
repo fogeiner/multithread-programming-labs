@@ -1,7 +1,6 @@
+#include <iostream>
 #include <string>
 #include <cerrno>
-#include <cstdio>
-#include <iostream>
 
 #include <aio.h>
 #include <sys/types.h>
@@ -45,7 +44,7 @@ int parse_arguments(std::string url, std::string &host, std::string &path) {
 	// starts with http://
 
 	if (url.substr(0, 7) != "http://") {
-		fprintf(stderr, "URL required\n");
+		std::cerr << "URL required" << std::endl;
 		return -1;
 	}
 
@@ -67,7 +66,7 @@ int parse_arguments(std::string url, std::string &host, std::string &path) {
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
-		fprintf(stderr, "Usage: %s url\n", argv[0]);
+		std::cerr << "Usage: " << argv[0] << " url" << std::endl;
 		return EXIT_FAILURE;
 	}
 
@@ -80,23 +79,19 @@ int main(int argc, char *argv[]) {
 
 	int rows, cols;
 	if (get_terminal_width_height(STDOUT_FILENO, &cols, &rows) == -1) {
-		perror("Terminal dimensions");
+		std::cerr << strerror(errno) << std::endl;
 	}
 
 	if (!isatty(STDIN_FILENO)) {
-		perror("Standard input device is not a terminal");
+		std::cerr << "Standard input device is not a terminal" << std::endl;
 		return EXIT_FAILURE;
 	}
 
-	if (term_save_state() == -1) {
-		perror("Saving term state");
+	if (term_canon_off() == -1) {
+		std::cerr << strerror(errno) << std::endl;
 		return EXIT_FAILURE;
 	}
 	try {
-		if(term_canon_off() == -1){
-			perror("Term canon off");
-			return EXIT_FAILURE;
-		}
 #ifdef DEBUG
 		std::clog << "Terminal size: " << rows << "x" << cols << std::endl;
 #endif
@@ -104,7 +99,7 @@ int main(int argc, char *argv[]) {
 		int serv_socket = init_tcp_socket();
 
 		if (serv_socket == -1) {
-			perror("socket: ");
+			std::cerr << strerror(errno) << std::endl;
 			return EXIT_FAILURE;
 		}
 
@@ -117,12 +112,12 @@ int main(int argc, char *argv[]) {
 		sockaddr_in remote_addr;
 
 		if (init_remote_host_sockaddr(remote_addr, host.c_str(), htons(HTTP_DEFAULT_PORT)) == -1) {
-			fprintf(stderr, "Getting remote_host info: %s\n", hstrerror(h_errno));
+			std::cerr << "Getting remote_host info: " << hstrerror(h_errno) << std::endl;
 			return EXIT_FAILURE;
 		}
 
 		if (connect(serv_socket, (const sockaddr*) & remote_addr, sizeof (remote_addr)) == -1) {
-			perror("connect");
+			std::cerr << strerror(errno) << std::endl;
 			return EXIT_FAILURE;
 		}
 
@@ -132,7 +127,7 @@ int main(int argc, char *argv[]) {
 
 		// sending request
 		if (-1 == write(serv_socket, request.c_str(), request.length())) {
-			perror("write");
+			std::cerr << strerror(errno) << std::endl;
 			return EXIT_FAILURE;
 		}
 
@@ -180,7 +175,7 @@ int main(int argc, char *argv[]) {
 				//	stdin_readrq.aio_lio_opcode = LIO_READ;
 
 				if (aio_read(&stdin_readrq) == -1) {
-					perror("aio_read");
+					std::cerr << strerror(errno) << std::endl;
 					break;
 				}
 			}
@@ -233,7 +228,7 @@ int main(int argc, char *argv[]) {
 
 				rq_list[rq_list_index++] = &stdout_writerq;
 				if (aio_write(&stdout_writerq) == -1) {
-					perror("aio_write");
+					std::cerr << strerror(errno) << std::endl;
 					break;
 				}
 			} else if (stdout_writerq_inprogress) {
@@ -248,7 +243,7 @@ int main(int argc, char *argv[]) {
 				rq_list[rq_list_index++] = &socket_readrq;
 
 				if (aio_read(&socket_readrq) == -1) {
-					perror("aio_read");
+					std::cerr << strerror(errno) << std::endl;
 					break;
 				}
 			} else if (socket_readrq_inprogress) {
@@ -266,7 +261,7 @@ int main(int argc, char *argv[]) {
 				aio_return(&stdin_readrq);
 				screen_full = false;
 			} else {
-				perror("aio_error");
+				std::cerr << strerror(ret) << std::endl;
 				break;
 			}
 
@@ -287,7 +282,7 @@ int main(int argc, char *argv[]) {
 						recv_Buf.push_back(recv_buf, read);
 					}
 				} else {
-					perror("aio_error");
+					std::cerr << strerror(ret) << std::endl;
 					break;
 				}
 			}
@@ -308,20 +303,20 @@ int main(int argc, char *argv[]) {
 					}
 					recv_Buf.put_back_front(chunk, wrote);
 				} else {
-					perror("aio_error");
+					std::cerr << strerror(ret) << std::endl;
 					break;
 				}
 			}
 		}
 	} catch (...) {
-		if (term_restore_state() == -1) {
-			perror("Term restore state");
+		if (term_canon_on() == -1) {
+			std::cerr << strerror(errno) << std::endl;
 		}
 		return EXIT_FAILURE;
 	}
 
-	if (term_restore_state() == -1) {
-		perror("Term restore state");
+	if (term_canon_on() == -1) {
+		std::cerr << strerror(errno) << std::endl;
 	}
 
 	return EXIT_SUCCESS;
