@@ -6,7 +6,8 @@
 #include <termios.h>
 #include <math.h>
 int get_terminal_width_height(int fd, int *width, int *height);
-int term_canon_on();
+int term_save_state();
+int term_restore_state();
 int term_canon_off();
 #endif
 

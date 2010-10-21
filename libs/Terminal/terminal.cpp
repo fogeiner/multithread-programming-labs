@@ -29,14 +29,22 @@ int get_terminal_width_height(int fd, int *width, int *height) {
 	return ret;
 }
 
-int term_canon_off(){
+int term_save_state(){
 	if(tcgetattr(STDIN_FILENO, &saved_tty) == -1){
 		return -1;
 	}
+}
 
+int term_restore_state(){
+		if(tcsetattr(STDIN_FILENO, TCSANOW, &saved_tty) == -1){
+			return -1;
+		}
+}
+
+int term_canon_off(){
 	// making changes
 	changed_tty = saved_tty;
-	changed_tty.c_lflag &= ~(ICANON);
+	changed_tty.c_lflag &= ~(ICANON | ECHO);
 	changed_tty.c_cc[VMIN] = 1;
 	changed_tty.c_cc[VTIME] = 0;
 
@@ -46,10 +54,5 @@ int term_canon_off(){
 	}
 }
 
-int term_canon_on(){
-	if(tcsetattr(STDIN_FILENO, TCSANOW, &saved_tty) == -1){
-		return -1;
-	}
-}
 
 

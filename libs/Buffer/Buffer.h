@@ -5,173 +5,211 @@
 #include <assert.h>
 
 #ifdef MT_BUFFER
-	#include "../Mutex/Mutex.h"
+#include "../Mutex/Mutex.h"
 #endif
 
 #include <list>
 
 class Buffer {
-	private:
+private:
 #ifdef MT_BUFFER
-		mutable Mutex m;
+    mutable Mutex m;
 #endif
-		std::list<Chunk*>_chunks;
+    std::list<Chunk*>_chunks;
 
-		Chunk *_mk_chunk(const char *buf, int size) const {
-			return new Chunk(buf, size);
-		}
+    Chunk *_mk_chunk(const char *buf, int size) const {
+        return new Chunk(buf, size);
+    }
 
-		Buffer(const Buffer&){}
-		Buffer& operator=(const Buffer&){
-			assert(false);
-			return *this;		
-		}
-	public:
+    Buffer(const Buffer&) {
+    }
 
-		Buffer() {
+    Buffer & operator=(const Buffer&) {
+        assert(false);
+        return *this;
+    }
+public:
 
-		}
+    Buffer() {
 
-		~Buffer() {
-#ifdef MT_BUFFER
-			m.lock();
-#endif
-			for (std::list<Chunk*>::iterator i = _chunks.begin();
-					i != _chunks.end();) {
-				Chunk *chunk = *i;
-				delete chunk;
-				i = _chunks.erase(i);
-			}
-#ifdef MT_BUFFER
-			m.unlock();
-#endif
-		}
+    }
 
-		int size() const {
+    ~Buffer() {
 #ifdef MT_BUFFER
-			m.lock();
+        m.lock();
 #endif
-			int size = _chunks.size();
+        for (std::list<Chunk*>::iterator i = _chunks.begin();
+                i != _chunks.end();) {
+            Chunk *chunk = *i;
+            delete chunk;
+            i = _chunks.erase(i);
+        }
 #ifdef MT_BUFFER
-			m.unlock();
+        m.unlock();
 #endif
-			return size;
-		}
+    }
 
-		void push_back(Chunk *chunk) {
+    int size() const {
 #ifdef MT_BUFFER
-			m.lock();
+        m.lock();
 #endif
-			_chunks.push_back(chunk);
+        int size = _chunks.size();
 #ifdef MT_BUFFER
-			m.unlock();
+        m.unlock();
 #endif
-		}
+        return size;
+    }
 
-		void push_front(Chunk *chunk) {
+    void push_back(Chunk *chunk) {
 #ifdef MT_BUFFER
-			m.lock();
+        m.lock();
 #endif
-			_chunks.push_front(chunk);
+        _chunks.push_back(chunk);
 #ifdef MT_BUFFER
-			m.unlock();
+        m.unlock();
 #endif
-		}
+    }
 
-		void push_back(const char *buf, int size) {
+    void push_front(Chunk *chunk) {
 #ifdef MT_BUFFER
-			m.lock();
+        m.lock();
 #endif
-			_chunks.push_back(_mk_chunk(buf, size));
+        _chunks.push_front(chunk);
 #ifdef MT_BUFFER
-			m.unlock();
+        m.unlock();
 #endif
-		}
+    }
 
-		void push_front(const char *buf, int size) {
+    void push_back(const char *buf, int size) {
 #ifdef MT_BUFFER
-			m.lock();
+        m.lock();
 #endif
-			_chunks.push_front(_mk_chunk(buf, size));
+        _chunks.push_back(_mk_chunk(buf, size));
 #ifdef MT_BUFFER
-			m.unlock();
+        m.unlock();
 #endif
-		}
+    }
 
-		Chunk* pop_back() {
+    void push_front(const char *buf, int size) {
 #ifdef MT_BUFFER
-			m.lock();
+        m.lock();
 #endif
-			if(_chunks.size() == 0){
+        _chunks.push_front(_mk_chunk(buf, size));
 #ifdef MT_BUFFER
-				m.unlock();
+        m.unlock();
 #endif
-				return NULL;
-			}
+    }
 
-			Chunk *ret_chunk_ptr = _chunks.back();
-			_chunks.pop_back();
+    Chunk* pop_back() {
 #ifdef MT_BUFFER
-			m.unlock();
+        m.lock();
 #endif
-			return ret_chunk_ptr;
-		}
+        if (_chunks.size() == 0) {
+#ifdef MT_BUFFER
+            m.unlock();
+#endif
+            return NULL;
+        }
 
-		Chunk* pop_front() {
+        Chunk *ret_chunk_ptr = _chunks.back();
+        _chunks.pop_back();
 #ifdef MT_BUFFER
-			m.lock();
+        m.unlock();
 #endif
-			if(_chunks.size() == 0){
-#ifdef MT_BUFFER
-				m.unlock();
-#endif
-				return NULL;
-			}
+        return ret_chunk_ptr;
+    }
 
-			Chunk *ret_chunk_ptr = _chunks.front();
-			_chunks.pop_front();
+    Chunk* pop_front() {
 #ifdef MT_BUFFER
-			m.unlock();
+        m.lock();
 #endif
-			return ret_chunk_ptr;
-		}
+        if (_chunks.size() == 0) {
+#ifdef MT_BUFFER
+            m.unlock();
+#endif
+            return NULL;
+        }
 
-		int put_back_front(Chunk *&chunk, int bytes_used){
+        Chunk *ret_chunk_ptr = _chunks.front();
+        _chunks.pop_front();
 #ifdef MT_BUFFER
-			m.lock();
+        m.unlock();
 #endif
-			if(bytes_used == 0){
-				_chunks.push_front(chunk);
-				int size = chunk->size();
-#ifdef MT_BUFFER
-				m.unlock();
-#endif
-				return size;
-			}
+        return ret_chunk_ptr;
+    }
 
-			int chunk_size = chunk->size();
-			const char *buf = chunk->buf();
-			if(bytes_used < chunk_size){
-				_chunks.push_front(_mk_chunk((buf + bytes_used), (chunk_size - bytes_used)));
-			}
-			delete chunk;
-			chunk = NULL;
+    Chunk* front() {
 #ifdef MT_BUFFER
-			m.unlock();
+        m.lock();
 #endif
-			return (chunk_size - bytes_used);
-		}
+        if (_chunks.size() == 0) {
+#ifdef MT_BUFFER
+            m.unlock();
+#endif
+            return NULL;
+        }
 
-		bool is_empty(){
+        Chunk *ret_chunk_ptr = _chunks.front();
 #ifdef MT_BUFFER
-			m.lock();
+        m.unlock();
 #endif
-			int size =  _chunks.size();
+        return ret_chunk_ptr;
+    }
+
+    Chunk* back() {
 #ifdef MT_BUFFER
-			m.unlock();   
+        m.lock();
 #endif
-			return (size == 0) ? true : false;
-		}
+        if (_chunks.size() == 0) {
+#ifdef MT_BUFFER
+            m.unlock();
+#endif
+            return NULL;
+        }
+
+        Chunk *ret_chunk_ptr = _chunks.back();
+#ifdef MT_BUFFER
+        m.unlock();
+#endif
+        return ret_chunk_ptr;
+    }
+
+    int put_back_front(Chunk *&chunk, int bytes_used) {
+#ifdef MT_BUFFER
+        m.lock();
+#endif
+        if (bytes_used == 0) {
+            _chunks.push_front(chunk);
+            int size = chunk->size();
+#ifdef MT_BUFFER
+            m.unlock();
+#endif
+            return size;
+        }
+
+        int chunk_size = chunk->size();
+        const char *buf = chunk->buf();
+        if (bytes_used < chunk_size) {
+            _chunks.push_front(_mk_chunk((buf + bytes_used), (chunk_size - bytes_used)));
+        }
+        delete chunk;
+        chunk = NULL;
+#ifdef MT_BUFFER
+        m.unlock();
+#endif
+        return (chunk_size - bytes_used);
+    }
+
+    bool is_empty() {
+#ifdef MT_BUFFER
+        m.lock();
+#endif
+        int size = _chunks.size();
+#ifdef MT_BUFFER
+        m.unlock();
+#endif
+        return (size == 0) ? true : false;
+    }
 };
 
 #endif
