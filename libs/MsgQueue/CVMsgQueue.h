@@ -1,29 +1,23 @@
 #pragma once
-#include "../Semaphore/Semaphore.h"
+#include "../CondVar/CondVar.h"
+#include "../Mutex/Mutex.h"
 #include "MsgQueue.h"
 #include <list>
 
 
-class SemMsgQueue: public MsgQueue {
+class CVMsgQueue: public MsgQueue {
 private:
-    bool dropped;
-
-	// mutex = i.e. binary semaphore
-    Semaphore _mutex;
-	// number of taken slots
-    Semaphore _taken;
-	// number of free slots
-    Semaphore _free;
-
+    bool _dropped;
+	int _queue_size;
+	CondVar _cv;
+	Mutex _m;
 public:
 
-    SemMsgQueue(int queue_size = 10) :
-    dropped(false),
-    _mutex(1),
-    _free(queue_size),
-    _taken(0){
+    CVMsgQueue(int queue_size = 10) :
+    _dropped(false),
+    _queue_size(queue_size){
     }
-    ~SemMsgQueue();
+    ~CVMsgQueue();
 
     int get(char *buf, size_t bufsize);
     int put(const char *msg);

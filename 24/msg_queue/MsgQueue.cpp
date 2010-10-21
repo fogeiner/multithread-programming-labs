@@ -1,16 +1,16 @@
 #include <list>
 
-#include "SemMsgQueue.h"
+#include "MsgQueue.h"
 
-SemMsgQueue::~SemMsgQueue() {
+MsgQueue::~MsgQueue() {
 }
 
-int SemMsgQueue::get(char *buf, size_t bufsize) {
+int MsgQueue::get(char *buf, size_t bufsize) {
 
     _taken--;
     _mutex--;
 
-    if (_dropped) {
+    if (dropped) {
         _taken++;
         _mutex++;
         return 0;
@@ -23,22 +23,20 @@ int SemMsgQueue::get(char *buf, size_t bufsize) {
     int str_length = str.length();
 
     int i;
-    for (i = 0; (i < bufsize) && (i < str_length + 1); ++i) {
+    for (i = 0; (i < bufsize) && (i < str_length); ++i) {
         buf[i] = s[i];
     }
-	
-	buf[bufsize - 1] = '\0';
 
     _mutex++;
     _free++;
     return i;
 }
 
-int SemMsgQueue::put(const char *msg) {
+int MsgQueue::put(const char *msg) {
     _free--;
     _mutex--;
 
-    if (_dropped) {
+    if (dropped) {
         _free++;
         _mutex++;
         return 0;
@@ -50,14 +48,13 @@ int SemMsgQueue::put(const char *msg) {
     _mutex++;
     _taken++;
 
-    return str.length() + 1;
+    return str.length();
 }
 
-void SemMsgQueue::drop() {
-    _dropped = true;
+void MsgQueue::drop() {
+    dropped = true;
 
     _mutex--;
-	// allowing all threads waiting for semaphores to unlock
     _free++;
     _taken++;
 

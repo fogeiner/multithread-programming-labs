@@ -6,7 +6,7 @@
 
 class SemMsgQueue: public MsgQueue {
 private:
-    bool dropped;
+    bool _dropped;
 
 	// mutex = i.e. binary semaphore
     Semaphore _mutex;
@@ -18,7 +18,7 @@ private:
 public:
 
     SemMsgQueue(int queue_size = 10) :
-    dropped(false),
+    _dropped(false),
     _mutex(1),
     _free(queue_size),
     _taken(0){

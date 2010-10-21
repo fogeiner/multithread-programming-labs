@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "../libs/Semaphore/Semaphore.h"
-#include "../libs/MsgQueue/SemMsgQueue.h"
+#include "../libs/MsgQueue/CVMsgQueue.h"
 #include "../libs/Thread/Thread.h"
 
 int stop_flag = 0;
@@ -69,17 +69,18 @@ void *f4(void *arg) {
     return NULL;
 }
 
-void drop(int sig){
+void drop(int sig) {
 	msgq->drop();
 }
 
-void stop(int sig) {
-    stop_flag = 1;
+void stop(int sig){
+	stop_flag = 1;
 }
+
 
 int main(int argc, char *argv[]) {
     try {
-        msgq = new SemMsgQueue(10);
+        msgq = new CVMsgQueue(10);
         Thread threads[] = {Thread(f1, msgq),
             Thread(f2, msgq), Thread(f3, msgq), Thread(f4, msgq)};
         for (int i = 0; i < sizeof (threads) / sizeof (Thread); ++i) {
@@ -87,8 +88,7 @@ int main(int argc, char *argv[]) {
         }
 
         signal(SIGINT, drop);
-        signal(SIGQUIT, stop);
-        pause();
+		signal(SIGQUIT, stop);
 
         for (int i = 0; i < sizeof (threads) / sizeof (Thread); ++i) {
             threads[i].join();

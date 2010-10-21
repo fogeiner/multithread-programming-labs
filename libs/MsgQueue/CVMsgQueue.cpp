@@ -1,66 +1,65 @@
 #include <list>
 
-#include "SemMsgQueue.h"
+#include "CVMsgQueue.h"
 
-SemMsgQueue::~SemMsgQueue() {
+CVMsgQueue::~CVMsgQueue() {
 }
 
-int SemMsgQueue::get(char *buf, size_t bufsize) {
+int CVMsgQueue::get(char *buf, size_t bufsize) {
 
-    _taken--;
-    _mutex--;
 
-    if (dropped) {
-        _taken++;
-        _mutex++;
-        return 0;
-    }
+	_m.lock();
+	while(_msgs.size() == 0 && !_dropped){
+		_cv.wait(_m);
+	}
+
+	if(_dropped){
+		_m.unlock();
+		return 0;
+	}
 
     std::string str = _msgs.back();
     _msgs.pop_back();
+
+	_m.unlock();
 
     const char *s = str.c_str();
     int str_length = str.length();
 
     int i;
-    for (i = 0; (i < bufsize) && (i < str_length); ++i) {
+    for (i = 0; (i < bufsize) && (i < str_length + 1); ++i) {
         buf[i] = s[i];
     }
+	buf[bufsize - 1] = '\0';
 
-    _mutex++;
-    _free++;
     return i;
 }
 
-int SemMsgQueue::put(const char *msg) {
-    _free--;
-    _mutex--;
-
-    if (dropped) {
-        _free++;
-        _mutex++;
-        return 0;
-    }
-
+int CVMsgQueue::put(const char *msg) {
+	_m.lock();
+	while(_msgs.size() >= _queue_size && !_dropped){
+		_cv.wait(_m);
+	}
+	if(_dropped){
+		_m.unlock();
+		return 0;
+	}
     std::string str(msg);
     _msgs.push_front(str);
 
-    _mutex++;
-    _taken++;
+	_cv.broadcast();
+	_m.unlock();
 
-    return str.length();
+    return str.length() + 1;
 }
 
-void SemMsgQueue::drop() {
-    dropped = true;
+void CVMsgQueue::drop() {
+    _dropped = true;
 
-    _mutex--;
-	// allowing all threads waiting for semaphores to unlock
-    _free++;
-    _taken++;
+	_cv.broadcast();
 
+	_m.lock();
     _msgs.erase(_msgs.begin(), _msgs.end());
-
-    _mutex++;
+	_m.unlock();
 }
 
