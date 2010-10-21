@@ -1,23 +1,25 @@
 #include "CondVar.h"
 
 void CondVar::error_check(int retv) {
+	if(retv != 0){
     char buf[256];
-    ::strerror_r(errno, buf, sizeof (buf));
-    if (retv != 0) {
-        throw CondVarException(buf);
-    }
+#ifdef __GNU
+	char *msg_ptr;
+    msg_ptr = ::strerror_r(retv, buf, sizeof (buf));
+    throw CondVarException(msg_ptr);
+#else
+	::strerror_r(retv, buf, sizeof(buf));
+	throw CondVarException(buf);
+#endif
+	}
 }
 
 CondVar::CondVar() {
-    error_check(pthread_condattr_init(&_caid));
-    error_check(pthread_cond_init(&_cvid, &_caid));
-    error_check(pthread_mutex_init(&_mid, NULL));
+    error_check(pthread_cond_init(&_cvid, NULL));
 }
 
 CondVar::~CondVar() {
-    pthread_condattr_destroy(&_caid);
     pthread_cond_destroy(&_cvid);
-    pthread_mutex_destroy(&_mid);
 }
 
 void CondVar::signal() {
@@ -28,10 +30,10 @@ void CondVar::broadcast() {
     error_check(pthread_cond_broadcast(&_cvid));
 }
 
-void CondVar::wait() {
-    error_check(pthread_cond_wait(&_cvid, &_mid));
+void CondVar::wait(Mutex &m) {
+    error_check(pthread_cond_wait(&_cvid, &m._mid));
 }
 
-void CondVar::timedwait(const struct timespec *abstime) {
-    error_check(pthread_cond_timedwait(&_cvid, &_mid, abstime));
+void CondVar::timedwait(Mutex &m, const struct timespec *abstime) {
+    error_check(pthread_cond_timedwait(&_cvid, &m._mid, abstime));
 }

@@ -24,24 +24,24 @@ public:
 
 class CondVar {
 private:
-    pthread_mutex_t _mid;
     pthread_cond_t _cvid;
-    pthread_condattr_t _caid;
 
     void error_check(int retv);
 
     CondVar & operator=(const CondVar& other) {
+		assert(false);
+		return *this;
     }
 
     CondVar(const CondVar& other) {
+		assert(false);
     }
-    // TODO: replace mutex with Mutex
 public:
     CondVar();
     ~CondVar();
 
     void signal();
     void broadcast();
-    void wait();
-    void timedwait(const struct timespec *abstime);
+    void wait(Mutex &m);
+    void timedwait(Mutex &m, const struct timespec *abstime);
 };
