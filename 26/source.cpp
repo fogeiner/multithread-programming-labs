@@ -167,11 +167,15 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	if(term_canon_off() == -1){
+	if(term_save_state() == -1){
 		std::cerr << strerror(errno) << std::endl;
 		return EXIT_FAILURE;
 	}
 	try{
+		if(term_canon_off() == -1){
+			std::cerr << strerror(errno) << std::endl;
+			return EXIT_FAILURE;
+		}
 
 #ifdef DEBUG
 		std::clog << "Terminal size: " << screen_rows_count << "x" << screen_cols_count << std::endl;
@@ -223,7 +227,8 @@ int main(int argc, char *argv[]) {
 				readfds.set(serv_socket);
 			}
 
-			readfds.set(STDIN_FILENO);
+			if(screen_full)
+				readfds.set(STDIN_FILENO);
 
 			int availible_fds = select(readfds.max_fd() + 1, &readfds.fdset(), NULL, NULL, NULL);
 
@@ -256,10 +261,13 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	} catch(...){
-		if(term_canon_on() == -1){
+		if(term_restore_state() == -1){
 			std::cerr << strerror(errno) << std::endl;
 			return EXIT_FAILURE;
 		}
+	}
+	if(term_restore_state() == -1){
+		std::cerr << strerror(errno) << std::endl;
 	}
 }
 
