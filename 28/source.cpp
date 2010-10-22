@@ -14,9 +14,7 @@
 
 #define DEBUG
 
-#define MT_BUFFER
 #include "../libs/Buffer/Buffer.h"
-#undef MT_BUFFER
 #include "../libs/Fd_set/Fd_set.h"
 #include "../libs/Terminal/terminal.h"
 
@@ -128,6 +126,7 @@ void *recv_thread(void *conn_ptr){
 	for(;;){
 		read = ::recv(con->socket, b, sizeof(b), 0);
 
+		pthread_mutex_lock(&con->cm);
 		if(read == -1){
 			print_error(errno);
 			::close(con->socket);
@@ -135,6 +134,8 @@ void *recv_thread(void *conn_ptr){
 #ifdef DEBUG
 			fprintf(stdout, "Recv thread finished\n");
 #endif
+		pthread_cond_signal(&con->cv);
+		pthread_mutex_unlock(&con->cm);
 			pthread_exit(NULL);
 		}
 
@@ -144,12 +145,12 @@ void *recv_thread(void *conn_ptr){
 #ifdef DEBUG
 			fprintf(stdout, "Recv thread finished\n");
 #endif
+		pthread_cond_signal(&con->cv);
+		pthread_mutex_unlock(&con->cm);
 			pthread_exit(NULL);
 		}
 
 		con->buf.push_back(b, read);
-
-		pthread_mutex_lock(&con->cm);
 		pthread_cond_signal(&con->cv);
 		pthread_mutex_unlock(&con->cm);
 	}
@@ -175,6 +176,10 @@ void *print_thread(void *conn_ptr){
 		exit(EXIT_FAILURE);
 	}
 
+	if(term_save_state() == -1){
+		print_error(errno);
+		exit(EXIT_FAILURE);
+	}
 	try{
 		if(term_canon_off() == -1){
 			print_error(errno);
@@ -193,9 +198,10 @@ void *print_thread(void *conn_ptr){
 
 			while(con->buf.is_empty()){
 				if(con->socket == connection::CLOSED_SOCKET){
-					if(term_canon_on() == -1){
+					if(term_restore_state() == -1){
 						print_error(errno);
 					}
+					pthread_mutex_unlock(&con->cm);
 					pthread_exit(NULL);
 				}
 				pthread_cond_wait(&con->cv, &con->cm);
@@ -254,7 +260,7 @@ void *print_thread(void *conn_ptr){
 			pthread_mutex_unlock(&con->cm);
 		}
 	} catch(std::exception &ex){
-		if(term_canon_on() == -1){
+		if(term_restore_state() == -1){
 			print_error(errno);
 		}
 		exit(EXIT_FAILURE);
