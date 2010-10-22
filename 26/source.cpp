@@ -63,7 +63,7 @@ int parse_arguments(std::string url, std::string &host, std::string &path) {
 #endif
 }
 
-void print_screen(Buffer &buf, bool &screen_full, int rows, int cols) {
+void print_screen(Buffer &buf, bool &screen_full, int &print_screen_counter, int rows, int cols) {
 
 	static const char msg_to_press_key[] = "Press enter to scroll...";
 	static int cur_row = 0, cur_col = 0;
@@ -108,7 +108,10 @@ void print_screen(Buffer &buf, bool &screen_full, int rows, int cols) {
 				cur_row = cur_col = 0;
 				std::cout << msg_to_press_key;
 				std::cout.flush();
-				screen_full = true;
+				print_screen_counter--;
+				if(print_screen_counter == 0){
+					screen_full = true;
+				}
 				buf.put_back_front(chunk, i);
 				return;
 			}
@@ -214,6 +217,7 @@ int main(int argc, char *argv[]) {
 
 		bool screen_full = false;
 		Fd_set readfds;
+		int print_screen_counter = 1;
 
 		for (;;) {
 
@@ -227,9 +231,11 @@ int main(int argc, char *argv[]) {
 				readfds.set(serv_socket);
 			}
 
-			if(screen_full)
+			if(screen_full){
 				readfds.set(STDIN_FILENO);
+			}
 
+			// in case no fds are set select will block
 			int availible_fds = select(readfds.max_fd() + 1, &readfds.fdset(), NULL, NULL, NULL);
 
 			if (availible_fds == -1) {
@@ -250,14 +256,15 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-			if (screen_full == true && readfds.isset(STDIN_FILENO)) {
+			if (readfds.isset(STDIN_FILENO)) {
 				char b;
 				::read(STDIN_FILENO, &b, sizeof (b));
+				print_screen_counter++;
 				screen_full = false;
 			}
 
 			if (screen_full == false) {
-				print_screen(recv_buf, screen_full, screen_rows_count, screen_cols_count);
+				print_screen(recv_buf, screen_full, print_screen_counter, screen_rows_count, screen_cols_count);
 			}
 		}
 	} catch(...){
