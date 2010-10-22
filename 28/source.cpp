@@ -13,6 +13,7 @@
 #include <pthread.h>
 
 #define DEBUG
+#undef DEBUG
 
 #include "../libs/Buffer/Buffer.h"
 #include "../libs/Fd_set/Fd_set.h"
@@ -115,7 +116,7 @@ struct connection{
 	}
 };
 
-
+extern "C"
 void *recv_thread(void *conn_ptr){
 	struct connection *con = static_cast<struct connection*>(conn_ptr);
 	const int BUFSIZE = 4 * 1024;
@@ -157,6 +158,7 @@ void *recv_thread(void *conn_ptr){
 	return NULL;
 }
 
+extern "C"
 void *print_thread(void *conn_ptr){
 
 	struct connection *con = static_cast<struct connection*>(conn_ptr);

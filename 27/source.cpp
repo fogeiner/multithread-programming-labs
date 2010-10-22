@@ -83,7 +83,9 @@ int main(int argc, char *argv[]) {
         perror("Terminal dimensions");
     }
 
-    if (!isatty(STDIN_FILENO)) {
+    char *print_buf = new char[cols * rows];
+    
+	if (!isatty(STDIN_FILENO)) {
         perror("isatty");
         return EXIT_FAILURE;
     }
@@ -138,7 +140,6 @@ int main(int argc, char *argv[]) {
 
         int next_tab_position;
         int cur_row = 0, cur_col = 0;
-        char print_buf[cols * rows];
         char recv_buf[BUFSIZE];
         char stdin_read_buf[1];
         int screens_to_print_count = 1;
@@ -293,12 +294,15 @@ int main(int argc, char *argv[]) {
         if (term_restore_state() == -1) {
             perror("Term restore state");
         }
+		delete[] print_buf;
         return EXIT_FAILURE;
     }
 
     if (term_restore_state() == -1) {
         perror("Term restore state");
     }
+
+	delete[] print_buf;
 
     return EXIT_SUCCESS;
 }
