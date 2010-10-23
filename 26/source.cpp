@@ -215,7 +215,9 @@ int main(int argc, char *argv[]) {
 			return EXIT_FAILURE;
 		}
 
+		const int STDIN_BUFSIZE = 128;
 		bool screen_full = false;
+		char stdin_buf[STDIN_BUFSIZE];
 		Fd_set readfds;
 		int print_screen_counter = 1;
 
@@ -231,9 +233,7 @@ int main(int argc, char *argv[]) {
 				readfds.set(serv_socket);
 			}
 
-			if(screen_full){
-				readfds.set(STDIN_FILENO);
-			}
+			readfds.set(STDIN_FILENO);
 
 			// in case no fds are set select will block
 			int availible_fds = select(readfds.max_fd() + 1, &readfds.fdset(), NULL, NULL, NULL);
@@ -257,9 +257,9 @@ int main(int argc, char *argv[]) {
 			}
 
 			if (readfds.isset(STDIN_FILENO)) {
-				char b;
-				::read(STDIN_FILENO, &b, sizeof (b));
-				print_screen_counter++;
+				int read;
+				read = ::read(STDIN_FILENO, stdin_buf, sizeof (stdin_buf));
+				print_screen_counter += (read == 0) ? 1 : read;
 				screen_full = false;
 			}
 

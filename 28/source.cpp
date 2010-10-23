@@ -164,6 +164,9 @@ void *print_thread(void *conn_ptr){
 	struct connection *con = static_cast<struct connection*>(conn_ptr);
 
 	int rows, cols;
+	const int STDIN_BUFSIZE = 128;
+	char stdin_buf[STDIN_BUFSIZE];
+	int print_screen_counter = 1;
 
 	if (get_terminal_width_height(STDOUT_FILENO, &cols, &rows) == -1) {
 		print_error(errno);
@@ -211,8 +214,9 @@ void *print_thread(void *conn_ptr){
 
 			if(!can_print){
 				// input from user
-				char b;
-				::read(STDIN_FILENO, &b, sizeof (b));
+				int read;
+				read = ::read(STDIN_FILENO, stdin_buf, sizeof (stdin_buf));
+				print_screen_counter += (read == 0) ? 1 : read;
 				can_print = true;
 			} else {
 
@@ -250,7 +254,10 @@ void *print_thread(void *conn_ptr){
 						cur_row = cur_col = 0;
 						fputs(msg_to_press_key, stdout);
 						fflush(stdout);
-						can_print = false;
+						print_screen_counter--;
+						if(print_screen_counter == 0){
+							can_print = false;
+						}
 						con->buf.put_back_front(chunk, i);
 						break;
 					}

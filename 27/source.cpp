@@ -18,6 +18,7 @@
 #include "../libs/Terminal/terminal.h"
 
 #define DEBUG
+#undef DEBUG
 
 int init_tcp_socket() {
     int socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -72,6 +73,7 @@ int main(int argc, char *argv[]) {
     }
 
     const int BUFSIZE = 1024;
+	const int STDIN_BUFSIZE = 128;
     const int HTTP_DEFAULT_PORT = 80;
     const int CLOSED_SOCKET = -1;
     const char msg_to_press_key[] = "\nPress space to scroll...";
@@ -141,7 +143,7 @@ int main(int argc, char *argv[]) {
         int next_tab_position;
         int cur_row = 0, cur_col = 0;
         char recv_buf[BUFSIZE];
-        char stdin_read_buf[1];
+        char stdin_read_buf[STDIN_BUFSIZE];
         int screens_to_print_count = 1;
         bool can_print = true;
         int ret;
@@ -172,7 +174,7 @@ int main(int argc, char *argv[]) {
 
 
         // socket_readrq -> 0; stdin_readrq -> 1; stdout_writerq -> 2
-        struct aiocb * rq_list[3] = {NULL, &stdin_readrq, NULL};
+        struct aiocb * rq_list[3] = {&socket_readrq, &stdin_readrq, NULL};
 
         Chunk *chunk;
         int count_to_flush;
@@ -198,7 +200,6 @@ int main(int argc, char *argv[]) {
                     perror("aio_read");
                     break;
                 }
-                rq_list[0] = &socket_readrq;
             }
 
             if (stdout_writerq_done && !recv_Buf.is_empty() && can_print) {
@@ -232,6 +233,8 @@ int main(int argc, char *argv[]) {
                         cur_col = 0;
                         cur_row++;
                     }
+                    
+					count_to_flush = i + 1;
 
                     if (cur_row == rows) {
                         screens_to_print_count--;
@@ -240,7 +243,6 @@ int main(int argc, char *argv[]) {
                             can_print = false;
                         }
 
-                        count_to_flush = i;
 
                         for (int j = 0; j < sizeof (msg_to_press_key) - 1; j++, i++) {
                             print_buf[i] = msg_to_press_key[j];
@@ -259,12 +261,20 @@ int main(int argc, char *argv[]) {
                 rq_list[2] = &stdout_writerq;
             }
 
+#ifdef DEBUG
+//			std::clog << "socket requested=" << socket_readrq_done << "\n"
+//				"stdin requested=" << stdin_readrq_done << "\n" <<
+//				"stdout requested=" << stdout_write_requested << std::endl;
+#endif
             aio_suspend(rq_list, 3, NULL);
 
             if (aio_error(&stdin_readrq) == 0) {
                 stdin_readrq_done = true;
                 ret = aio_return(&stdin_readrq);
-                screens_to_print_count++;
+#ifdef DEBUG
+				std::clog << "Read " << ret << " symbols from stdin" << std::endl;
+#endif
+                screens_to_print_count += ret == 0 ? 1 : ret;
                 can_print = true;
             }
 
@@ -274,12 +284,18 @@ int main(int argc, char *argv[]) {
                 rq_list[2] = NULL;
                 aio_return(&stdout_writerq);
                 recv_Buf.pop_front();
+#ifdef DEBUG 
+				std::clog << "Returning " << count_to_flush << " symbols to buffer" << std::endl;
+#endif
                 recv_Buf.put_back_front(chunk, count_to_flush);
             }
 
             if (serv_socket != CLOSED_SOCKET && aio_error(&socket_readrq) == 0) {
                 socket_readrq_done = true;
                 ret = aio_return(&socket_readrq);
+#ifdef DEBUG
+				std::clog << "Read " << ret << " symbols from socket" << std::endl;
+#endif
                 if (ret != 0) {
                     recv_Buf.push_back(recv_buf, ret);
                 } else {
