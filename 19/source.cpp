@@ -47,9 +47,21 @@ private:
         return n;
     }
 
+
+
+    pthread_t sort_tid;
+    Node *head;
+    int list_size;
+    mutable pthread_rwlock_t rwlock;
+public:
+
     void sort_list() {
-        if (list_size <= 1)
+            pthread_rwlock_wrlock(&rwlock);
+        if (list_size <= 1){
+
+            pthread_rwlock_unlock(&rwlock);
             return;
+		}
 
         for (int i = list_size - 1; i > 0; --i) {
             for (int j = 0; j < i; ++j) {
@@ -59,33 +71,8 @@ private:
                     Node::swap(n1, n2);
             }
         }
+            pthread_rwlock_unlock(&rwlock);
     }
-
-    static void *auto_sort(void *ptr) {
-        List *list = static_cast<List*> (ptr);
-        const static int SLEEP_TIME = 1;
-        for (;;) {
-            sleep(SLEEP_TIME);
-
-            if (list->head == NULL) {
-                break;
-            }
-            pthread_rwlock_wrlock(&list->rwlock);
-
-            list->sort_list();
-
-            pthread_rwlock_unlock(&list->rwlock);
-        }
-
-        return NULL;
-    }
-
-
-    pthread_t sort_tid;
-    Node *head;
-    int list_size;
-    mutable pthread_rwlock_t rwlock;
-public:
 
     List() : list_size(0) {
         head = new Node("", NULL, NULL);
@@ -93,7 +80,6 @@ public:
         head->prev = head;
 
         pthread_rwlock_init(&rwlock, NULL);
-        pthread_create(&sort_tid, NULL, &auto_sort, this);
     }
 
     ~List() {
@@ -111,7 +97,6 @@ public:
 
         pthread_rwlock_unlock(&rwlock);
 
-        pthread_join(sort_tid, NULL);
         pthread_rwlock_destroy(&rwlock);
     }
 
@@ -147,9 +132,29 @@ public:
     }
 };
 
+    static void *auto_sort(void *ptr) {
+        List *list = static_cast<List*> (ptr);
+        const static int SLEEP_TIME = 5;
+        for (;;) {
+            sleep(SLEEP_TIME);
+
+            if (list->head == NULL) {
+                break;
+            }
+
+            list->sort_list();
+
+        }
+
+        return NULL;
+    }
 int main(int argc, char *argv[]) {
 
-    List list;
+	pthread_t sort_tid;
+    List *list = new List();
+
+	pthread_create(&sort_tid, NULL, auto_sort, list);
+
     cout << "Input lines, please:" << endl;
     string s;
     for (;;) {
@@ -159,10 +164,13 @@ int main(int argc, char *argv[]) {
             break;
 
         if (s.empty()) {
-            list.print_list();
+            list->print_list();
         } else {
-            list.push_front(s);
+            list->push_front(s);
         }
     }
-    pthread_exit(NULL);
+
+	delete list;
+	pthread_join(sort_tid, NULL);
+	pthread_exit(NULL);
 }
