@@ -50,97 +50,78 @@ private:
         }
     };
 
-    pthread_t sort_tid;
     Node *head;
     int list_size;
 
-    static void *auto_sort(void *ptr){
-        List *list = static_cast<List*> (ptr);
-           
-        const static int SLEEP_TIME = 1;
-        
-        for (;;) {
-            sleep(SLEEP_TIME);
-
-            if (list->head == NULL) {
-                break;
-            }
-     
-            list->sort_list();
-        }
-
-        return NULL;
-    }
-
-    Node *getNodeIndexOf(int index) {
-        int i = 0;
-        assert(index >= 0);
-        Node *n = head->next;
-
-        for (;; n = n->next, ++i) {
-            if (i == index) {
-                break;
-            }
-        }
-        return n;
-    }
-
-    void sort_list() {
-        if (list_size <= 1)
-            return;
-
-		bool swapped;
-
-        for (int i = list_size - 1; i > 0; --i) {
-            for (int j = 0; j < i; ++j) {
-				swapped = false;
-                Node *n1 = getNodeIndexOf(j);
-                Node *n2 = getNodeIndexOf(j + 1);
-                n1->wrlock();
-                n2->wrlock();
-                if (Node::compare(n1, n2) > 0){
-                    Node::swap(n1, n2);
-					swapped = true;
-				}
-             
-                n2->unlock();
-                n1->unlock();
-
-				if(swapped){
-					sleep(1);
-				}
-            }
-        }
-    }
-
 public:
+
+		void sort_list(int *sleep_time = NULL) {
+			static const int SWAP_TIME = 1;
+
+			if (list_size <= 1){
+				return;
+			}
+
+			Node *bound = head;
+			Node *n1, *n2;
+
+			for(;;){
+			
+				head->rdlock();
+				n1 = head->next;
+				head->unlock();
+
+				n1->wrlock();   
+				n2 = n1->next;
+				if(n2 == bound){
+					n1->unlock();
+					break;
+				}
+
+				n2->wrlock();
+				for(;;){
+					if(Node::compare(n1, n2) > 0){
+						Node::swap(n1, n2);
+						if(sleep_time != NULL && *sleep_time != 0){
+							sleep(*sleep_time);
+						}
+					}
+
+					if(n2->next != bound){
+						n1 = n2;
+						n2 = n2->next;
+						n2->wrlock();
+						n1->prev->unlock();
+					} else {
+						n2->unlock();
+						n1->unlock();
+						bound = n2;
+						break;
+					}
+				}
+			}
+
+		}
 
     List() : list_size(0) {
         head = new Node("", NULL, NULL);
         head->next = head;
         head->prev = head;
-
-        pthread_create(&sort_tid, NULL, &auto_sort, this);
     }
 
     ~List() {
-        Node *head_ptr = head;
-
-        head = NULL;
-        pthread_cancel(sort_tid);
-        pthread_join(sort_tid, NULL);
         
-        head_ptr->wrlock();
-        
-        for (Node *n = head_ptr->next; n != head_ptr;) {
-            Node *t = n->next;
-            delete n;
-            n = t;
-        }
+        	head->wrlock();
 
-        list_size = 0;
-        head_ptr->unlock();
-        delete head_ptr;
+			for (Node *n = head->next; n != head;) {
+				Node *t = n->next;
+				delete n;
+				n = t;
+			}
+
+			list_size = 0;
+			head->unlock();
+			delete head;
     }
 
     int size() const {
@@ -190,30 +171,60 @@ public:
 
 
         for (Node *n = head->next; n != head; n = n->next) {
-            n->rdlock();
+      //      n->rdlock();
             cout << "Entry " << counter << "\t" << n->data << endl;
-            n->unlock();
+      //      n->unlock();
             counter++;
         }
     }
 };
 
+bool stop_flag = false;
+int sleep_time = 1;
+static void *auto_sort(void *ptr){
+	List *list = static_cast<List*> (ptr);
+
+	const static int SLEEP_TIME = 1;
+
+	for (;;) {
+		if(stop_flag){
+			break;
+		}
+
+		sleep(SLEEP_TIME);
+
+		list->sort_list(&sleep_time);
+	}
+	
+	return NULL;
+}
+
 
 int main(int argc, char *argv[]) {
 
-    List list;
-    cout << "Input lines, please:" << endl;
-    string s;
-    for (;;) {
-        getline(cin, s);
+	pthread_t sort_tid;
+	List *list = new List();
+	pthread_create(&sort_tid, NULL, auto_sort, list);
 
-        if (cin.eof()){
-            break;
-        } else if (s.empty()) {
-            list.print_list();
-        } else {
-            list.push_front(s);
-        }
-    }
-    pthread_exit(NULL);
+	cout << "Input lines, please:" << endl;
+	string s;
+	for (;;) {
+		getline(cin, s);
+
+		if (cin.eof()){
+			break;
+		} else if (s.empty()) {
+			list->print_list();
+		} else {
+			list->push_front(s);
+		}
+	}
+	
+	stop_flag = true;
+	sleep_time = 0;
+	
+	pthread_join(sort_tid, NULL);
+	delete list;
+
+	pthread_exit(NULL);
 }

@@ -52,7 +52,7 @@ class List {
 
 
 	public:
-		void sort_list() {
+		void sort_list(int *sleep_time = NULL) {
 			static const int SWAP_TIME = 1;
 
 			if (list_size <= 1){
@@ -79,7 +79,9 @@ class List {
 				for(;;){
 					if(Node::compare(n1, n2) > 0){
 						Node::swap(n1, n2);
-						sleep(SWAP_TIME);
+						if(sleep_time != NULL && *sleep_time != 0){
+							sleep(SWAP_TIME);
+					}
 					}
 
 					if(n2->next != bound){
@@ -177,11 +179,11 @@ class List {
 };
 
 bool stop_flag = false;
-
+int sleep_time = 1;
 static void *auto_sort(void *ptr){
 	List *list = static_cast<List*> (ptr);
 
-	const static int SLEEP_TIME = 1;
+	const static int SLEEP_TIME = 5;
 
 	for (;;) {
 		if(stop_flag){
@@ -190,7 +192,7 @@ static void *auto_sort(void *ptr){
 
 		sleep(SLEEP_TIME);
 
-		list->sort_list();
+		list->sort_list(&sleep_time);
 	}
 	
 	return NULL;
@@ -218,6 +220,8 @@ int main(int argc, char *argv[]) {
 	}
 	
 	stop_flag = true;
+	sleep_time = 0;
+	
 	pthread_join(sort_tid, NULL);
 	delete list;
 
