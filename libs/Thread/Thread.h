@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <string>
 #include <cstring>
+#include <assert.h>
 
 class Thread {
 private:
@@ -14,14 +15,18 @@ private:
     void *_arg;
     void error_check(int retv);
 
+	Thread(const Thread& other){
+		assert(false);
+	}
     Thread & operator=(const Thread& other) {
+		assert(false);
+		return *this;
     }
 
 public:
 
     Thread(void *(*f)(void *), void *arg = NULL) : _func(f), _arg(arg), _run(false), _needs_resource_release(false) {
     }
-    Thread(const Thread& orig);
     ~Thread();
     void run();
     void detach();

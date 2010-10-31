@@ -1,16 +1,5 @@
 #include "Thread.h"
 
-Thread::Thread(const Thread& orig) {
-    if (!orig._run) {
-        _func = orig._func;
-        _arg = orig._arg;
-        _needs_resource_release = orig._needs_resource_release;
-        _run = orig._run;
-    } else {
-        throw ThreadException("Assigning used thread");
-    }
-}
-
 void Thread::error_check(int retv) {
     if (retv != 0) {
 		char buf[256];
