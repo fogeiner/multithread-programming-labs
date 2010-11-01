@@ -184,7 +184,7 @@ int sleep_time = 1;
 static void *auto_sort(void *ptr){
 	List *list = static_cast<List*> (ptr);
 
-	const static int SLEEP_TIME = 1;
+	const static int SLEEP_TIME = 5;
 
 	for (;;) {
 		if(stop_flag){

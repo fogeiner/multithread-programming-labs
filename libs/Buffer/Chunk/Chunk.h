@@ -1,30 +1,26 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 #include <cstring>
+#include <vector>
 
 class Chunk {
 private:
-    char *_buffer;
-    int _size;
+	std::vector<char> _buffer;
 
 public:
 
     int size() const {
-        return _size;
+		_buffer.size();
     }
 
     const char *buf() const {
-        return _buffer;
+        return &_buffer[0];
     }
 
-    Chunk(const char *buf, int size) : _size(size) {
-        _buffer = new char[size];
-        memcpy(_buffer, buf, size);
-    }
+    Chunk(const char *buf, int size): _buffer(buf, buf + size)
+	{}
 
-    ~Chunk() {
-        delete[] _buffer;
-    }
+    ~Chunk(){}
 };
 
 #endif

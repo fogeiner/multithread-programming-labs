@@ -2,7 +2,7 @@
 
 APP = bin
 OBJ = source.o ../libs/Semaphore/Semaphore.o ../libs/Thread/Thread.o
-CXXFLAGS = -lpthread -pthread -g
+CXXFLAGS = -lpthread -pthread
 CC = g++
 
 $(APP): $(OBJ)

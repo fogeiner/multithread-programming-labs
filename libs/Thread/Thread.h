@@ -9,15 +9,12 @@
 class Thread {
 private:
     pthread_t _tid;
-    bool _needs_resource_release;
     bool _run;
     void *(*_func)(void *);
     void *_arg;
     void error_check(int retv);
 
-	Thread(const Thread& other){
-		assert(false);
-	}
+
     Thread & operator=(const Thread& other) {
 		assert(false);
 		return *this;
@@ -25,9 +22,18 @@ private:
 
 public:
 
-    Thread(void *(*f)(void *), void *arg = NULL) : _func(f), _arg(arg), _run(false), _needs_resource_release(false) {
+    Thread(void *(*f)(void *), void *arg = NULL) : _func(f), _arg(arg), _run(false) {
     }
-    ~Thread();
+    
+    Thread(const Thread& other){
+		assert(_run == false);
+		_run = other._run;
+		_func = other._func;
+		_arg = other._arg;
+	}
+    ~Thread(){
+	}
+	
     void run();
     void detach();
     void join(void **ptr = NULL);
