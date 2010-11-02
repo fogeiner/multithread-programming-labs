@@ -7,7 +7,6 @@ CVMsgQueue::~CVMsgQueue() {
 
 int CVMsgQueue::get(char *buf, size_t bufsize) {
 
-
 	_m.lock();
 	while(_msgs.size() == 0 && !_dropped){
 		_cv.wait(_m);
