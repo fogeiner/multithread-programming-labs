@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 
 		// singal has arrived, need to join threads to release taken resources
 		// in case threads type is Thread[some_number] this will work
-		// Problem may occur if someone will pass that array like a pointer
+		// Problem may occur if someone passes that array like a pointer
 		// -- information needed by sizeof operator will be lost
 		for(int i = 0; i < sizeof(threads)/sizeof(Thread); ++i){
 			threads[i].join();
