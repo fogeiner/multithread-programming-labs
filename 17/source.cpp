@@ -196,9 +196,9 @@ static void *auto_sort(void *ptr){
 
 int main(int argc, char *argv[]) {
 
-	pthread_t sort_tid;
+	pthread_t sort1_tid;
 	List *list = new List();
-	pthread_create(&sort_tid, NULL, auto_sort, list);
+	pthread_create(&sort1_tid, NULL, auto_sort, list);
 
 	cout << "Input lines, please:" << endl;
 	string s;
@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	stop_flag = true;
-	pthread_join(sort_tid, NULL);
+	pthread_join(sort1_tid, NULL);
 	delete list;
 
 	pthread_exit(NULL);
