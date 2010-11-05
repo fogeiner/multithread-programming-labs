@@ -52,6 +52,12 @@ class ProxyClient:
 	def fileno(self, *args):
 		return self._socket.fileno()
 
+class CacheEntry:
+	_buf = ''
+
+class Cache:
+	_cache = {}
+
 class ProcessClientRequestTask(Task):
 	def __init__(self, proxy_client):
 		self._proxy_client = proxy_client
@@ -71,11 +77,14 @@ class ProcessClientRequestTask(Task):
 					or parsed_url.scheme != 'http'):
 				l.debug('bad request from the client')
 				# here we need to send client msg about the bad request
+				# and remove client from clients list
 				pass
 
 			# got some valid input
 		else:
-			# got some junk, just ingoring
+			# got some junk, just closing connection
+			# and removing client from clients
+
 			pass
 
 class ReadClientTask(Task):
