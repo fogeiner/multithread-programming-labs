@@ -211,6 +211,14 @@ int main(int argc, char* argv[]) {
 		std::cerr << "socket(): " << strerror(errno) << std::endl;
 	}
 
+	{
+		int flag_value = 1;
+		if(-1 == setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &flag_value, sizeof(flag_value))){
+			std::cerr << "setsockopt(): " << strerror(errno) << std::endl;
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	if (-1 == bind(listening_socket, (const sockaddr *) & local_addr, sizeof (local_addr))) {
 		std::cerr << "bind(): " << strerror(errno) << std::endl;
 		exit(EXIT_FAILURE);
@@ -241,6 +249,8 @@ int main(int argc, char* argv[]) {
 
 		avaliable_sockets = select(max(readfds.max_fd(), writefds.max_fd()) + 1, &readfds.fdset(),
 				&writefds.fdset(), NULL, NULL /*&tv*/);
+		
+		// usleep(1000000/16);
 
 #ifdef DEBUG
 		std::clog << "sockets avaliable: " << avaliable_sockets << std::endl;

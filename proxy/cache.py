@@ -2,8 +2,14 @@
 # -*- conding: utf-8 -*-
 
 class Cache:
-	def get(self, key){
-			}
+	_entries = {}
+	def get(self, key):
+		pass
+	def add(self, key):
+		pass
+	def del(self, key):
+		pass
+
 	pass
 
 class CacheEntry:
