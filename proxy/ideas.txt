@@ -1,1 +1,30 @@
-1)
+lifecycle:
+StartServerTask -> SelectTask
+
+AcceptClient (new socket) -> RecvRequestTask (receiving either until \r\n\r\n or S seconds timeout) -> ParseRequestTask (Parsing received header for info)) -> ProcessRequestTask (if no restrictions applied, try to get a needed CacheEntry; if doesn't exists -- create) -> {if one exists add to waiting users list} {if no exists create new and add to waiting users list}
+
+InitServerConection -> SendRequest -> RecvHeaderTask -> ParseHeaderTask -> {recv to cache if answer is good and the result needs caching} RecvServerData {if the result cannot be cached -- retranslator}
+
+if during another RecvServerData CacheEntry size exceeds maximum -- make retranslator for every client and delete CacheEntry.
+
+SendClientTask
+
+BadRequestTask
+
+Two variants of work: as CachingServer (200 reply)  and as retranslator
+
+retranslator is used always except for 200 reply and less than N Mb data
+
+Caching server mode:
+Retranslator mode:
+
+Mode can be switched from cache to just a retraslator;
+
+Retranslator: buffer, c_sock, s_sock; 
+Cache: buffer, s_sock and many clients;
+Not finished CacheEntry with 0 clients gets dropped
+in case of errors:
+a) bad request from client: BadRequestTask
+b) client closes connection: drop CacheEntry
+
+Retransalor can work with once opened sockets and given buffer

@@ -3,7 +3,7 @@
 import socket as s
 
 buf_size = 1024
-port = 2222
+port = 8080
 
 def process_client(c_sock):
 	buf = ''
@@ -12,11 +12,13 @@ def process_client(c_sock):
 		print(buf,)
 		if buf[-4:] == '\r\n\r\n':
 			break
-	c_sock.send("HTTP/1.0 505 Protocol version not supported\r\n\r\nNo HTTP/1.1")
+	c_sock.send("HTTP/1.0 302 Redirect\r\nLocation: cn.ru\r\n\r\nNo HTTP/1.1")
+	#c_sock.send("HTTP/1.0 505 Protocol version not supported\r\n\r\nNo HTTP/1.1")
 	c_sock.close()
 
 if __name__ == '__main__':
 	l_sock = s.socket(s.AF_INET, s.SOCK_STREAM)
+	l_sock.setsockopt(s.SOL_SOCKET, s.SO_REUSEADDR, 1)
 	l_sock.bind(('', port))
 	l_sock.listen(5)
 
