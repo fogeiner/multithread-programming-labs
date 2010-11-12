@@ -1,12 +1,14 @@
-from http_proxy.Retranslator import Retranslator
+from Retranslator import Retranslator
+from Cache import Cache, CacheEntry
 import socket
 import signal
+import select
 
 from Logger import *
 from TaskDispatcher import TaskDispatcher
 import config
 
-class Task:
+class Task(object):
     """ 'abstract' class representing a Task """
     def __init__(self):
         self._done = True
@@ -15,30 +17,35 @@ class Task:
 
 class AcceptClientTask(Task):
     def __init__(self, proxy):
+        super(AcceptClientTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
 
-class RecvRequestTask(Task):
+class ReceiveRequestTask(Task):
     def __init__(self, proxy):
+        super(ReceiveServerDataTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
     
 class ParseRequestTask(Task):
     def __init__(self, proxy):
+        super(ParseRequestTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
 
 class ProcessRequestTask(Task):
     def __init__(self, proxy):
+        super(ProcessRequestTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
 
 class InitServerConnectionTask(Task):
     def __init__(self, proxy):
+        super(InitServerConnectionTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
@@ -46,37 +53,43 @@ class InitServerConnectionTask(Task):
 
 class SendRequestTask(Task):
     def __init__(self, proxy):
+        super(SendRequestTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
 
-class RecveiveResponseTask(Task):
+class ReceiveResponseTask(Task):
     def __init__(self, proxy):
+        super(ReceiveServerDataTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
 
 class ParseResponseTask(Task):
     def __init__(self, proxy):
+        super(ParseResponseTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
 
 class SendClientDataTask(Task):
     def __init__(self, proxy):
+        super(SendClientDataTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
 
 
-class RecvServerDataTask(Task):
+class ReceiveServerDataTask(Task):
     def __init__(self, proxy):
+        super(ReceiveServerDataTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
 
 class SelectTask(Task):
     def __init__(self, proxy):
+        super(SelectTask, self).__init__()
         self._proxy = proxy
     def run(self):
         rlist, wlist, xlist = [self._proxy._l_sock], [], []
@@ -90,6 +103,7 @@ class SelectTask(Task):
 
 class StopServerTask(Task):
     def __init__(self, proxy):
+        super(StopServerTask, self).__init__()
         self._proxy = proxy
     def run(self):
         pass
@@ -97,6 +111,7 @@ class StopServerTask(Task):
 class StartServerTask(Task):
     """ starts proxy server """
     def __init__(self, proxy):
+        super(StartServerTask, self).__init__()
         self._proxy = proxy
 
     def run(self):
@@ -110,7 +125,7 @@ class StartServerTask(Task):
         select_task = SelectTask(self._proxy)
         self._proxy._t_d.put(select_task)
             
-class Proxy:
+class Proxy(object):
     def __init__(self):
         self._backlog = config.backlog
         self._listening_port = config.listening_port
@@ -124,16 +139,16 @@ class Proxy:
         
     def start(self):
         self._t_d = TaskDispatcher()
-        start_server_task = StartServerTask(task_dispatcher, self)
+        start_server_task = StartServerTask(self)
         self._t_d.put(start_server_task)
         # in case we use threads here should be threads creation
         l.debug('running task_dispatcher')
-        task_dispatcher.run()
-
-proxy = None
+        self._t_d.run()
 
 def sigint_handler(signum, frame):
     proxy._t_d.put(StopServerTask(proxy))
+
+proxy = None
 
 if __name__ == "__main__":
     proxy = Proxy()

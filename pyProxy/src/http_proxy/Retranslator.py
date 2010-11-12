@@ -1,5 +1,11 @@
-class Retranslator:
+class Retranslator(object):
     def __init__(self):
-        self._c_sock
-        self._s_sock
-        self._buf
+        pass
+
+class RetranslatorServer(object):
+    def __init__(self):
+        pass
+
+class RetranslatorClient(object):
+    def __init__(self):
+        pass
