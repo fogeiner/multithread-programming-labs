@@ -1,5 +1,5 @@
 from Retranslator import Retranslator
-from ProxyConnection import ProxyClient, ProxyHTTPServer
+from ProxyConnection import ProxyClient, ProxyHTTPServer, Connection
 from Cache import Cache, CacheEntry
 import socket
 import signal
@@ -49,7 +49,7 @@ class ReceiveRequestTask(Task):
         self._client._request += request_fr
 
         # end of request
-        if self._client._request[-4:] == self._proxy._http_delimeter:
+        if self._client._request[-4:] == config.http_delimeter:
             self._client._status = ProxyClient.PARSING_REQUEST
             self._proxy._t_d.put( (ParseRequestTask.PRIORITY, ParseRequestTask(self._proxy, self._client)) )
     
@@ -68,7 +68,7 @@ class ParseRequestTask(Task):
     def run(self):
         l.debug('ParseRequestTask run')
     
-        m = re.match(r'^(GET|HEAD)\s+(.+)\s+HTTP/(1.\d)\s+$', self._client._request, re.M)
+        m = re.match(r'^(\w+)\s+(.+)\s+HTTP/(1.\d)\s+$', self._client._request, re.M)
         
         if m:
             method, url, version = m.groups()
@@ -107,7 +107,7 @@ class ProcessRequestTask(Task):
         else:
             l.debug('creating new CacheEntry')
             # create new entry and add as client
-            entry = CacheEntry(self._client._parsed_url, self._client._request)
+            entry = CacheEntry(self._client._url, self._client._parsed_url, self._client._request)
             entry.add_client(self._client)
             cache.add_entry(self._client._url, entry)
 
@@ -158,10 +158,10 @@ class ReceiveResponseTask(Task):
         l.debug('ReceiveResponseTask run')
         entry = self._cache_entry
         entry._buf += entry._server.recv(self._proxy._recv_bufsize)
-        header_end_index = entry._buf.find(self._proxy._http_delimeter)
+        header_end_index = entry._buf.find(config.http_delimeter)
         if header_end_index != -1:
             entry._header = entry._buf[:header_end_index]
-            entry._buf = entry._buf[header_end_index+len(self._proxy._http_delimeter):]
+            entry._buf = entry._buf[header_end_index+len(config.http_delimeter):]
             entry._server._status = ProxyHTTPServer.PARSING_RESPONSE
             self._proxy._t_d.put( (ParseResponseTask.PRIORITY, ParseResponseTask(self._proxy, entry)) )
 
@@ -177,7 +177,20 @@ class ParseResponseTask(Task):
         if m:
             version, code, comment = m.groups()
             l.debug(version +' '+ code + ' ' + comment)
+
+            if code == self._proxy._http_OK_code:
+                # caching and sending to clients
+                entry._server._status = ProxyHTTPServer.CACHE
+            else:
+                # retranslating
+                entry._server._status = ProxyHTTPServer.RETRANSLATOR
+                # get the entry out of Cache
+                self._proxy._cache.remove_by_key(entry._url)
+                # add to list of retranslated connections
+                retranslator = Retranslator(entry._server, entry._clients, entry._header, entry._buf)
+                self._proxy._retranslated_connections.append(retranslator)
         else:
+            l.debug('Server sent incorrect reply')
             pass
 
 class SendClientDataTask(Task):
@@ -192,6 +205,47 @@ class ReceiveServerDataTask(Task):
         self._proxy = proxy
     def run(self):
         pass
+
+class RetranslatorReceiveTask(Task):
+    PRIORITY = 0
+    def __init__(self, proxy, retranslator):
+        self._proxy = proxy
+        self._retranslator = retranslator
+    def run(self):
+        l.debug('RetranslatorReceiveTask run')
+        retranslator = self._retranslator
+        proxy = self._proxy
+        
+        buf = retranslator._server.recv(proxy._recv_bufsize)
+        # end of transmission
+        if buf == '':
+            retranslator._server.close()
+            retranslator._server = Connection.CLOSED_CONNECTION
+        else:
+            for c in retranslator._clients:
+                if c._method != 'HEAD':
+                    c._send_buf += buf
+
+class RetranslatorSendTask(Task):
+    PRIORITY = 0
+    def __init__(self, proxy, client):
+        self._proxy = proxy
+        self._client = client
+    def run(self):
+        l.debug('RetranslatorSendTask run')
+        retranslator = self._client._retranslator
+        client = self._client
+        
+        sent = client.send(client._send_buf)
+        client._send_buf = client._send_buf[sent:]
+        
+        if len(client._send_buf) == 0 and retranslator._server == Connection.CLOSED_CONNECTION:
+            client.close()
+            client._c_sock = Connection.CLOSED_CONNECTION
+            retranslator._clients.remove(client)
+            if len(retranslator._clients) == 0:
+                self._proxy._retranslated_connections.remove(retranslator)
+
 
 class SelectTask(Task):
     PRIORITY = 20
@@ -214,17 +268,25 @@ class SelectTask(Task):
         for e in cache.entries():
             if e._server._status == ProxyHTTPServer.GETTING_RESPONSE:
                 rlist.append(e)
-        # servers in Retranslator
 
+        # servers in Retranslator
+        for r in proxy._retranslated_connections:
+            if r._server != Connection.CLOSED_CONNECTION:
+                rlist.append(r)
         # write
         # writing request to servers
         for e in cache.entries():
             if e._server._status == ProxyHTTPServer.SENDING_REQUEST:
                 wlist.append(e)
-        
+        # writing to clients in retranslator
+        for r in proxy._retranslated_connections:
+            for c in r._clients:
+                if len(c._send_buf) != 0:
+                    wlist.append(c)
+
         rlist, wlist, xlist = select.select(rlist, wlist, xlist)
-        #import time
-        #time.sleep(1)
+        import time
+        time.sleep(1)
 
         l.debug('Select results: ' + repr(rlist) +' '+ repr(wlist) +' '+ repr(xlist))
 
@@ -232,17 +294,21 @@ class SelectTask(Task):
             # new client?
             if s == self._proxy._l_sock:
                 proxy._t_d.put((AcceptClientTask.PRIORITY, AcceptClientTask(proxy)))
+            elif s in proxy._retranslated_connections:
+                proxy._t_d.put( (RetranslatorReceiveTask.PRIORITY, RetranslatorReceiveTask(proxy, s)) )
             elif s._status == ProxyClient.GETTING_REQUEST:
                 proxy._t_d.put((ReceiveRequestTask.PRIORITY, ReceiveRequestTask(proxy, s)))
             elif s._server._status == ProxyHTTPServer.GETTING_RESPONSE:
                 proxy._t_d.put( (ReceiveResponseTask.PRIORITY, ReceiveResponseTask(proxy, s)) )
-            elif s._status == ProxyClient.CACHE:
-                pass
                 
         for s in wlist:
-            if s._server._status == ProxyHTTPServer.SENDING_REQUEST:
-                # @type s CacheEntry
-                proxy._t_d.put( (SendRequestTask.PRIORITY, SendRequestTask(proxy, s)) )
+            if s.__class__ == CacheEntry:
+                if s._server._status == ProxyHTTPServer.SENDING_REQUEST:
+                    # @type s CacheEntry
+                    proxy._t_d.put( (SendRequestTask.PRIORITY, SendRequestTask(proxy, s)) )
+            if s.__class__ == ProxyClient:
+                proxy._t_d.put( (RetranslatorSendTask.PRIORITY, RetranslatorSendTask(proxy, s)) )
+
 
         # planning next SelectTask
         proxy._t_d.put( (SelectTask.PRIORITY, SelectTask(proxy)) )
@@ -283,8 +349,7 @@ class Proxy(object):
         self._default_http_port = config.default_http_port
         self._listening_socket = None
         self._cache = Cache()
-        self._retranslator = Retranslator()
-        self._http_delimeter = config.http_delimeter
+        self._retranslated_connections = []
         self._http_OK_code = config.http_OK_code
 
         # clients that connected but haven't sent the request yet

@@ -2,10 +2,11 @@ class CacheEntry(object):
     NEW = 0
     PENDING = 1
     READY = 2
-    def __init__(self, parsed_url, request):
+    def __init__(self, url, parsed_url, request):
         self._status = CacheEntry.NEW
         self._server = None
         self._clients = []
+        self._url = url
         self._parsed_url = parsed_url
         self._request = request
         # header of the response
@@ -27,6 +28,8 @@ class CacheEntry(object):
 class Cache(object):
     def __init__(self):
         self._cache = {}
+    def remove_by_key(self, key):
+        del self._cache[key]
     def entries(self):
        return self._cache.values()
     def get(self, key):

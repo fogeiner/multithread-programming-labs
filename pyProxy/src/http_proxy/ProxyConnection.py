@@ -1,10 +1,8 @@
 import time
 
-__author__="alstein"
-__date__ ="$11.11.2010 15:00:59$"
-
 class Connection:
     """ represents abstract class for network connections """
+    CLOSED_CONNECTION = None
     def __init__(self, time=int(time.time())):
         self._last_upd_time = time
     
@@ -32,12 +30,15 @@ class ProxyClient(Connection):
         self._method = None
 
         self._bytes_received = 0
+
+        self._send_buf = ''
         # what kind of connection is this client?
         self._status = ProxyClient.INIT
-
+        self._retranslator = None
     def close(self):
         self._c_sock.close()
-
+    def send(self, buf):
+        return self._c_sock.send(buf)
     def fileno(self):
         return self._c_sock.fileno()
     
