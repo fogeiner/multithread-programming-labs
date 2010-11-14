@@ -1,3 +1,5 @@
+from ProxyConnection import ProxyClient
+
 class CacheEntry(object):
     NEW = 0
     PENDING = 1
@@ -22,7 +24,10 @@ class CacheEntry(object):
     def unlock(self):
         pass
     def add_client(self, client):
+        client._status = ProxyClient.CACHE
+        client._cache_entry = self
         self._clients.append(client)
+
 
 
 class Cache(object):

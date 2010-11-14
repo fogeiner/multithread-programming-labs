@@ -29,12 +29,13 @@ class ProxyClient(Connection):
         self._parsed_url = None
         self._method = None
 
-        self._bytes_received = 0
+        self._bytes_sent = 0
 
         self._send_buf = ''
         # what kind of connection is this client?
         self._status = ProxyClient.INIT
         self._retranslator = None
+        self._cache_entry = None
     def close(self):
         self._c_sock.close()
     def send(self, buf):
