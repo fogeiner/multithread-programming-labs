@@ -49,7 +49,7 @@ class ReceiveRequestTask(Task):
         self._client._request += request_fr
 
         # end of request
-        if self._client._request[-4:] == '\r\n\r\n':
+        if self._client._request[-4:] == self._proxy._http_delimeter:
             self._client._status = ProxyClient.PARSING_REQUEST
             self._proxy._t_d.put( (ParseRequestTask.PRIORITY, ParseRequestTask(self._proxy, self._client)) )
     
@@ -87,7 +87,7 @@ class ParseRequestTask(Task):
             self._bad_request()
             
 class ProcessRequestTask(Task):
-    PRIORITY = 5
+    PRIORITY = 0
     def __init__(self, proxy, client):
         self._proxy = proxy
         self._client = client
@@ -150,16 +150,35 @@ class SendRequestTask(Task):
 
 
 class ReceiveResponseTask(Task):
-    def __init__(self, proxy):
+    PRIORITY = 0
+    def __init__(self, proxy, cache_entry):
         self._proxy = proxy
+        self._cache_entry = cache_entry
     def run(self):
-        pass
+        l.debug('ReceiveResponseTask run')
+        entry = self._cache_entry
+        entry._buf += entry._server.recv(self._proxy._recv_bufsize)
+        header_end_index = entry._buf.find(self._proxy._http_delimeter)
+        if header_end_index != -1:
+            entry._header = entry._buf[:header_end_index]
+            entry._buf = entry._buf[header_end_index+len(self._proxy._http_delimeter):]
+            entry._server._status = ProxyHTTPServer.PARSING_RESPONSE
+            self._proxy._t_d.put( (ParseResponseTask.PRIORITY, ParseResponseTask(self._proxy, entry)) )
 
 class ParseResponseTask(Task):
-    def __init__(self, proxy):
+    PRIORITY = 0
+    def __init__(self, proxy, cache_entry):
         self._proxy = proxy
+        self._cache_entry = cache_entry
     def run(self):
-        pass
+        l.debug('ParseResponseTask run')
+        entry = self._cache_entry
+        m = re.match(r'^HTTP/(1\.\d)\s+(\d{3})\s+(.*)$', entry._header, re.M)
+        if m:
+            version, code, comment = m.groups()
+            l.debug(version +' '+ code + ' ' + comment)
+        else:
+            pass
 
 class SendClientDataTask(Task):
     def __init__(self, proxy, entry):
@@ -180,48 +199,53 @@ class SelectTask(Task):
         self._proxy = proxy
     def run(self):
         l.debug('SelectTask run')
+        proxy = self._proxy
+        cache = proxy._cache
 
-        
         rlist, wlist, xlist = [], [], []
         # read
         # listening socket
-        rlist.append(self._proxy._l_sock)
+        rlist.append(proxy._l_sock)
 
         # clients that haven't sent the request yet
-        rlist += [s for s in self._proxy._new_clients if s._status == ProxyClient.GETTING_REQUEST]
-        # clients in Cache
-        # clients in Retranslator
+        rlist += [s for s in proxy._new_clients if s._status == ProxyClient.GETTING_REQUEST]
+
+        # servers in Cache
+        for e in cache.entries():
+            if e._server._status == ProxyHTTPServer.GETTING_RESPONSE:
+                rlist.append(e)
+        # servers in Retranslator
 
         # write
         # writing request to servers
-        for e in self._proxy._cache.entries():
+        for e in cache.entries():
             if e._server._status == ProxyHTTPServer.SENDING_REQUEST:
                 wlist.append(e)
         
         rlist, wlist, xlist = select.select(rlist, wlist, xlist)
-        import time
-        time.sleep(1)
+        #import time
+        #time.sleep(1)
 
         l.debug('Select results: ' + repr(rlist) +' '+ repr(wlist) +' '+ repr(xlist))
 
         for s in rlist:
             # new client?
             if s == self._proxy._l_sock:
-                self._proxy._t_d.put((AcceptClientTask.PRIORITY, AcceptClientTask(self._proxy)))
+                proxy._t_d.put((AcceptClientTask.PRIORITY, AcceptClientTask(proxy)))
             elif s._status == ProxyClient.GETTING_REQUEST:
-                self._proxy._t_d.put((ReceiveRequestTask.PRIORITY, ReceiveRequestTask(self._proxy, s)))
-            elif s._status == ProxyClient.RETRANSLATOR:
-                pass
+                proxy._t_d.put((ReceiveRequestTask.PRIORITY, ReceiveRequestTask(proxy, s)))
+            elif s._server._status == ProxyHTTPServer.GETTING_RESPONSE:
+                proxy._t_d.put( (ReceiveResponseTask.PRIORITY, ReceiveResponseTask(proxy, s)) )
             elif s._status == ProxyClient.CACHE:
                 pass
                 
         for s in wlist:
             if s._server._status == ProxyHTTPServer.SENDING_REQUEST:
                 # @type s CacheEntry
-                self._proxy._t_d.put( (SendRequestTask.PRIORITY, SendRequestTask(self._proxy, s)) )
+                proxy._t_d.put( (SendRequestTask.PRIORITY, SendRequestTask(proxy, s)) )
 
         # planning next SelectTask
-        self._proxy._t_d.put( (SelectTask.PRIORITY, SelectTask(self._proxy)) )
+        proxy._t_d.put( (SelectTask.PRIORITY, SelectTask(proxy)) )
     
 
 class StopServerTask(Task):
@@ -260,7 +284,8 @@ class Proxy(object):
         self._listening_socket = None
         self._cache = Cache()
         self._retranslator = Retranslator()
-        
+        self._http_delimeter = config.http_delimeter
+        self._http_OK_code = config.http_OK_code
 
         # clients that connected but haven't sent the request yet
         # list of ProxyClients

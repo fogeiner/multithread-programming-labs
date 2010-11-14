@@ -8,6 +8,12 @@ class CacheEntry(object):
         self._clients = []
         self._parsed_url = parsed_url
         self._request = request
+        # header of the response
+        self._header = ''
+        # body of the response
+        self._body = ''
+        # temp. buffer for receving
+        self._buf = ''
     def fileno(self):
         return self._server.fileno()
     def lock(self):

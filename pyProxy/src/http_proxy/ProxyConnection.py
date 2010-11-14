@@ -50,15 +50,19 @@ class ProxyHTTPServer(Connection):
     SENDING_REQUEST = 1
     # server is in process of sending request
     GETTING_RESPONSE = 2
+    # server response is parsed
+    PARSING_RESPONSE = 3
     # server is used in retranslator
-    RETRANSLATOR = 3
+    RETRANSLATOR = 4
     # server is used in cache transmissions
-    CACHE = 4
+    CACHE = 5
     
     def __init__(self, s_sock):
         self._s_sock = s_sock
         self._bytes_sent = 0
         self._status = ProxyHTTPServer.SENDING_REQUEST
+    def recv(self, size):
+        return self._s_sock.recv(size)
     def send(self, buf):
         sent = self._s_sock.send(buf)
         self._bytes_sent += sent

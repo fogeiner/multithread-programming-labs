@@ -5,3 +5,5 @@ send_bufsize = 4*1024
 max_cache_entry_size = 2*1024*1024
 supported_http_methods = ['HEAD', 'GET']
 default_http_port = 80
+http_delimeter = '\r\n\r\n'
+http_OK_code = '200'
