@@ -6,8 +6,10 @@ class CacheEntry(object):
         self._status = CacheEntry.NEW
         self._server = None
         self._clients = []
-        self._parsed_url = None
-        self._request = None
+        self._parsed_url = parsed_url
+        self._request = request
+    def fileno(self):
+        return self._server.fileno()
     def lock(self):
         pass
     def unlock(self):
@@ -19,6 +21,8 @@ class CacheEntry(object):
 class Cache(object):
     def __init__(self):
         self._cache = {}
+    def entries(self):
+       return self._cache.values()
     def get(self, key):
         return self._cache.get(key)
     def add_entry(self, url, entry):
