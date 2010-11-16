@@ -43,7 +43,6 @@ int parse_arguments(int argc, char *argv[], unsigned short &local_port, unsigned
 
 int init_tcp_socket() {
 	int socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
 	return socket;
 }
 
@@ -69,17 +68,20 @@ int init_remote_host_sockaddr(sockaddr_in &remote_addr, char *remote_host, unsig
 	return 0;
 }
 
+// add sockets to FD_SETs depending on what we can do with them
 void init_fds(Fd_set &readfds, Fd_set &writefds, int listening_socket, std::list<Forwarded_connection*> &connections) {
 #ifdef DEBUG
 	std::clog << "Adding fds to FD_SET: " << std::endl;
 #endif
 
+	// deleting all descriptors from previous operations
 	readfds.zero();
 	writefds.zero();
 
 #ifdef DEBUG
 	std::clog << "read listening socket: " << listening_socket << "\n";
 #endif
+	// adding listening socket; always
 	readfds.set(listening_socket);
 
 #ifdef DEBUG
@@ -93,6 +95,8 @@ void init_fds(Fd_set &readfds, Fd_set &writefds, int listening_socket, std::list
 			<< " server socket: " << fc->server_socket() << " client socket " << fc->client_socket()
 			<< std::endl;
 #endif
+
+		// if both sockets are closed then we don't need such Forwarded_connection any more
 		if ((fc->client_socket() == Forwarded_connection::CLOSED_SOCKET) &&
 				(fc->server_socket() == Forwarded_connection::CLOSED_SOCKET)) {
 #ifdef DEBUG
@@ -105,6 +109,7 @@ void init_fds(Fd_set &readfds, Fd_set &writefds, int listening_socket, std::list
 		}
 
 		if (fc->client_socket() != Forwarded_connection::CLOSED_SOCKET) {
+			// we are willing to read from not closed sockets
 			readfds.set(fc->client_socket());
 #ifdef DEBUG
 			std::clog << "read: " << fc->client_socket() << " ";
@@ -113,10 +118,12 @@ void init_fds(Fd_set &readfds, Fd_set &writefds, int listening_socket, std::list
 #ifdef DEBUG
 				std::clog << "write: " << fc->client_socket() << " ";
 #endif
+				// and if we also have something to write to them we shall check write ability
 				writefds.set(fc->client_socket());
 			}
 		}
 
+		// all the same if true for the server-side of connection
 		if (fc->server_socket() != Forwarded_connection::CLOSED_SOCKET) {
 			readfds.set(fc->server_socket());
 #ifdef DEBUG
@@ -132,10 +139,6 @@ void init_fds(Fd_set &readfds, Fd_set &writefds, int listening_socket, std::list
 		}
 
 	}
-
-#ifdef DEBUG
-	std::clog << std::endl;
-#endif
 }
 
 int add_client_connection(int listening_socket, sockaddr_in &remote_addr, std::list<Forwarded_connection*> &connections) {
@@ -158,7 +161,7 @@ int add_client_connection(int listening_socket, sockaddr_in &remote_addr, std::l
 
 	Forwarded_connection *fc = new Forwarded_connection(server_sock, client_sock);
 
-	connections.push_front(fc);
+	connections.push_back(fc);
 #ifdef DEBUG
 	std::clog << "New client connection." << "\n" << "server socket: " << server_sock
 		<< " client socket: " << client_sock << std::endl;
@@ -174,10 +177,13 @@ int main(int argc, char* argv[]) {
 	signal(SIGINT, exit);
 
 	// ignore SIGPIPE
+	// needed in case remote host closes connection
+	// right before we are going to write to socket
 	act.sa_handler=SIG_IGN;
 	sigemptyset(&act.sa_mask);
 	act.sa_flags=0;
 	sigaction(SIGPIPE, &act, NULL); 
+
 
 	unsigned short remote_port;
 	unsigned short local_port;
@@ -213,6 +219,7 @@ int main(int argc, char* argv[]) {
 
 	{
 		int flag_value = 1;
+		// was needed in case programm crashed without freeing listening port
 		if(-1 == setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &flag_value, sizeof(flag_value))){
 			std::cerr << "setsockopt(): " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
@@ -233,7 +240,7 @@ int main(int argc, char* argv[]) {
 	Fd_set readfds, writefds;
 	std::list<Forwarded_connection*> connections;
 
-	for (;;) {
+	while(true) {
 		init_fds(readfds, writefds, listening_socket, connections);
 
 		int avaliable_sockets;
@@ -241,6 +248,7 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG
 		std::clog << "Getting to select" << std::endl;
 #endif
+
 //		const int SELECT_TIMEOUT_SECONDS = 1;
 //		struct timeval tv;
 //		tv.tv_sec = SELECT_TIMEOUT_SECONDS;
@@ -250,6 +258,8 @@ int main(int argc, char* argv[]) {
 		avaliable_sockets = select(max(readfds.max_fd(), writefds.max_fd()) + 1, &readfds.fdset(),
 				&writefds.fdset(), NULL, NULL /*&tv*/);
 		
+		// for test purposes; also it lets you make emulation of the slow net services,
+		// for instance a slow webserver
 		// usleep(1000000/16);
 
 #ifdef DEBUG
@@ -259,13 +269,14 @@ int main(int argc, char* argv[]) {
 		if (-1 == avaliable_sockets) {
 			std::cerr << "select(): " << strerror(errno) << std::endl;
 
+			// if interrupted by signal, do nothing, else stop
 			if(errno == EINTR)
 				continue;
 			else
 				exit(EXIT_FAILURE);
 		}
 
-		// new client connecting
+		// if a new client connecting
 		if (readfds.isset(listening_socket)) {
 			if (-1 == add_client_connection(listening_socket, remote_addr, connections)) {
 				std::cerr << "initing new connection: " << strerror(errno) << std::endl;
@@ -281,30 +292,34 @@ int main(int argc, char* argv[]) {
 				i != connections.end(); ++i) {
 			Forwarded_connection *fc = *i;
 
+			if(fc->client_socket() != Forwarded_connection::CLOSED_SOCKET)
 			if (writefds.isset(fc->client_socket())) {
 				fc->client_write();
 			}
 
+			if(fc->server_socket() != Forwarded_connection::CLOSED_SOCKET)
 			if (writefds.isset(fc->server_socket())) {
 				fc->server_write();
 			}
 
+			if(fc->client_socket() != Forwarded_connection::CLOSED_SOCKET)
 			if (readfds.isset(fc->client_socket())) {
 				fc->client_read();
 			}
 
+			if(fc->server_socket() != Forwarded_connection::CLOSED_SOCKET)
 			if (readfds.isset(fc->server_socket())) {
 				fc->server_read();
 			}
 
 		}
 
-		// making cyclic shift
-		if(connections.size() > 1){
-			Forwarded_connection *fc = connections.front();
-			connections.pop_front();
-			connections.push_back(fc);
-		}
+// making cyclic shift; not needed any more
+//		if(connections.size() > 1){
+//			Forwarded_connection *fc = connections.front();
+//			connections.pop_front();
+//			connections.push_back(fc);
+//		}
 
 	}
 	return (EXIT_SUCCESS);

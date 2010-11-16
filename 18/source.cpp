@@ -3,7 +3,9 @@
 #include <pthread.h>
 #include <cstdlib>
 #include <cassert>
-
+#define DEBUG
+#include "../libs/Mutex/Mutex.h"
+#undef DEBUG
 using namespace std;
 
 
@@ -13,7 +15,7 @@ class List {
 		class Node {
 			friend class List;
 			private:
-			pthread_mutex_t mutex;
+			Mutex mutex;
 			public:
 			string data;
 			Node *next;
@@ -28,21 +30,19 @@ class List {
 			}
 
 			void lock(){
-				pthread_mutex_lock(&mutex);
+				mutex.lock();
 			}
 
 			void unlock(){
-				pthread_mutex_unlock(&mutex);
+				mutex.unlock();
 			}
 
 			Node(string data, Node *next, Node *prev) :
-				data(data), next(next), prev(prev) {
+				data(data), next(next), prev(prev), mutex(Mutex::ERRORCHECK_MUTEX) {
 
-					pthread_mutex_init(&mutex, NULL);
 				}
 
 			~Node() {
-				pthread_mutex_destroy(&mutex);
 			}
 		};
 
@@ -53,35 +53,38 @@ class List {
 
 	public:
 		void sort_list(int *sleep_time = NULL) {
-			static const int SWAP_TIME = 1;
-
-			if (list_size <= 1){
-				return;
-			}
 
 			Node *bound = head;
 			Node *n1, *n2;
 
-			for(;;){
 			
+			// it's safe not to lock head here
+			if (list_size <= 1){
+				return;
+			}
+			
+			for(;;){				
 				head->lock();
 				n1 = head->next;
-				head->unlock();
-
 				n1->lock();   
-				n2 = n1->next;
-				if(n2 == bound){
-					n1->unlock();
-					break;
-				}
 
+				n2 = n1->next;
+				
+				if(n2 == bound){
+					head->unlock();
+					n1->unlock();
+					return;
+				}
+				
 				n2->lock();
+				
+				head->unlock();
 				for(;;){
 					if(Node::compare(n1, n2) > 0){
 						Node::swap(n1, n2);
 						if(sleep_time != NULL && *sleep_time != 0){
-							sleep(SWAP_TIME);
-					}
+							sleep(*sleep_time);
+						}
 					}
 
 					if(n2->next != bound){
@@ -90,8 +93,8 @@ class List {
 						n2->lock();
 						n1->prev->unlock();
 					} else {
-						n2->unlock();
 						n1->unlock();
+						n2->unlock();
 						bound = n2;
 						break;
 					}
@@ -127,24 +130,6 @@ class List {
 			head->unlock();
 		}
 
-		void push_back(string s) {
-			head->lock();
-			if(head->prev != head){
-				head->prev->lock();
-			}
-
-			Node *n = new Node(s, head, head->prev);
-			head->prev->next = n;
-			head->prev = n;
-
-			list_size++;
-
-			if(n->prev != head){
-				n->prev->unlock();
-			}
-			head->unlock();
-		}
-
 		void push_front(string s) {
 			head->lock();
 			if(head->next != head){
@@ -169,10 +154,10 @@ class List {
 			int counter = 0;
 
 			for (Node *n = head->next; n != head; n = n->next) {
-// otherwise sorting and printing is hell
-		//		n->lock();
+				// otherwise sorting and printing is hell
+						//n->lock();
 				cout << "Entry " << counter << "\t" << n->data << endl;
-		//		n->unlock();
+						//n->unlock();
 				counter++;
 			}
 		}
@@ -183,27 +168,29 @@ int sleep_time = 1;
 static void *auto_sort(void *ptr){
 	List *list = static_cast<List*> (ptr);
 
-	const static int SLEEP_TIME = 5;
+	const static int SORT_SLEEP_TIME = 5;
 
 	for (;;) {
 		if(stop_flag){
 			break;
 		}
 
-		sleep(SLEEP_TIME);
+		sleep(SORT_SLEEP_TIME);
 
 		list->sort_list(&sleep_time);
 	}
-	
+
 	return NULL;
 }
 
 
 int main(int argc, char *argv[]) {
 
-	pthread_t sort_tid;
+	pthread_t sort_tids[2];
 	List *list = new List();
-	pthread_create(&sort_tid, NULL, auto_sort, list);
+	for(int i = 0; i < sizeof(sort_tids)/sizeof(pthread_t); ++i){
+		pthread_create(&sort_tids[i], NULL, auto_sort, list);
+	}
 
 	cout << "Input lines, please:" << endl;
 	string s;
@@ -218,11 +205,13 @@ int main(int argc, char *argv[]) {
 			list->push_front(s);
 		}
 	}
-	
+
 	stop_flag = true;
 	sleep_time = 0;
-	
-	pthread_join(sort_tid, NULL);
+
+	for(int i = 0; i < sizeof(sort_tids)/sizeof(pthread_t); ++i){
+		pthread_join(sort_tids[i], NULL);
+	}
 	delete list;
 
 	pthread_exit(NULL);

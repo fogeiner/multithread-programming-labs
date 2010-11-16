@@ -232,7 +232,7 @@ class CacheReceiveTask(Task):
 
             if len(entry._buf) > proxy._max_cache_entry_size:
                 l.debug('CacheEntry size exceeds limit')
-
+       
 class CacheSendTask(Task):
     PRIORITY = 0
     def __init__(self, proxy, client):

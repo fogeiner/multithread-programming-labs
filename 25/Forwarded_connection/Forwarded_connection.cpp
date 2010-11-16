@@ -11,6 +11,7 @@ int Forwarded_connection::client_read() {
 #ifdef DEBUG
     std::clog << "client_read " << "client_socket: " << _client_socket << std::endl;
 #endif
+	// connection can got closed after select is done
     if(_client_socket == CLOSED_SOCKET){
 		return -1;
 	}
@@ -77,12 +78,11 @@ int Forwarded_connection::client_write() {
 	if(_client_socket == CLOSED_SOCKET){
 		return -1;
 	}
-	int wrote;
 	
 	Chunk *chunk = _server_to_client_buf->pop_front();
 	const char *b = chunk->buf();
 	int size = chunk->size();
-	wrote = ::send(_client_socket, b, size, 0);
+	int wrote = ::send(_client_socket, b, size, 0);
 	
 	if(wrote == -1){
 		std::cerr << "Write failure: " << strerror(errno) << std::endl;
@@ -107,12 +107,11 @@ int Forwarded_connection::server_write() {
     if(_server_socket == CLOSED_SOCKET){
 		return -1;
 	}
-    int wrote;
 	
 	Chunk *chunk = _client_to_server_buf->pop_front();
 	const char *b = chunk->buf();
 	int size = chunk->size();
-	wrote = ::send(_server_socket, b, size, 0);
+	int wrote = ::send(_server_socket, b, size, 0);
 	
 	if(wrote == -1){
 		std::cerr << "Write failure " << strerror(errno) << std::endl;

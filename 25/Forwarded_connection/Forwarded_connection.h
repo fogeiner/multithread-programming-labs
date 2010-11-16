@@ -5,6 +5,7 @@
 #include "../../libs/Buffer/Buffer.h"
 #include <sys/socket.h>
 #include <cerrno>
+
 class Forwarded_connection {
 private:
 
@@ -32,16 +33,14 @@ public:
 
     int client_socket() const;
     int server_socket() const;
-    int client_read();
 
+    int client_read();
     int server_read();
 
     int client_write();
     int server_write();
 
     int client_to_server_msgs_count() const;
-
     int server_to_client_msgs_count() const;
-
 };
 #endif

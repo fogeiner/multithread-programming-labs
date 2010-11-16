@@ -119,16 +119,12 @@ class List {
 		}
 
 		void print_list() const {
-			pthread_rwlock_rdlock(&rwlock);
-
 			int counter = 0;
 
 			for (Node *n = head->next; n != head; n = n->next) {
 				cout << "Entry " << counter << "\t" << n->data << endl;
 				counter++;
 			}
-
-			pthread_rwlock_unlock(&rwlock);
 		}
 };
 

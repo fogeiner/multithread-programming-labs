@@ -75,7 +75,7 @@ public:
 				n2 = n1->next;
 				if(n2 == bound){
 					n1->unlock();
-					break;
+					return;
 				}
 
 				n2->wrlock();
@@ -93,8 +93,8 @@ public:
 						n2->wrlock();
 						n1->prev->unlock();
 					} else {
-						n2->unlock();
 						n1->unlock();
+						n2->unlock();
 						bound = n2;
 						break;
 					}
@@ -110,7 +110,6 @@ public:
     }
 
     ~List() {
-        
         	head->wrlock();
 
 			for (Node *n = head->next; n != head;) {
@@ -125,25 +124,9 @@ public:
     }
 
     int size() const {
+       	head->rdlock();
         return list_size;
-    }
-
-    void push_back(string s) {
-        head->wrlock();
-        if(head->prev != head){
-            head->prev->wrlock();
-        }
-        
-        Node *n = new Node(s, head, head->prev);
-        head->prev->next = n;
-        head->prev = n;
-
-        list_size++;
-
-        if(n->prev != head){
-            n->prev->unlock();
-        }
-        head->unlock();
+		head->unlock();
     }
 
     void push_front(string s) {
@@ -171,9 +154,7 @@ public:
 
 
         for (Node *n = head->next; n != head; n = n->next) {
-      //      n->rdlock();
             cout << "Entry " << counter << "\t" << n->data << endl;
-      //      n->unlock();
             counter++;
         }
     }
@@ -202,9 +183,11 @@ static void *auto_sort(void *ptr){
 
 int main(int argc, char *argv[]) {
 
-	pthread_t sort_tid;
+	pthread_t sort_tids[2];
 	List *list = new List();
-	pthread_create(&sort_tid, NULL, auto_sort, list);
+	for(int i = 0; i < sizeof(sort_tids)/sizeof(pthread_t); ++i){
+		pthread_create(&sort_tids[i], NULL, auto_sort, list);
+	}
 
 	cout << "Input lines, please:" << endl;
 	string s;
@@ -222,8 +205,11 @@ int main(int argc, char *argv[]) {
 	
 	stop_flag = true;
 	sleep_time = 0;
-	
-	pthread_join(sort_tid, NULL);
+
+
+	for(int i = 0; i < sizeof(sort_tids)/sizeof(pthread_t); ++i){
+		pthread_join(sort_tids[i], NULL);
+	}
 	delete list;
 
 	pthread_exit(NULL);
