@@ -3,11 +3,8 @@
 #include <pthread.h>
 #include <cstdlib>
 #include <cassert>
-#define DEBUG
 #include "../libs/Mutex/Mutex.h"
-#undef DEBUG
 using namespace std;
-
 
 class List {
 	private:
@@ -57,7 +54,6 @@ class List {
 			Node *bound = head;
 			Node *n1, *n2;
 
-			
 			// it's safe not to lock head here
 			if (list_size <= 1){
 				return;
@@ -194,7 +190,7 @@ int main(int argc, char *argv[]) {
 
 	cout << "Input lines, please:" << endl;
 	string s;
-	for (;;) {
+	while(1) {
 		getline(cin, s);
 
 		if (cin.eof()){

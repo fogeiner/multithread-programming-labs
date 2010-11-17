@@ -52,10 +52,13 @@ private:
 
     Node *head;
     int list_size;
+    pthread_rwlock_t destruct_lock;
 
 public:
 
 		void sort_list(int *sleep_time = NULL) {
+			pthread_rwlock_rdlock(&destruct_lock);
+
 			static const int SWAP_TIME = 1;
 
 			if (list_size <= 1){
@@ -69,16 +72,18 @@ public:
 			
 				head->rdlock();
 				n1 = head->next;
-				head->unlock();
 
 				n1->wrlock();   
 				n2 = n1->next;
 				if(n2 == bound){
+			pthread_rwlock_unlock(&destruct_lock);
+					head->unlock();
 					n1->unlock();
 					return;
 				}
 
 				n2->wrlock();
+				head->unlock();
 				for(;;){
 					if(Node::compare(n1, n2) > 0){
 						Node::swap(n1, n2);
@@ -100,17 +105,20 @@ public:
 					}
 				}
 			}
+			pthread_rwlock_unlock(&destruct_lock);
 
 		}
 
     List() : list_size(0) {
         head = new Node("", NULL, NULL);
-        head->next = head;
+		pthread_rwlock_init(&destruct_lock, NULL);
+		head->next = head;
         head->prev = head;
     }
 
     ~List() {
         	head->wrlock();
+			pthread_rwlock_wrlock(&destruct_lock);
 
 			for (Node *n = head->next; n != head;) {
 				Node *t = n->next;
@@ -120,13 +128,13 @@ public:
 
 			list_size = 0;
 			head->unlock();
+			pthread_rwlock_unlock(&destruct_lock);
+			pthread_rwlock_destroy(&destruct_lock);
 			delete head;
     }
 
     int size() const {
-       	head->rdlock();
         return list_size;
-		head->unlock();
     }
 
     void push_front(string s) {
@@ -167,11 +175,7 @@ static void *auto_sort(void *ptr){
 
 	const static int SLEEP_TIME = 5;
 
-	for (;;) {
-		if(stop_flag){
-			break;
-		}
-
+	while(!stop_flag) {
 		sleep(SLEEP_TIME);
 
 		list->sort_list(&sleep_time);
@@ -183,7 +187,7 @@ static void *auto_sort(void *ptr){
 
 int main(int argc, char *argv[]) {
 
-	pthread_t sort_tids[2];
+	pthread_t sort_tids[20];
 	List *list = new List();
 	for(int i = 0; i < sizeof(sort_tids)/sizeof(pthread_t); ++i){
 		pthread_create(&sort_tids[i], NULL, auto_sort, list);
@@ -191,7 +195,7 @@ int main(int argc, char *argv[]) {
 
 	cout << "Input lines, please:" << endl;
 	string s;
-	for (;;) {
+	while(1) {
 		getline(cin, s);
 
 		if (cin.eof()){
@@ -206,11 +210,11 @@ int main(int argc, char *argv[]) {
 	stop_flag = true;
 	sleep_time = 0;
 
+	delete list;
 
 	for(int i = 0; i < sizeof(sort_tids)/sizeof(pthread_t); ++i){
 		pthread_join(sort_tids[i], NULL);
 	}
-	delete list;
 
 	pthread_exit(NULL);
 }
