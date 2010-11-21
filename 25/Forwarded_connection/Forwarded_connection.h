@@ -2,7 +2,7 @@
 #define FORWARDED_CONNECTION_H
 #include <unistd.h>
 #include <iostream>
-#include "../../libs/Buffer/Buffer.h"
+#include "../Buffer/Buffer.h"
 #include <sys/socket.h>
 #include <cerrno>
 

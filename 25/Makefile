@@ -8,7 +8,7 @@ CC = g++
 $(APP): $(OBJ)
 	$(CC) -o $(APP) $(OBJ) $(CXXFLAGS)
 
-retranslator.o: Makefile retranslator.cpp ../libs/Fd_set/Fd_set.h ../libs/Buffer/Buffer.h ../libs/Buffer/Chunk/Chunk.h
+retranslator.o: Makefile retranslator.cpp ../libs/Fd_set/Fd_set.h Buffer/Buffer.h Buffer/Chunk/Chunk.h
 	$(CC) -o retranslator.o -c $(CXXFLAGS) retranslator.cpp
 
 Forwarded_connection/Forwarded_connection.o: Makefile Forwarded_connection/Forwarded_connection.cpp Forwarded_connection/Forwarded_connection.h

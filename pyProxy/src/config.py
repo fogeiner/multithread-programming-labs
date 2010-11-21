@@ -7,3 +7,5 @@ supported_http_methods = ['HEAD', 'GET']
 default_http_port = 80
 http_delimeter = '\r\n\r\n'
 http_OK_code = '200'
+http_scheme = 'http'
+bad_request_msg = 'HTTP/1.0 400 Bad request\r\n\r\nBad request'

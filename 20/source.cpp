@@ -8,53 +8,53 @@ using namespace std;
 
 
 class List {
-private:
+	private:
 
-    class Node {
-        friend class List;
-    private:
-        pthread_rwlock_t rwlock;
-    public:
-        string data;
-        Node *next;
-        Node *prev;
+		class Node {
+			friend class List;
+			private:
+			pthread_rwlock_t rwlock;
+			public:
+			string data;
+			Node *next;
+			Node *prev;
 
-        static int compare(Node *n1, Node *n2) {
-            return n1->data.compare(n2->data);
-        }
+			static int compare(Node *n1, Node *n2) {
+				return n1->data.compare(n2->data);
+			}
 
-        static void swap(Node *n1, Node *n2) {
-            n1->data.swap(n2->data);
-        }
+			static void swap(Node *n1, Node *n2) {
+				n1->data.swap(n2->data);
+			}
 
-        void rdlock(){
-            pthread_rwlock_rdlock(&rwlock);
-        }
-        
-        void wrlock(){
-			pthread_rwlock_wrlock(&rwlock);
-		}
-        
-        void unlock(){
-            pthread_rwlock_unlock(&rwlock);
-        }
+			void rdlock(){
+				pthread_rwlock_rdlock(&rwlock);
+			}
 
-        Node(string data, Node *next, Node *prev) :
-        data(data), next(next), prev(prev) {
-			
-			pthread_rwlock_init(&rwlock, NULL);
-        }
+			void wrlock(){
+				pthread_rwlock_wrlock(&rwlock);
+			}
 
-        ~Node() {
-            pthread_rwlock_destroy(&rwlock);
-        }
-    };
+			void unlock(){
+				pthread_rwlock_unlock(&rwlock);
+			}
 
-    Node *head;
-    int list_size;
-    pthread_rwlock_t destruct_lock;
+			Node(string data, Node *next, Node *prev) :
+				data(data), next(next), prev(prev) {
 
-public:
+					pthread_rwlock_init(&rwlock, NULL);
+				}
+
+			~Node() {
+				pthread_rwlock_destroy(&rwlock);
+			}
+		};
+
+		Node *head;
+		int list_size;
+		pthread_rwlock_t destruct_lock;
+
+	public:
 
 		void sort_list(int *sleep_time = NULL) {
 			pthread_rwlock_rdlock(&destruct_lock);
@@ -68,15 +68,15 @@ public:
 			Node *bound = head;
 			Node *n1, *n2;
 
-			for(;;){
-			
+			while(1) {
+
 				head->rdlock();
 				n1 = head->next;
 
 				n1->wrlock();   
 				n2 = n1->next;
 				if(n2 == bound){
-			pthread_rwlock_unlock(&destruct_lock);
+					pthread_rwlock_unlock(&destruct_lock);
 					head->unlock();
 					n1->unlock();
 					return;
@@ -84,7 +84,7 @@ public:
 
 				n2->wrlock();
 				head->unlock();
-				for(;;){
+				while(1) {
 					if(Node::compare(n1, n2) > 0){
 						Node::swap(n1, n2);
 						if(sleep_time != NULL && *sleep_time != 0){
@@ -109,15 +109,15 @@ public:
 
 		}
 
-    List() : list_size(0) {
-        head = new Node("", NULL, NULL);
-		pthread_rwlock_init(&destruct_lock, NULL);
-		head->next = head;
-        head->prev = head;
-    }
+		List() : list_size(0) {
+			head = new Node("", NULL, NULL);
+			pthread_rwlock_init(&destruct_lock, NULL);
+			head->next = head;
+			head->prev = head;
+		}
 
-    ~List() {
-        	head->wrlock();
+		~List() {
+			head->wrlock();
 			pthread_rwlock_wrlock(&destruct_lock);
 
 			for (Node *n = head->next; n != head;) {
@@ -131,41 +131,41 @@ public:
 			pthread_rwlock_unlock(&destruct_lock);
 			pthread_rwlock_destroy(&destruct_lock);
 			delete head;
-    }
+		}
 
-    int size() const {
-        return list_size;
-    }
+		int size() const {
+			return list_size;
+		}
 
-    void push_front(string s) {
-        head->wrlock();
-        if(head->next != head){
-            head->next->wrlock();
-        }
+		void push_front(string s) {
+			head->wrlock();
+			if(head->next != head){
+				head->next->wrlock();
+			}
 
-        Node *n = new Node(s, head->next, head);
-        head->next->prev = n;
-        head->next = n;
+			Node *n = new Node(s, head->next, head);
+			head->next->prev = n;
+			head->next = n;
 
-        list_size++;
+			list_size++;
 
-        if(n->next != head){
-            n->next->unlock();
-        }
-        
-        head->unlock();
-    }
+			if(n->next != head){
+				n->next->unlock();
+			}
 
-    void print_list() const {
+			head->unlock();
+		}
 
-        int counter = 0;
+		void print_list() const {
+
+			int counter = 0;
 
 
-        for (Node *n = head->next; n != head; n = n->next) {
-            cout << "Entry " << counter << "\t" << n->data << endl;
-            counter++;
-        }
-    }
+			for (Node *n = head->next; n != head; n = n->next) {
+				cout << "Entry " << counter << "\t" << n->data << endl;
+				counter++;
+			}
+		}
 };
 
 bool stop_flag = false;
@@ -180,7 +180,7 @@ static void *auto_sort(void *ptr){
 
 		list->sort_list(&sleep_time);
 	}
-	
+
 	return NULL;
 }
 
@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
 			list->push_front(s);
 		}
 	}
-	
+
 	stop_flag = true;
 	sleep_time = 0;
 
