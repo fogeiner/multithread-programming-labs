@@ -1,18 +1,24 @@
 #pragma once
 #include <list>
 #include <vector>
+#include <map>
 #include <exception>
 #include <string>
+
 
 #include <cerrno>
 #include <cstring>
 #include <cassert>
 
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <arpa/inet.h>
+#include <unistd.h>
+
+
 
 #include "../Fd_set/Fd_set.h"
 #include "../Buffer/Buffer.h"
@@ -22,23 +28,125 @@
 #include <cstdio>
 #endif
 
-std::vector<std::list<Selectable*> > 
-Select(std::list<Selectable*> rlist,
-		std::list<Selectable*> wlist,
-		std::list<Selectable*> xlist){
+template<typename T>
+inline T max(T a, T b){
+	if (a > b) return a;
+	else return b;
+}
+
+class SelectException: public std::exception {
+	private:
+		std::string _err;
+		static const int ERR_MSG_MAX_LENGTH = 256;
+	public:
+
+		SelectException(int err_number){
+			char buf[ERR_MSG_MAX_LENGTH];
+			char *msg_ptr;
+			msg_ptr = ::strerror_r(err_number, buf, sizeof(buf));
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+			this->_err.assign(buf);
+#else
+			this->_err.assign(msg_ptr);	
+#endif
+		}
+
+		const char *what() const throw(){
+			return this->_err.c_str();
+		}
+
+		~SelectException() throw() {}
+};
+
+void Select(std::list<Selectable*> *rlist,
+		std::list<Selectable*> *wlist,
+		std::list<Selectable*> *xlist, int ms_timeout = 0){
+	std::map<int, Selectable*> fd2obj;
+
 	Fd_set rfds, wfds, xfds;
 
-	std::vector<std::list<Selectable*> > lists;
-	return lists;
+	if (rlist != NULL)
+	for(std::list<Selectable*>::iterator i = rlist->begin();
+			i != rlist->end(); ++i){
+		Selectable *s = *i;
+		int fd = s->fileno();
+		fd2obj.insert(std::pair<int, Selectable*>(fd, s));
+		rfds.set(fd);
+	}
+
+	if (wlist != NULL)
+	for(std::list<Selectable*>::iterator i = wlist->begin();
+			i != wlist->end(); ++i){
+		Selectable *s = *i;
+		int fd = s->fileno();
+		fd2obj.insert(std::pair<int, Selectable*>(fd, s));
+		wfds.set(fd);
+	}
+
+	if (xlist != NULL)
+	for(std::list<Selectable*>::iterator i = xlist->begin();
+			i != xlist->end(); ++i){
+		Selectable *s = *i;
+		int fd = s->fileno();
+		fd2obj.insert(std::pair<int, Selectable*>(fd, s));
+		xfds.set(fd);
+	}
+
+	int max_fd = max(max(rfds.max_fd(), wfds.max_fd()), xfds.max_fd());
+
+    struct timeval tv;
+	const int USEC_IN_SEC = 1000;
+	tv.tv_sec = ms_timeout / USEC_IN_SEC;
+	tv.tv_usec = ms_timeout - (ms_timeout / USEC_IN_SEC) * USEC_IN_SEC;
+
+	struct timeval *tv_p = (ms_timeout == 0) ? NULL : &tv;
+	
+	int av_fds;
+	if((av_fds = select(max_fd + 1, &rfds.fdset(), &wfds.fdset(), &xfds.fdset(), tv_p)) == -1){
+		throw SelectException(errno);
+	}
+#ifdef DEBUG
+	fprintf(stderr, "Select returned %d fds\n", av_fds);
+#endif
+	
+	if (rlist != NULL)
+	rlist->clear();
+	if (wlist != NULL)
+	wlist->clear();
+	if (xlist != NULL)
+	xlist->clear();
+
+	for(std::map<int, Selectable*>::iterator i = fd2obj.begin();
+			i != fd2obj.end(); ++i){
+		std::pair<int, Selectable*> kv = *i;
+		int fd = kv.first;
+		Selectable *s = kv.second;
+
+		if (rlist != NULL)
+		if(rfds.isset(fd)){
+			rlist->push_back(s);
+		}
+
+		if (wlist != NULL)
+		if(wfds.isset(fd)){
+			wlist->push_back(s);
+		}
+
+		if (xlist != NULL)
+		if (xfds.isset(fd)) {
+			xlist->push_back(s);
+		}
+	}
 }
+	
 
 class TCPSocketException: public std::exception {
 	private:
 		std::string _err;
 		static const int ERR_MSG_MAX_LENGTH = 256;
 	public:
-		TCPSocketException(const char *msg): _err(msg) {
 
+		TCPSocketException(const char *msg): _err(msg){
 		}
 
 		TCPSocketException(int err_number){
@@ -367,7 +475,7 @@ class TCPSocket: public Selectable {
 			return this->connect(name.c_str(), port);
 		}
 
-		TCPSocket accept(){
+		TCPSocket *accept(){
 			struct sockaddr addr;
 			socklen_t len = sizeof(addr);
 			int n_sock = ::accept(this->_b->_sock, &addr, &len);
@@ -377,6 +485,6 @@ class TCPSocket: public Selectable {
 			if(n_sock == -1){
 				throw AcceptException(errno);
 			}
-			return TCPSocket(n_sock, addr);
+			return new TCPSocket(n_sock, addr);
 		}
 };
