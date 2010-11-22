@@ -66,41 +66,41 @@ void Select(std::list<Selectable*> *rlist,
 	Fd_set rfds, wfds, xfds;
 
 	if (rlist != NULL)
-	for(std::list<Selectable*>::iterator i = rlist->begin();
-			i != rlist->end(); ++i){
-		Selectable *s = *i;
-		int fd = s->fileno();
-		fd2obj.insert(std::pair<int, Selectable*>(fd, s));
-		rfds.set(fd);
-	}
+		for(std::list<Selectable*>::iterator i = rlist->begin();
+				i != rlist->end(); ++i){
+			Selectable *s = *i;
+			int fd = s->fileno();
+			fd2obj.insert(std::pair<int, Selectable*>(fd, s));
+			rfds.set(fd);
+		}
 
 	if (wlist != NULL)
-	for(std::list<Selectable*>::iterator i = wlist->begin();
-			i != wlist->end(); ++i){
-		Selectable *s = *i;
-		int fd = s->fileno();
-		fd2obj.insert(std::pair<int, Selectable*>(fd, s));
-		wfds.set(fd);
-	}
+		for(std::list<Selectable*>::iterator i = wlist->begin();
+				i != wlist->end(); ++i){
+			Selectable *s = *i;
+			int fd = s->fileno();
+			fd2obj.insert(std::pair<int, Selectable*>(fd, s));
+			wfds.set(fd);
+		}
 
 	if (xlist != NULL)
-	for(std::list<Selectable*>::iterator i = xlist->begin();
-			i != xlist->end(); ++i){
-		Selectable *s = *i;
-		int fd = s->fileno();
-		fd2obj.insert(std::pair<int, Selectable*>(fd, s));
-		xfds.set(fd);
-	}
+		for(std::list<Selectable*>::iterator i = xlist->begin();
+				i != xlist->end(); ++i){
+			Selectable *s = *i;
+			int fd = s->fileno();
+			fd2obj.insert(std::pair<int, Selectable*>(fd, s));
+			xfds.set(fd);
+		}
 
 	int max_fd = max(max(rfds.max_fd(), wfds.max_fd()), xfds.max_fd());
 
-    struct timeval tv;
+	struct timeval tv;
 	const int USEC_IN_SEC = 1000;
 	tv.tv_sec = ms_timeout / USEC_IN_SEC;
 	tv.tv_usec = ms_timeout - (ms_timeout / USEC_IN_SEC) * USEC_IN_SEC;
 
 	struct timeval *tv_p = (ms_timeout == 0) ? NULL : &tv;
-	
+
 	int av_fds;
 	if((av_fds = select(max_fd + 1, &rfds.fdset(), &wfds.fdset(), &xfds.fdset(), tv_p)) == -1){
 		throw SelectException(errno);
@@ -108,13 +108,13 @@ void Select(std::list<Selectable*> *rlist,
 #ifdef DEBUG
 	fprintf(stderr, "Select returned %d fds\n", av_fds);
 #endif
-	
+
 	if (rlist != NULL)
-	rlist->clear();
+		rlist->clear();
 	if (wlist != NULL)
-	wlist->clear();
+		wlist->clear();
 	if (xlist != NULL)
-	xlist->clear();
+		xlist->clear();
 
 	for(std::map<int, Selectable*>::iterator i = fd2obj.begin();
 			i != fd2obj.end(); ++i){
@@ -123,22 +123,22 @@ void Select(std::list<Selectable*> *rlist,
 		Selectable *s = kv.second;
 
 		if (rlist != NULL)
-		if(rfds.isset(fd)){
-			rlist->push_back(s);
-		}
+			if(rfds.isset(fd)){
+				rlist->push_back(s);
+			}
 
 		if (wlist != NULL)
-		if(wfds.isset(fd)){
-			wlist->push_back(s);
-		}
+			if(wfds.isset(fd)){
+				wlist->push_back(s);
+			}
 
 		if (xlist != NULL)
-		if (xfds.isset(fd)) {
-			xlist->push_back(s);
-		}
+			if (xfds.isset(fd)) {
+				xlist->push_back(s);
+			}
 	}
 }
-	
+
 
 class TCPSocketException: public std::exception {
 	private:
