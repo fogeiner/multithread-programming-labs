@@ -32,16 +32,16 @@ Select(std::list<Selectable*> rlist,
 	return lists;
 }
 
-class SocketException: public std::exception {
+class TCPSocketException: public std::exception {
 	private:
 		std::string _err;
 		static const int ERR_MSG_MAX_LENGTH = 256;
 	public:
-		SocketException(const char *msg): _err(msg) {
+		TCPSocketException(const char *msg): _err(msg) {
 
 		}
 
-		SocketException(int err_number){
+		TCPSocketException(int err_number){
 			char buf[ERR_MSG_MAX_LENGTH];
 			char *msg_ptr;
 			msg_ptr = ::strerror_r(err_number, buf, sizeof(buf));
@@ -56,10 +56,100 @@ class SocketException: public std::exception {
 			return this->_err.c_str();
 		}
 
-		~SocketException() throw() {}
+		~TCPSocketException() throw() {}
+};
+
+class SocketException: public TCPSocketException {
+	public:
+		SocketException(const char *msg): TCPSocketException(msg){
+		}
+
+		SocketException(int err_number): TCPSocketException(err_number){
+		}
+};
+
+class SockOptException: public TCPSocketException {
+	public:
+		SockOptException(const char *msg): TCPSocketException(msg){
+		}
+
+		SockOptException(int err_number): TCPSocketException(err_number){
+		}
+};
+
+class ConnectException: public TCPSocketException {
+	public:
+		ConnectException(const char *msg): TCPSocketException(msg){
+		}
+
+		ConnectException(int err_number): TCPSocketException(err_number){
+		}
+};
+
+class AcceptException: public TCPSocketException {
+	public:
+		AcceptException(const char *msg): TCPSocketException(msg){
+		}
+
+		AcceptException(int err_number): TCPSocketException(err_number){
+		}
 };
 
 
+class IOException: public TCPSocketException {
+	public:
+		IOException(const char *msg): TCPSocketException(msg){
+		}
+
+		IOException(int err_number): TCPSocketException(err_number){
+		}
+};
+
+class RecvException: public IOException {
+	public:
+		RecvException(const char *msg): IOException(msg){
+		}
+
+		RecvException(int err_number): IOException(err_number){
+		}
+};
+
+
+class SendException: public IOException {
+	public:
+		SendException(const char *msg): IOException(msg){
+		}
+
+		SendException(int err_number): IOException(err_number){
+		}
+};
+
+class BindException: public TCPSocketException {
+	public:
+		BindException(const char *msg): TCPSocketException(msg){
+		}
+
+		BindException(int err_number): TCPSocketException(err_number){
+		}
+};
+
+class ListenException: public TCPSocketException {
+	public:
+		ListenException(const char *msg): TCPSocketException(msg){
+		}
+
+		ListenException(int err_number): TCPSocketException(err_number){
+		}
+};
+
+class DNSException: public TCPSocketException {
+	public:
+		DNSException(const char *msg): TCPSocketException(msg){
+		}
+
+		DNSException(int err_number): TCPSocketException(hstrerror(err_number)) {
+		}
+};
 
 class TCPSocket: public Selectable {
 	private:
@@ -147,14 +237,14 @@ class TCPSocket: public Selectable {
 
 		void getsockopt(int level, int optname, void *optval, socklen_t *optlen) {
 			if(::getsockopt(this->_b->_sock, level, optname, optval, optlen) == -1){
-				throw SocketException(errno);
+				throw SockOptException(errno);
 			}
 		}
 
 		void setsockopt(int level, int optname, const void *optval, socklen_t optlen) {
 
 			if(::setsockopt(this->_b->_sock, level, optname, optval, optlen) == -1){
-				throw SocketException(errno);
+				throw SockOptException(errno);
 			}
 		}
 
@@ -164,7 +254,7 @@ class TCPSocket: public Selectable {
 
 		void listen(int backlog){
 			if(::listen(this->_b->_sock, backlog) == -1){
-				throw SocketException(errno);
+				throw ListenException(errno);
 			}
 		}
 
@@ -187,13 +277,13 @@ class TCPSocket: public Selectable {
 			assert(count > 0);
 			char buf[count];
 
-			int read = ::recv(this->_b->_sock, buf, sizeof(buf), 0);
+			int read = ::recv(this->_b->_sock, buf, sizeof(buf), MSG_NOSIGNAL);
 #ifdef DEBUG
 			fprintf(stderr, "socket %d recv %d bytes\n", _b->_sock, read);
 #endif
 
 			if(read == -1){
-				throw SocketException(errno);
+				throw RecvException(errno);
 			}
 
 			if(read > 0) {
@@ -218,13 +308,13 @@ class TCPSocket: public Selectable {
 		int send(Buffer *buf, int count) {
 			assert(buf->size() >= count);
 
-			int sent = ::send(this->_b->_sock, buf->buf(), count, 0);
+			int sent = ::send(this->_b->_sock, buf->buf(), count, MSG_NOSIGNAL);
 #ifdef DEBUG
 			fprintf(stderr, "socket %d sent %d bytes\n", _b->_sock, sent);
 #endif
 
 			if(sent == -1){
-				throw SocketException(errno);
+				throw SendException(errno);
 			}
 
 			return sent;
@@ -239,7 +329,7 @@ class TCPSocket: public Selectable {
 			local_addr.sin_addr.s_addr = INADDR_ANY;
 
 			if(::bind(this->_b->_sock, (const sockaddr*)&local_addr, sizeof(local_addr)) == -1) {
-				throw SocketException(errno);
+				throw BindException(errno);
 			}
 
 #ifdef DEBUG
@@ -256,11 +346,11 @@ class TCPSocket: public Selectable {
 			int h_errnop;
 			if(gethostbyname_r(name, &ret, tmp_buf, sizeof(tmp_buf),
 						&result, &h_errnop) == -1){
-				throw SocketException(hstrerror(h_errno));
+				throw DNSException(h_errno);
 			}
 
 			if (result == NULL){
-				throw SocketException("Host connection problem (doesn't exist?)");
+				throw DNSException(h_errno);
 			}
 
 			memset(&remote_addr, 0, sizeof(remote_addr));
@@ -269,7 +359,7 @@ class TCPSocket: public Selectable {
 			remote_addr.sin_port = htons(port);
 
 			if(::connect(this->_b->_sock, (struct sockaddr*)&remote_addr, sizeof(remote_addr)) == -1){
-				throw SocketException(errno);
+				throw ConnectException(errno);
 			}
 		}
 
@@ -285,7 +375,7 @@ class TCPSocket: public Selectable {
 			fprintf(stderr, "socket %d accepted %d\n", this->_b->_sock, n_sock);
 #endif
 			if(n_sock == -1){
-				throw SocketException(errno);
+				throw AcceptException(errno);
 			}
 			return TCPSocket(n_sock, addr);
 		}
