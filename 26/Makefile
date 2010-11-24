@@ -6,7 +6,7 @@ CC = g++
 $(APP): $(OBJ)
 	$(CC) -o $(APP) $(OBJ) $(CXXFLAGS)
 
-source.o: source.cpp ../libs/Buffer/Buffer.h
+source.o: source.cpp ../libs/ChunkBuffer/Buffer.h
 	$(CC) -c -o source.o source.cpp $(CXXFLAGS)
 
 ../libs/Terminal/terminal.o: ../libs/Terminal/terminal.h ../libs/Terminal/terminal.cpp

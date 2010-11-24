@@ -15,7 +15,7 @@
 #define DEBUG
 #undef DEBUG
 
-#include "../libs/Buffer/Buffer.h"
+#include "../libs/ChunkBuffer/Buffer.h"
 #include "../libs/Fd_set/Fd_set.h"
 #include "../libs/Terminal/terminal.h"
 

@@ -1,7 +1,7 @@
 APP = bin
 OBJ = source.o ../libs/Terminal/terminal.o ../libs/Mutex/Mutex.o
 T_HEADER = ../libs/Terminal/terminal.h
-B_HEADER = ../libs/Buffer/Buffer.h
+B_HEADER = ../libs/ChunkBuffer/Buffer.h
 M_HEADER = ../libs/Mutex/Mutex.h
 CXXFLAGS = -lpthread
 CC = g++
