@@ -5,8 +5,10 @@ class Buffer {
 		virtual void append(const Buffer &buffer) = 0;
 		virtual void append(const Buffer *buffer) = 0;
 		virtual void append(const char *buf, int length) = 0;
+		virtual void append(const char *buf) = 0;
 		virtual const char* buf() const = 0 ;
 		virtual int size() const = 0;
+		virtual bool is_empty() const = 0;
 		virtual Buffer *subbuf(int start, int end) const = 0;
 		virtual Buffer *first(int count) const = 0;
 		virtual Buffer *last(int count) const = 0;

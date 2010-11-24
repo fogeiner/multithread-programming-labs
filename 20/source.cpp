@@ -52,6 +52,7 @@ class List {
 
 		Node *head;
 		int list_size;
+		// needed in case trying to sort meanwhile deleting
 		pthread_rwlock_t destruct_lock;
 
 	public:
@@ -211,6 +212,7 @@ int main(int argc, char *argv[]) {
 	sleep_time = 0;
 
 	delete list;
+
 
 	for(int i = 0; i < sizeof(sort_tids)/sizeof(pthread_t); ++i){
 		pthread_join(sort_tids[i], NULL);

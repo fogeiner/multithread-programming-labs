@@ -157,6 +157,7 @@ TCPSocket::TCPSocket(int sock, struct sockaddr addr){
 	fprintf(stderr, "created socket %d\n", _b->_sock);
 #endif
 	this->_state = ACTIVE;
+	this->_b->_closed = false;
 }
 
 TCPSocket::TCPSocket(const TCPSocket &orig) {
@@ -237,8 +238,9 @@ int TCPSocket::recv(Buffer *b, int count) {
 	if(read > 0) {
 		b->append(buf, read);
 	}
-
-
+	if(read == 0){
+		this->_b->_closed = true;
+	}	
 	return read;
 }
 
@@ -280,6 +282,7 @@ void TCPSocket::bind(unsigned short port) {
 		throw BindException(errno);
 	}
 
+this->_b->_closed = false;
 #ifdef DEBUG
 	fprintf(stderr, "socket %d bound to port %d\n", _b->_sock, port);
 #endif
@@ -288,7 +291,7 @@ void TCPSocket::bind(unsigned short port) {
 void TCPSocket::connect(const char *name, unsigned short port) {
 	struct sockaddr_in remote_addr;
 
-	const int GETHOSTBYNAME_R_BUFSIZE = 256;
+	const int GETHOSTBYNAME_R_BUFSIZE = 4096;
 	char tmp_buf[GETHOSTBYNAME_R_BUFSIZE];
 	struct hostent ret, *result;
 	int h_errnop;
@@ -309,9 +312,13 @@ void TCPSocket::connect(const char *name, unsigned short port) {
 	if(::connect(this->_b->_sock, (struct sockaddr*)&remote_addr, sizeof(remote_addr)) == -1){
 		throw ConnectException(errno);
 	}
+	this->_b->_closed = false;
+#ifdef DEBUG
+	fprintf(stderr, "connected to %s port %d\n", name, port);
+#endif
 }
 
-void TCPSocket::connect(std::string &name, short port) {
+void TCPSocket::connect(const std::string name, unsigned short port) {
 	return this->connect(name.c_str(), port);
 }
 
@@ -326,5 +333,9 @@ TCPSocket *TCPSocket::accept(){
 		throw AcceptException(errno);
 	}
 	return new TCPSocket(n_sock, addr);
+}
+
+bool TCPSocket::is_closed(){
+	return this->_b->_closed;
 }
 

@@ -1,5 +1,5 @@
 #pragma once
-#define DEBUG
+//#define DEBUG
 #include <list>
 #include <vector>
 #include <map>
@@ -157,8 +157,9 @@ class TCPSocket: public Selectable {
 		struct Base {
 			int _sock;
 			int _links;
+			bool _closed;
 
-			Base(int sock, int links = 1): _sock(sock), _links(links) {
+			Base(int sock, int links = 1): _sock(sock), _links(links), _closed(true) {
 			}
 		};
 
@@ -198,7 +199,9 @@ class TCPSocket: public Selectable {
 		void bind(unsigned short port);
 		
 		void connect(const char *name, unsigned short port);
-		void connect(std::string &name, short port);
+		void connect(const std::string name, unsigned short port);
+
+		bool is_closed();
 		
 		TCPSocket *accept();
 };

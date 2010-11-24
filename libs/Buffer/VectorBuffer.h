@@ -9,6 +9,9 @@ class VectorBuffer: public Buffer {
 
 	public:
 		VectorBuffer(){}
+		VectorBuffer(const char *buf){
+			this->append(buf);
+		}
 
 		VectorBuffer(const VectorBuffer &orig): 
 			_v(orig._v) {
@@ -35,6 +38,14 @@ class VectorBuffer: public Buffer {
 		virtual void append(const char *buf, int length){
 			this->_v.insert(this->_v.end(), buf, buf + length);
 		}
+
+		virtual void append(const char *buf){
+			int i;
+			for(i = 0; *(buf+i) != '\0'; ++i)
+				;
+			this->_v.insert(this->_v.end(), buf, buf + i);
+		}
+
 		virtual const char* buf() const {
 			return this->_v.data();
 		}
@@ -85,6 +96,10 @@ class VectorBuffer: public Buffer {
 		virtual Buffer &operator+=(const Buffer *another) {
 			this->append(another);
 			return *this;
+		}
+
+		virtual bool is_empty() const {
+			return this->size() == 0 ? true : false;
 		}
 
 		virtual ~VectorBuffer() {}

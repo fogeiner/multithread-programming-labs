@@ -11,76 +11,28 @@
 
 #include <unistd.h>
 
-#include "../libs/ChunkBuffer/Buffer.h"
+#include "../libs/HTTPURIParser/HTTPURIParser.h"
+#include "../libs/TCPSocket/TCPSocket.h"
+#include "../libs/Buffer/VectorBuffer.h"
 #include "../libs/Fd_set/Fd_set.h"
 #include "../libs/Terminal/terminal.h"
 
 #define DEBUG
 
-int init_tcp_socket() {
-	int socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	return socket;
-}
 
-int init_remote_host_sockaddr(sockaddr_in &remote_addr, const char *remote_host, unsigned short remote_port) {
-	// in static memory, no need to call free
-
-	bzero(&remote_addr, sizeof (remote_addr));
-
-	struct hostent *remote_hostent = gethostbyname(remote_host);
-
-	if (remote_hostent == NULL) {
-		return -1;
-	}
-
-	remote_addr.sin_addr = *((in_addr *) remote_hostent->h_addr_list[0]);
-	remote_addr.sin_family = AF_INET;
-	remote_addr.sin_port = remote_port;
-	return 0;
-}
-
-int parse_arguments(std::string url, std::string &host, std::string &path) {
-	// starts with http://
-
-	if (url.substr(0, 7) != "http://") {
-		std::cerr << "URL required" << std::endl;
-		return -1;
-	}
-
-	url = url.substr(7, url.length());
-	int slash_index = url.find_first_of('/', 0);
-
-	if (slash_index != -1) {
-		host = url.substr(0, slash_index);
-		path = url.substr(slash_index, url.length());
-	} else {
-		host = url;
-		path = '/';
-	}
-
-#ifdef DEBUG
-	std::clog << "Host: " << host << "\tPath: " << path << std::endl;
-#endif
-}
-
-void print_screen(Buffer &buf, bool &screen_full, int &print_screen_counter, int rows, int cols) {
+void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int rows, int cols) {
 
 	static const char msg_to_press_key[] = "Press enter to scroll...";
 	static int cur_row = 0, cur_col = 0;
 	int next_tab_position;
 	const int DEFAULT_TAB_WIDTH = 8;
 
-	for (;;) {
-		if(buf.is_empty()){
-			return;
-		}
+	while(!screen_full && !buf->is_empty()) {
+		int size = buf->size();
+		const char *b = buf->buf();
 
-		Chunk *chunk = buf.pop_front();
-
-		int chunk_size = chunk->size();
-		const char *b = chunk->buf();
-
-		for (int i = 0; i < chunk_size; ++i) {
+		int i;
+		for (i = 0; i < size; ++i) {
 			switch (b[i]) {
 				case '\t':
 					next_tab_position = DEFAULT_TAB_WIDTH * 
@@ -112,57 +64,17 @@ void print_screen(Buffer &buf, bool &screen_full, int &print_screen_counter, int
 				if(print_screen_counter == 0){
 					screen_full = true;
 				}
-				buf.put_back_front(chunk, i);
-				return;
+				break;
 			}
 		}
-
-		delete chunk;
+		buf->drop_first(i);
 	}
 }
 
-int GET_send_request(int &socket, std::string &url, std::string &path, std::string &host) {
-
-	std::string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
-#ifdef DEBUG
-	std::clog << "Sending request:\n" << request << std::endl;
-#endif
-
-	int send_size = request.length();
-	int sent;
-
-	sent = ::send(socket, request.c_str(), send_size, 0);
-
-	if (sent != send_size) {
-		return -1;
-	}
-}
-
-int GET_recv_answer(int &socket, Buffer &recv_buf) {
-	const int BUFSIZE = 4*1024;
-	char b[BUFSIZE];
-	int read;
-	read = ::recv(socket, b, sizeof (b), 0);
-
-	if (read > 0) {
-		recv_buf.push_back(b, read);
-	}
-
-	return read;
-}
-
-int main(int argc, char *argv[]) {
-	if (argc != 2) {
-		std::cerr << "Usage: " << argv[0] << " url" << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	const int HTTP_DEFAULT_PORT = 80;
-	const int CLOSED_SOCKET = -1;
-	int screen_rows_count, screen_cols_count;
-
+void get_terminal_props_and_save_state(int &screen_rows_count, int &screen_cols_count){
 	if (get_terminal_width_height(STDOUT_FILENO, &screen_cols_count, &screen_rows_count) == -1) {
 		std::cerr << strerror(errno) << std::endl;
+		exit(EXIT_FAILURE);
 	}
 
 	if(!isatty(STDIN_FILENO)){
@@ -172,8 +84,24 @@ int main(int argc, char *argv[]) {
 
 	if(term_save_state() == -1){
 		std::cerr << strerror(errno) << std::endl;
+		exit(EXIT_FAILURE);
+	}
+}
+
+int main(int argc, char *argv[]) {
+	if (argc != 2) {
+		std::cerr << "Usage: " << argv[0] << " url" << std::endl;
 		return EXIT_FAILURE;
 	}
+
+	int screen_rows_count, screen_cols_count;
+	get_terminal_props_and_save_state(screen_rows_count, screen_cols_count);
+
+	TCPSocket *serv_socket = NULL;
+	Buffer *recv_buf = NULL;
+	Buffer *send_buf = NULL;
+	ParsedURI *pu = NULL;
+
 	try{
 		if(term_canon_off() == -1){
 			std::cerr << strerror(errno) << std::endl;
@@ -184,53 +112,51 @@ int main(int argc, char *argv[]) {
 		std::clog << "Terminal size: " << screen_rows_count << "x" << screen_cols_count << std::endl;
 #endif
 
-		int serv_socket = init_tcp_socket();
+		serv_socket = new TCPSocket();
+		recv_buf = new VectorBuffer();
+		send_buf = new VectorBuffer();
+		std::string url(argv[1]);
+		ParsedURI *pu = HTTPURIParser::parse(url);
 
-		if (serv_socket == -1) {
-			std::cerr << strerror(errno) << std::endl;
-			return EXIT_FAILURE;
+		if(pu == NULL){
+			std::cerr << "Invalid URI provided" << std::endl;
+			exit(EXIT_FAILURE);
 		}
 
-		Buffer recv_buf;
-		std::string host, path, url(argv[1]);
+#ifdef DEBUG
+		std::clog << "connecting to " << pu->netloc << " port " << ((pu->port_n != 0) ? pu->port_n : 80) << std::endl;
+#endif
+		serv_socket->connect(pu->netloc, pu->port_n != 0 ? pu->port_n : 80);
 
-		if (parse_arguments(url, host, path) == -1) {
-			return EXIT_FAILURE;
-		}
+		send_buf->append("GET ");
+		// HTTP/1.1 servers can do without Host; usually send Location with full URI
+		send_buf->append(url.c_str());
+		send_buf->append(" HTTP/1.0\r\n\r\n");
 
-		sockaddr_in remote_addr;
-
-		if (init_remote_host_sockaddr(remote_addr, host.c_str(), htons(HTTP_DEFAULT_PORT)) == -1) {
-			std::cerr << "Getting remote_host info: " << hstrerror(h_errno) << std::endl;
-			return EXIT_FAILURE;
-		}
-
-		if (connect(serv_socket, (const sockaddr*) & remote_addr, sizeof (remote_addr)) == -1) {
-			std::cerr << strerror(errno) << std::endl;
-			return EXIT_FAILURE;
-		}
-
-		if (GET_send_request(serv_socket, url, path, host) == -1) {
-			std::cerr << strerror(errno) << std::endl;
-			return EXIT_FAILURE;
-		}
-
+		int to_send = send_buf->size();
+#ifdef DEBUG
+		std::clog << "sending request (" << to_send << " bytes): " << "GET " << url << " HTTP/1.0" << std::endl;
+#endif
+		while(to_send -= serv_socket->send(send_buf))
+			;
 		const int STDIN_BUFSIZE = 128;
 		bool screen_full = false;
 		char stdin_buf[STDIN_BUFSIZE];
+
 		Fd_set readfds;
+
 		int print_screen_counter = 1;
 
 		for (;;) {
 
-			if ((serv_socket == CLOSED_SOCKET) && (recv_buf.size() == 0)) {
+			if ((serv_socket->is_closed()) && (recv_buf->size() == 0)) {
 				break;
 			}
 
 			readfds.zero();
 
-			if (serv_socket != CLOSED_SOCKET) {
-				readfds.set(serv_socket);
+			if (!serv_socket->is_closed()) {
+				readfds.set(serv_socket->fileno());
 			}
 
 			readfds.set(STDIN_FILENO);
@@ -243,17 +169,8 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 
-			if (serv_socket != CLOSED_SOCKET && readfds.isset(serv_socket)) {
-				int ret = GET_recv_answer(serv_socket, recv_buf);
-				if (ret == -1) {
-					std::cerr << strerror(errno) << std::endl;
-					return EXIT_FAILURE;
-				}
-
-				if (ret == 0) {
-					close(serv_socket);
-					serv_socket = CLOSED_SOCKET;
-				}
+			if (!serv_socket->is_closed() && readfds.isset(serv_socket->fileno())) {
+				serv_socket->recv(recv_buf);
 			}
 
 			if (readfds.isset(STDIN_FILENO)) {
@@ -268,11 +185,20 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	} catch(...){
+		delete serv_socket;
+		delete recv_buf;
+		delete send_buf;
+		delete pu;
+
 		if(term_restore_state() == -1){
 			std::cerr << strerror(errno) << std::endl;
 			return EXIT_FAILURE;
 		}
 	}
+	delete serv_socket;
+	delete recv_buf;
+	delete send_buf;
+	delete pu;
 	if(term_restore_state() == -1){
 		std::cerr << strerror(errno) << std::endl;
 	}
