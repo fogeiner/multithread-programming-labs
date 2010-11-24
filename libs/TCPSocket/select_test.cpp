@@ -1,4 +1,3 @@
-#define DEBUG
 #include "TCPSocket.h"
 #include <cstdio>
 #include <list>
