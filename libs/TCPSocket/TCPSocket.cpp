@@ -115,23 +115,27 @@ const char *TCPSocketException::what() const throw(){
 }
 
 void TCPSocket::increase() {
-	assert(_b->_links != 0);
-	_b->_links++;
+	if(this->_state != CLOSED){
+		assert(_b->_links != 0);
+		_b->_links++;
 #ifdef DEBUG
-	fprintf(stderr, "socket %d increase: now %d\n",_b->_sock, _b->_links);
+		fprintf(stderr, "socket %d increase: now %d\n",_b->_sock, _b->_links);
 #endif
+	}
 }
 
 void TCPSocket::decrease() {
-	assert(_b->_links > 0);
+	if(this->_state != CLOSED){
+		assert(_b->_links > 0);
 
-	_b->_links--;
+		_b->_links--;
 
 #ifdef DEBUG
-	fprintf(stderr, "socket %d decrease: now %d\n", _b->_sock, _b->_links);
+		fprintf(stderr, "socket %d decrease: now %d\n", _b->_sock, _b->_links);
 #endif
-	if (_b->_links == 0) {
-		this->close();
+		if (_b->_links == 0) {
+			this->close();
+		}
 	}
 }
 
@@ -144,7 +148,7 @@ TCPSocket::TCPSocket() {
 	}
 
 	this->_b = new TCPSocket::Base(sock);
-	this->_state = ACTIVE;
+	this->_state = CREATED;
 #ifdef DEBUG
 	fprintf(stderr, "created socket %d\n", _b->_sock);
 #endif
@@ -156,12 +160,12 @@ TCPSocket::TCPSocket(int sock, struct sockaddr addr){
 #ifdef DEBUG
 	fprintf(stderr, "created socket %d\n", _b->_sock);
 #endif
-	this->_state = ACTIVE;
-	this->_b->_closed = false;
+	this->_state = CONNECTED;
 }
 
 TCPSocket::TCPSocket(const TCPSocket &orig) {
 	this->_b = orig._b;
+	this->_state = orig._state;
 	this->increase();
 }
 
@@ -175,6 +179,7 @@ TCPSocket& TCPSocket::operator=(const TCPSocket &orig) {
 	}
 
 	this->decrease();
+	this->_state = orig._state;
 	this->_b = orig._b;
 	this->increase();
 	return *this;
@@ -205,9 +210,11 @@ void TCPSocket::listen(int backlog){
 	if(::listen(this->_b->_sock, backlog) == -1){
 		throw ListenException(errno);
 	}
+	this->_state = LISTENING;
 }
 
 void TCPSocket::close() {
+
 	if(this->_state != CLOSED){
 #ifdef DEBUG
 		fprintf(stderr, "socket %d closing\n", _b->_sock);
@@ -238,24 +245,26 @@ int TCPSocket::recv(Buffer *b, int count) {
 	if(read > 0) {
 		b->append(buf, read);
 	}
-	if(read == 0){
-		this->_b->_closed = true;
+
+	if (read == 0){
+		this->close();
 	}	
+
 	return read;
 }
 
-int TCPSocket::send(Buffer &buf) {
-	return this->send(&buf);
+int TCPSocket::send(Buffer &buf, bool send_all) {
+	return this->send(&buf, send_all);
 }
 
-int TCPSocket::send(Buffer &buf, int count) {
-	return this->send(&buf, count);
+int TCPSocket::send(Buffer &buf, int count, bool send_all) {
+	return this->send(&buf, count, send_all);
 }
 
-int TCPSocket::send(Buffer *buf) {
-	return this->send(buf, buf->size());
+int TCPSocket::send(Buffer *buf, bool send_all) {
+	return this->send(buf, buf->size(), send_all);
 }
-int TCPSocket::send(Buffer *buf, int count) {
+int TCPSocket::send(Buffer *buf, int count, bool send_all) {
 	assert(buf->size() >= count);
 
 	int sent = ::send(this->_b->_sock, buf->buf(), count, MSG_NOSIGNAL);
@@ -282,7 +291,6 @@ void TCPSocket::bind(unsigned short port) {
 		throw BindException(errno);
 	}
 
-this->_b->_closed = false;
 #ifdef DEBUG
 	fprintf(stderr, "socket %d bound to port %d\n", _b->_sock, port);
 #endif
@@ -312,7 +320,7 @@ void TCPSocket::connect(const char *name, unsigned short port) {
 	if(::connect(this->_b->_sock, (struct sockaddr*)&remote_addr, sizeof(remote_addr)) == -1){
 		throw ConnectException(errno);
 	}
-	this->_b->_closed = false;
+	this->_state = CONNECTED;
 #ifdef DEBUG
 	fprintf(stderr, "connected to %s port %d\n", name, port);
 #endif
@@ -336,6 +344,6 @@ TCPSocket *TCPSocket::accept(){
 }
 
 bool TCPSocket::is_closed(){
-	return this->_b->_closed;
+	return this->_state == CLOSED;
 }
 

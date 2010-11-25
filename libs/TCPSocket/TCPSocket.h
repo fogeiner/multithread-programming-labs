@@ -167,10 +167,10 @@ class TCPSocket: public Selectable {
 		void increase() ;
 		void decrease();
 
-		enum TCPSocketState {ACTIVE, CLOSED};
-		TCPSocketState _state;
 		TCPSocket::Base *_b;
 		struct sockaddr _addr;
+		enum TCPSocketState {CREATED, CONNECTED, LISTENING, CLOSED};
+		TCPSocketState _state;
 	public:
 
 		TCPSocket() ;
@@ -191,10 +191,10 @@ class TCPSocket: public Selectable {
 		int recv(Buffer &b, int count = 4096);
 		int recv(Buffer *b, int count = 4096);
 		
-		int send(Buffer &buf);
-		int send(Buffer &buf, int count);
-		int send(Buffer *buf);
-		int send(Buffer *buf, int count);
+		int send(Buffer &buf, bool send_all = false);
+		int send(Buffer &buf, int count, bool send_all = false);
+		int send(Buffer *buf, bool send_all = false);
+		int send(Buffer *buf, int count, bool send_all = false);
 
 		void bind(unsigned short port);
 		
