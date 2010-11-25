@@ -7,7 +7,7 @@ B = Buffer
 VB = VectorBuffer
 APP = bin
 OBJ = source.o $(L)/$(T)/$(T).o $(L)/$(S)/$(S).o $(L)/$(P)/$(P).o
-CXXFLAGS = -lpthread
+CXXFLAGS = -lpthread -g
 CC = g++
 
 $(APP): $(OBJ)

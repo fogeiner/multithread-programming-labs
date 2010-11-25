@@ -15,7 +15,7 @@
 #include "../libs/TCPSocket/TCPSocket.h"
 #include "../libs/Buffer/VectorBuffer.h"
 #include "../libs/Fd_set/Fd_set.h"
-#include "../libs/Terminal/terminal.h"
+#include "../libs/Terminal/Terminal.h"
 
 #define DEBUG
 
@@ -72,13 +72,13 @@ void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int
 }
 
 void get_terminal_props_and_save_state(int &screen_rows_count, int &screen_cols_count){
-	if (get_terminal_width_height(STDOUT_FILENO, &screen_cols_count, &screen_rows_count) == -1) {
-		std::cerr << strerror(errno) << std::endl;
+	if(!isatty(STDIN_FILENO)){
+		std::cerr <<  "Standard input device is not a terminal" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	if(!isatty(STDIN_FILENO)){
-		std::cerr <<  "Standard input device is not a terminal" << std::endl;
+	if (get_terminal_width_height(STDOUT_FILENO, &screen_cols_count, &screen_rows_count) == -1) {
+		std::cerr << strerror(errno) << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -184,16 +184,18 @@ int main(int argc, char *argv[]) {
 				print_screen(recv_buf, screen_full, print_screen_counter, screen_rows_count, screen_cols_count);
 			}
 		}
-	} catch(...){
+	} catch(std::exception &ex){
 		delete serv_socket;
 		delete recv_buf;
 		delete send_buf;
 		delete pu;
 
+		std::cerr << "Error: " << ex.what() << std::endl;
+
 		if(term_restore_state() == -1){
 			std::cerr << strerror(errno) << std::endl;
-			return EXIT_FAILURE;
 		}
+		return EXIT_FAILURE;
 	}
 	delete serv_socket;
 	delete recv_buf;
