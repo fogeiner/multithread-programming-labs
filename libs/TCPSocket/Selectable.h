@@ -2,7 +2,7 @@
 
 class Selectable {
 	public:
-		virtual int fileno() = 0;
+		virtual int fileno() const = 0;
 		virtual ~Selectable() {}
 };
 

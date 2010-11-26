@@ -185,11 +185,11 @@ TCPSocket& TCPSocket::operator=(const TCPSocket &orig) {
 	return *this;
 }
 
-int TCPSocket::fileno() {
+int TCPSocket::fileno() const {
 	return this->_b->_sock;
 }
 
-void TCPSocket::getsockopt(int level, int optname, void *optval, socklen_t *optlen) {
+void TCPSocket::getsockopt(int level, int optname, void *optval, socklen_t *optlen) const {
 	if(::getsockopt(this->_b->_sock, level, optname, optval, optlen) == -1){
 		throw SockOptException(errno);
 	}
@@ -253,24 +253,25 @@ int TCPSocket::recv(Buffer *b, int count) {
 	return read;
 }
 
-int TCPSocket::send(Buffer &buf, bool send_all) {
+int TCPSocket::send(const Buffer &buf, bool send_all) {
 	return this->send(&buf, send_all);
 }
 
-int TCPSocket::send(Buffer &buf, int count, bool send_all) {
+int TCPSocket::send(const Buffer &buf, int count, bool send_all) {
 	return this->send(&buf, count, send_all);
 }
 
-int TCPSocket::send(Buffer *buf, bool send_all) {
+int TCPSocket::send(const Buffer *buf, bool send_all) {
 	return this->send(buf, buf->size(), send_all);
 }
-int TCPSocket::send(Buffer *buf, int count, bool send_all) {
+int TCPSocket::send(const Buffer *buf, int count, bool send_all) {
 	assert(buf->size() >= count);
 
 	int to_send = count;
 	int sent_total = 0;
 	while(to_send != sent_total){
-		int sent = ::send(this->_b->_sock, buf->buf(), count, MSG_NOSIGNAL);
+		int sent = ::send(this->_b->_sock, buf->buf() + sent_total, 
+				to_send - sent_total, MSG_NOSIGNAL);
 #ifdef DEBUG
 	fprintf(stderr, "socket %d sent %d bytes\n", _b->_sock, sent);
 #endif
@@ -348,7 +349,10 @@ TCPSocket *TCPSocket::accept(){
 	return new TCPSocket(n_sock, addr);
 }
 
-bool TCPSocket::is_closed(){
+bool TCPSocket::is_closed() const {
 	return this->_state == CLOSED;
 }
 
+TCPSocket::TCPSocketState TCPSocket::get_state() const {
+	return this->_state;
+}

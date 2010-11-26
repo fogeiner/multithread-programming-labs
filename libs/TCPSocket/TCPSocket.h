@@ -62,10 +62,10 @@ class TCPSocketException: public std::exception {
 
 class SocketStateException: public TCPSocketException {
 	public:
-		SocketException(const char *msg): TCPSocketException(msg){
+		SocketStateException(const char *msg): TCPSocketException(msg){
 		}
 
-		SocketException(int err_number): TCPSocketException(err_number){
+		SocketStateException(int err_number): TCPSocketException(err_number){
 		}
 };
 
@@ -162,6 +162,8 @@ class DNSException: public TCPSocketException {
 };
 
 class TCPSocket: public Selectable {
+	public:
+		enum TCPSocketState {CREATED, CONNECTED, LISTENING, CLOSED};
 	private:
 		struct Base {
 			int _sock;
@@ -178,7 +180,6 @@ class TCPSocket: public Selectable {
 
 		TCPSocket::Base *_b;
 		struct sockaddr _addr;
-		enum TCPSocketState {CREATED, CONNECTED, LISTENING, CLOSED};
 		TCPSocketState _state;
 	public:
 		const static int DEFAULT_RECV_BUFSIZE = 4096;
@@ -190,9 +191,9 @@ class TCPSocket: public Selectable {
 
 		TCPSocket& operator=(const TCPSocket &orig);
 		
-		int fileno();
+		int fileno() const;
 		
-		void getsockopt(int level, int optname, void *optval, socklen_t *optlen);
+		void getsockopt(int level, int optname, void *optval, socklen_t *optlen) const;
 		void setsockopt(int level, int optname, const void *optval, socklen_t optlen);
 		void set_reuse_addr(int value);
 
@@ -201,17 +202,19 @@ class TCPSocket: public Selectable {
 		int recv(Buffer &b, int count = DEFAULT_RECV_BUFSIZE);
 		int recv(Buffer *b, int count = DEFAULT_RECV_BUFSIZE);
 		
-		int send(Buffer &buf, bool send_all = false);
-		int send(Buffer &buf, int count, bool send_all = false);
-		int send(Buffer *buf, bool send_all = false);
-		int send(Buffer *buf, int count, bool send_all = false);
+		int send(const Buffer &buf, bool send_all = false);
+		int send(const Buffer &buf, int count, bool send_all = false);
+		int send(const Buffer *buf, bool send_all = false);
+		int send(const Buffer *buf, int count, bool send_all = false);
 
 		void bind(unsigned short port);
 		
 		void connect(const char *name, unsigned short port);
 		void connect(const std::string name, unsigned short port);
 
-		bool is_closed();
+		bool is_closed() const;
 		
 		TCPSocket *accept();
+
+		TCPSocketState get_state() const;
 };
