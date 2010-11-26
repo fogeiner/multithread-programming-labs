@@ -17,28 +17,31 @@
 #include "../libs/Fd_set/Fd_set.h"
 #include "../libs/Terminal/Terminal.h"
 
-#define DEBUG
+//#define DEBUG
 
 
 void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int rows, int cols) {
 
-	static const char msg_to_press_key[] = "Press enter to scroll...";
+	static const char msg_to_press_key[] = "Press space to scroll";
 	static int cur_row = 0, cur_col = 0;
 	int next_tab_position;
-	const int DEFAULT_TAB_WIDTH = 8;
+	const int DEFAULT_TAB_WIDTH = 4;
+	if (cur_row == -1){
+		std::cout << '\n';
+	}
 
 	while(!screen_full && !buf->is_empty()) {
 		int size = buf->size();
 		const char *b = buf->buf();
-
+       
 		int i;
 		for (i = 0; i < size; ++i) {
 			switch (b[i]) {
 				case '\t':
 					next_tab_position = DEFAULT_TAB_WIDTH * 
 						((cur_col + DEFAULT_TAB_WIDTH)/DEFAULT_TAB_WIDTH);
-					if (next_tab_position <= cols){
-						cur_col += next_tab_position;
+					if (next_tab_position < cols){
+						cur_col = next_tab_position;
 						break;
 					}
 				case '\n':
@@ -51,17 +54,22 @@ void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int
 
 			std::cout << b[i];
 
-			if (cur_col == cols) {
+			if (cur_col == cols - 1) {
 				cur_col = 0;
 				cur_row++;
 			}
 
-			if (cur_row == rows) {
-				cur_row = cur_col = 0;
+			if (cur_row == rows - 2) {
+				print_screen_counter--;
+
+				std::cout << '\n';
 				std::cout << msg_to_press_key;
 				std::cout.flush();
-				print_screen_counter--;
-				if(print_screen_counter == 0){
+				
+				cur_row = -1;
+				cur_col = 0;
+				
+				if(print_screen_counter == 0) {
 					screen_full = true;
 				}
 				break;
