@@ -133,12 +133,11 @@ int main(int argc, char *argv[]) {
 		send_buf->append(url.c_str());
 		send_buf->append(" HTTP/1.0\r\n\r\n");
 
-		int to_send = send_buf->size();
 #ifdef DEBUG
-		std::clog << "sending request (" << to_send << " bytes): " << "GET " << url << " HTTP/1.0" << std::endl;
+		std::clog << "sending request (" << send_buf->size() << " bytes): " << "GET " << url << " HTTP/1.0" << std::endl;
 #endif
-		while(to_send -= serv_socket->send(send_buf))
-			;
+		serv_socket->send(send_buf, send_buf->size(), true);
+
 		const int STDIN_BUFSIZE = 128;
 		bool screen_full = false;
 		char stdin_buf[STDIN_BUFSIZE];

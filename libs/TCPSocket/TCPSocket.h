@@ -60,6 +60,15 @@ class TCPSocketException: public std::exception {
 		~TCPSocketException() throw() {}
 };
 
+class SocketStateException: public TCPSocketException {
+	public:
+		SocketException(const char *msg): TCPSocketException(msg){
+		}
+
+		SocketException(int err_number): TCPSocketException(err_number){
+		}
+};
+
 class SocketException: public TCPSocketException {
 	public:
 		SocketException(const char *msg): TCPSocketException(msg){
@@ -164,7 +173,7 @@ class TCPSocket: public Selectable {
 		};
 
 
-		void increase() ;
+		void increase();
 		void decrease();
 
 		TCPSocket::Base *_b;
@@ -172,11 +181,12 @@ class TCPSocket: public Selectable {
 		enum TCPSocketState {CREATED, CONNECTED, LISTENING, CLOSED};
 		TCPSocketState _state;
 	public:
+		const static int DEFAULT_RECV_BUFSIZE = 4096;
 
-		TCPSocket() ;
+		TCPSocket();
 		TCPSocket(int sock, struct sockaddr addr);
 		TCPSocket(const TCPSocket &orig);
-		~TCPSocket() ;
+		~TCPSocket();
 
 		TCPSocket& operator=(const TCPSocket &orig);
 		
@@ -188,8 +198,8 @@ class TCPSocket: public Selectable {
 
 		void listen(int backlog);
 		void close() ;
-		int recv(Buffer &b, int count = 4096);
-		int recv(Buffer *b, int count = 4096);
+		int recv(Buffer &b, int count = DEFAULT_RECV_BUFSIZE);
+		int recv(Buffer *b, int count = DEFAULT_RECV_BUFSIZE);
 		
 		int send(Buffer &buf, bool send_all = false);
 		int send(Buffer &buf, int count, bool send_all = false);

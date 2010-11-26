@@ -3,13 +3,13 @@
 void Semaphore::error_check(int retv) {
     if (retv == -1) {
 		char buf[256];
-#ifdef __GNU
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE 
 		char *msg_ptr;
 		msg_ptr = ::strerror_r(errno, buf, sizeof(buf));
-        throw SemaphoreException(msg_ptr);
+        throw SemaphoreException(errno, msg_ptr);
 #else
 		::strerror_r(errno, buf, sizeof(buf));
-		throw SemaphoreException(buf);
+		throw SemaphoreException(errno, buf);
 #endif
     }
 }

@@ -75,7 +75,7 @@ void *f4(void *arg) {
 	try{
 		MsgQueue *m = static_cast<MsgQueue*> (arg);
 		char buf[size];
-		for (;;) {
+		while (1) {
 			if (flag_to_stop)
 				break;
 

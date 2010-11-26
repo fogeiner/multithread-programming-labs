@@ -19,9 +19,9 @@ bool stop_signal_received = false;
 Semaphore a, b, c, m, w;
 
 // count of seconds each of production threads sleep
-const int 	A_PROD_TIME = 1,
-			B_PROD_TIME = 2,
-			C_PROD_TIME = 3;
+const int 	A_PROD_TIME = 0,//1,
+			B_PROD_TIME = 0,//2,
+			C_PROD_TIME = 0;//3;
 
 // count of seconds between semaphores state printing
 const int PRINT_DELAY_TIME = 1;
@@ -33,25 +33,13 @@ void *produce_widget(void *ptr) {
 			c--;
 			w++;
 		}
-	} catch(std::exception &ex) {
+	} catch(SemaphoreException &ex) {
 		fprintf(stderr, "Error: %s\n", ex.what());
 	}
 
 	return NULL;
 }
 
-void *produce_detail_B(void *ptr) {
-	try{
-		while(!stop_signal_received) {
-			sleep(B_PROD_TIME);
-			b++;
-		}
-	} catch(std::exception &ex) {
-		fprintf(stderr, "Error: %s\n", ex.what());
-	}
-
-	return NULL;
-}
 
 void *produce_module(void *ptr) {
 	try{
@@ -60,20 +48,7 @@ void *produce_module(void *ptr) {
 			b--;
 			m++;
 		}
-	} catch(std::exception &ex) {
-		fprintf(stderr, "Error: %s\n", ex.what());
-	}
-
-	return NULL;
-}
-
-void *produce_detail_C(void *ptr) {
-	try{
-		while(!stop_signal_received) {
-			sleep(C_PROD_TIME);
-			c++;
-		}
-	} catch(std::exception &ex) {
+	} catch(SemaphoreException &ex) {
 		fprintf(stderr, "Error: %s\n", ex.what());
 	}
 
@@ -86,12 +61,39 @@ void *produce_detail_A(void *ptr) {
 			sleep(A_PROD_TIME);
 			a++;
 		}
-	} catch(std::exception &ex) {
+	} catch(SemaphoreException &ex) {
 		fprintf(stderr, "Error: %s\n", ex.what());
 	}
 
 	return NULL;
 }
+
+void *produce_detail_B(void *ptr) {
+	try{
+		while(!stop_signal_received) {
+			sleep(B_PROD_TIME);
+			b++;
+		}
+	} catch(SemaphoreException &ex) {
+		fprintf(stderr, "Error: %s\n", ex.what());
+	}
+
+	return NULL;
+}
+
+void *produce_detail_C(void *ptr) {
+	try{
+		while(!stop_signal_received) {
+			sleep(C_PROD_TIME);
+			c++;
+		}
+	} catch(SemaphoreException &ex) {
+		fprintf(stderr, "Error: %s\n", ex.what());
+	}
+
+	return NULL;
+}
+
 // function for printing out the current state of semaphores
 // actually, there's no guarantee that printed values are correct
 void *print_state(void *ptr) {

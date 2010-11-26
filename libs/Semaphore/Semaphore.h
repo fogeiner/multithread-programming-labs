@@ -32,14 +32,19 @@ class SemaphoreException : public std::exception {
 private:
 
     std::string _err;
+	int _err_num;
 public:
 
-    SemaphoreException(char *err_msg) : _err(err_msg) {
+    SemaphoreException(int err_num, char *err_msg) : _err_num(err_num), _err(err_msg) {
     }
 
     ~SemaphoreException() throw () {
 
     }
+	
+	const int err_num() const {
+		return _err_num;
+	}
 
     const char *what() const throw () {
         return _err.c_str();

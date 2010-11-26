@@ -267,16 +267,21 @@ int TCPSocket::send(Buffer *buf, bool send_all) {
 int TCPSocket::send(Buffer *buf, int count, bool send_all) {
 	assert(buf->size() >= count);
 
-	int sent = ::send(this->_b->_sock, buf->buf(), count, MSG_NOSIGNAL);
+	int to_send = count;
+	int sent_total = 0;
+	while(to_send != sent_total){
+		int sent = ::send(this->_b->_sock, buf->buf(), count, MSG_NOSIGNAL);
 #ifdef DEBUG
 	fprintf(stderr, "socket %d sent %d bytes\n", _b->_sock, sent);
 #endif
 
-	if(sent == -1){
-		throw SendException(errno);
-	}
+		if(sent == -1){
+			throw SendException(errno);
+		}
 
-	return sent;
+		sent_total += sent;
+	}
+	return sent_total;
 }
 
 void TCPSocket::bind(unsigned short port) {
