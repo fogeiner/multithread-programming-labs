@@ -1,5 +1,4 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+#pragma once 
 
 #include <syslog.h>
 #include <stdarg.h>
@@ -48,5 +47,3 @@ class Logger {
 			assert(false);
 		}
 };
-
-#endif

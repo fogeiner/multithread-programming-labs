@@ -1,12 +1,20 @@
 #pragma once
+#include "../TCPSocket/TCPSocket.h"
+#include "Async.h"
 
-class AsyncSocket: public Selectable {
+class AsyncSocket: public TCPSocket, public Async {
 	public:
-		virtual bool readable() = 0;
-		virtual bool writable() = 0;
-		virtual void handle_read() = 0;
-		virtual void handle_write() = 0;
-		virtual void handle_close() = 0;
-		virtual void handle_accept() = 0;
-		virtual ~AsyncSocket();
+		AsyncSocket(): TCPSocket(){
+		}	
+		AsyncSocket(int sock, struct sockaddr *addr): TCPSocket(sock, addr) {
+		}
+		AsyncSocket(const AsyncSocket &orig): TCPSocket(orig) {
+		}
+		AsyncSocket& operator=(const AsyncSocket &orig){
+			TCPSocket::operator=(orig);
+		}
+		~AsyncSocket(){
+		}
 };
+
+

@@ -1,5 +1,5 @@
 #pragma once
-//#define DEBUG
+#define DEBUG
 #include <list>
 #include <vector>
 #include <map>
@@ -185,7 +185,7 @@ class TCPSocket: public Selectable {
 		const static int DEFAULT_RECV_BUFSIZE = 4096;
 
 		TCPSocket();
-		TCPSocket(int sock, struct sockaddr addr);
+		TCPSocket(int sock, struct sockaddr *addr = NULL);
 		TCPSocket(const TCPSocket &orig);
 		~TCPSocket();
 
@@ -217,4 +217,5 @@ class TCPSocket: public Selectable {
 		TCPSocket *accept();
 
 		TCPSocketState get_state() const;
+		int peek() const;
 };

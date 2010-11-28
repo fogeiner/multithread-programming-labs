@@ -154,13 +154,17 @@ TCPSocket::TCPSocket() {
 #endif
 }
 
-TCPSocket::TCPSocket(int sock, struct sockaddr addr){
+TCPSocket::TCPSocket(int sock, struct sockaddr *addr){
 	this->_b = new TCPSocket::Base(sock);
-	this->_addr = addr;
+
+	if(addr != NULL) {
+		this->_addr = *addr;
+	}
+
 #ifdef DEBUG
 	fprintf(stderr, "created socket %d\n", _b->_sock);
 #endif
-	this->_state = CONNECTED;
+	this->_state = CREATED;
 }
 
 TCPSocket::TCPSocket(const TCPSocket &orig) {
@@ -196,6 +200,9 @@ void TCPSocket::getsockopt(int level, int optname, void *optval, socklen_t *optl
 }
 
 void TCPSocket::setsockopt(int level, int optname, const void *optval, socklen_t optlen) {
+	if (this->_state == CLOSED){
+		throw SocketStateException("Wrong state for operation");
+	}
 
 	if(::setsockopt(this->_b->_sock, level, optname, optval, optlen) == -1){
 		throw SockOptException(errno);
@@ -203,10 +210,17 @@ void TCPSocket::setsockopt(int level, int optname, const void *optval, socklen_t
 }
 
 void TCPSocket::set_reuse_addr(int value) {
+	if (this->_state == CLOSED){
+		throw SocketStateException("Wrong state for operation");
+	}
 	this->setsockopt(SOL_SOCKET, SO_REUSEADDR, &value, sizeof(value));
 }
 
 void TCPSocket::listen(int backlog){
+	if (this->_state != CREATED) {
+		throw SocketStateException("Wrong state for operation");
+	}
+
 	if(::listen(this->_b->_sock, backlog) == -1){
 		throw ListenException(errno);
 	}
@@ -231,14 +245,20 @@ int TCPSocket::recv(Buffer &b, int count){
 
 int TCPSocket::recv(Buffer *b, int count) {
 	assert(count > 0);
-	char buf[count];
+	
+	if (this->_state != CONNECTED) {
+		throw SocketStateException("Wrong state for operation");
+	}
 
-	int read = ::recv(this->_b->_sock, buf, sizeof(buf), MSG_NOSIGNAL);
+	char *buf = new char[count];
+
+	int read = ::recv(this->_b->_sock, buf, count, MSG_NOSIGNAL);
 #ifdef DEBUG
 	fprintf(stderr, "socket %d recv %d bytes\n", _b->_sock, read);
 #endif
 
 	if(read == -1){
+		delete[] buf;
 		throw RecvException(errno);
 	}
 
@@ -249,6 +269,8 @@ int TCPSocket::recv(Buffer *b, int count) {
 	if (read == 0){
 		this->close();
 	}	
+
+	delete[] buf;
 
 	return read;
 }
@@ -265,6 +287,10 @@ int TCPSocket::send(const Buffer *buf, bool send_all) {
 	return this->send(buf, buf->size(), send_all);
 }
 int TCPSocket::send(const Buffer *buf, int count, bool send_all) {
+	if (this->_state != CONNECTED){
+		throw SocketStateException("Wrong state for operation");
+	}
+
 	assert(buf->size() >= count);
 
 	int to_send = count;
@@ -286,6 +312,9 @@ int TCPSocket::send(const Buffer *buf, int count, bool send_all) {
 }
 
 void TCPSocket::bind(unsigned short port) {
+	if (this->_state != CREATED){
+		throw SocketStateException("Wrong state for operation");
+	}
 
 	struct sockaddr_in local_addr;
 	memset(&local_addr, 0, sizeof(local_addr));
@@ -303,6 +332,10 @@ void TCPSocket::bind(unsigned short port) {
 }
 
 void TCPSocket::connect(const char *name, unsigned short port) {
+	if (this->_state != CREATED){
+		throw SocketStateException("Wrong state for operation");
+	}
+
 	struct sockaddr_in remote_addr;
 
 	const int GETHOSTBYNAME_R_BUFSIZE = 4096;
@@ -337,6 +370,10 @@ void TCPSocket::connect(const std::string name, unsigned short port) {
 }
 
 TCPSocket *TCPSocket::accept(){
+	if (this->_state != LISTENING){
+		throw SocketStateException("Wrong state for operation");
+	}
+
 	struct sockaddr addr;
 	socklen_t len = sizeof(addr);
 	int n_sock = ::accept(this->_b->_sock, &addr, &len);
@@ -346,7 +383,9 @@ TCPSocket *TCPSocket::accept(){
 	if(n_sock == -1){
 		throw AcceptException(errno);
 	}
-	return new TCPSocket(n_sock, addr);
+	TCPSocket *s = new TCPSocket(n_sock, &addr);
+	s->_state = CONNECTED;
+	return s;
 }
 
 bool TCPSocket::is_closed() const {
@@ -355,4 +394,17 @@ bool TCPSocket::is_closed() const {
 
 TCPSocket::TCPSocketState TCPSocket::get_state() const {
 	return this->_state;
+}
+
+/**
+ * peeks for max of 1 byte
+ */
+int TCPSocket::peek() const {
+	char b;
+	int read;
+	read = ::recv(this->_b->_sock, &b, 1, MSG_PEEK | MSG_NOSIGNAL);
+	if (read == -1){
+		throw RecvException(errno);
+	}
+	return read;
 }

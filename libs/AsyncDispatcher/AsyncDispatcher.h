@@ -2,168 +2,63 @@
 #define DEBUG
 #include "../TCPSocket/TCPSocket.h"
 #include "../TCPSocket/Selectable.h"
+#include "Async.h"
 #include <list>
+#include <cassert>
 
 #ifdef DEBUG
 #include <cstdio>
 #endif
 
-class AsyncSocket: public Selectable {
-	public:
-		virtual bool readable() = 0;
-		virtual bool writable() = 0;
-		virtual void handle_read() = 0;
-		virtual void handle_write() = 0;
-		virtual void handle_close() = 0;
-		virtual void handle_accept() = 0;
-		virtual ~AsyncSocket();
-};
-
-class AsyncDispatcher: public Selectable {
+class AsyncDispatcher: public Selectable, public Async {
 	private:
-		static std::list<AsyncSocket*> _sockets;
+		static std::list<AsyncDispatcher*> _sockets;
 		TCPSocket *_s;
 	public:
-		AsyncDispatcher(){
-		}
-		~AsyncDispatcher(){
-		}
-		AsyncDispatcher(const AsyncDispatcher &orig){
-		}
-		AsyncDispatcher &operator=(const AsyncDispatcher &orig){
-		}
+		AsyncDispatcher();
+		AsyncDispatcher(int sock);
+		AsyncDispatcher(TCPSocket *socket);
+		AsyncDispatcher(const AsyncDispatcher &orig);
+		AsyncDispatcher& operator=(const AsyncDispatcher &orig);
+		~AsyncDispatcher();
 
-		static void loop(int timeout_ms = 0){
-			std::list<Selectable*> rlist, wlist, xlist;
-			for(std::list<AsyncSocket*>::iterator i = _sockets.begin();
-					i != _sockets.end(); ++i){
-				AsyncSocket *s = *i;
-				if (s->readable()){
-					rlist.push_back(s);
-				}
-				if (s->writable()){
-					wlist.push_back(s);
-				}
-				if (s->readable() || s->writable()){
-					xlist.push_back(s);
-				}
-			}
+		static void loop(int timeout_ms = 0);
 
-			Select(&rlist, &wlist, &xlist, timeout_ms);
+		bool readable();
+		bool writable();
 
-			for(std::list<Selectable*>::iterator i = rlist.begin();
-					i != rlist.end(); ++i){
-				AsyncSocket* s = static_cast<AsyncSocket*>(*i);
-				s -> handle_read();
-			}
+		void handle_read();
+		void handle_write();
+		void handle_close();
+		void handle_accept();
 
-			for(std::list<Selectable*>::iterator i = wlist.begin();
-					i != wlist.end(); ++i){
-				AsyncSocket* s = static_cast<AsyncSocket*>(*i);
-				s -> handle_write();
-			}
-		}
+		int fileno() const;
 
-		virtual bool readable() {
-#ifdef DEBUG
-			fprintf(stderr, "unhandled readable()\n");
-#endif
-			return true;
-		}
-		virtual bool writable(){
-#ifdef DEBUG
-			fprintf(stderr, "unhandled writable()\n");
-#endif
-			return true;
-		}
+		void getsockopt(int level, int optname, void *optval, socklen_t *optlen) const ;
+		void setsockopt(int level, int optname, const void *optval, socklen_t optlen);
 
-		virtual void handle_read(){
-#ifdef DEBUG
-			fprintf(stderr, "unhandled handle_read()\n");
-#endif
-		}
-		virtual void handle_write(){
-#ifdef DEBUG
-			fprintf(stderr, "unhandled handle_write()\n");
-#endif
-		}
-		virtual void handle_close(){
-#ifdef DEBUG
-			fprintf(stderr, "unhandled handle_close()\n");
-#endif
-		}
-		virtual void handle_accept(){
-#ifdef DEBUG
-			fprintf(stderr, "unhandled handle_accept()\n");
-#endif
-		}
+		void set_reuse_addr(int value);
 
-		int fileno() const {
-			return this->_s->fileno();
-		}
+		void listen(int backlog);
 
-		void getsockopt(int level, int optname, void *optval, socklen_t *optlen) const {
-			return this->_s->getsockopt(level, optname, optval, optlen);
-		}
+		void close();
+		int recv(Buffer &b, int count = TCPSocket::DEFAULT_RECV_BUFSIZE);
+		int recv(Buffer *b, int count = TCPSocket::DEFAULT_RECV_BUFSIZE);
 
-		void setsockopt(int level, int optname, const void *optval, socklen_t optlen){
-			return this->_s->setsockopt(level, optname, optval, optlen);
-		}
+		int send(const Buffer &buf, bool send_all = false) ;
+		int send(const Buffer &buf, int count, bool send_all = false);
+		int send(const Buffer *buf, bool send_all = false);
+		int send(const Buffer *buf, int count, bool send_all = false);
 
-		void set_reuse_addr(int value){
-			return this->_s->set_reuse_addr(value);
-		}
-
-		void listen(int backlog){
-			return this->_s->listen(backlog);
-		}
-
-		void close(){
-			return this->_s->close();
-		}
-
-		int recv(Buffer &b, int count = TCPSocket::DEFAULT_RECV_BUFSIZE){
-			return this->_s->recv(b, count);
-		}
-
-		int recv(Buffer *b, int count = TCPSocket::DEFAULT_RECV_BUFSIZE){
-			return this->_s->recv(b, count);
-		}
-
-		int send(const Buffer &buf, bool send_all = false) {
-			return this->_s->send(buf, send_all);
-		}
-		int send(const Buffer &buf, int count, bool send_all = false){
-			return this->_s->send(buf, count, send_all);
-		}
-		int send(const Buffer *buf, bool send_all = false){
-			return this->_s->send(buf, send_all);
-		}
-		int send(const Buffer *buf, int count, bool send_all = false){
-			return this->_s->send(buf, count, send_all);
-		}
-
-		void bind(unsigned short port){
-			return this->_s->bind(port);
-		}
-
-		void connect(const char *name, unsigned short port){
-			return this->_s->connect(name, port);
-		}
-
-		void connect(const std::string name, unsigned short port){
-			return this->_s->connect(name, port);
-		}
-
-		bool is_closed(){
-			return this->_s->is_closed();
-		}
-
-		TCPSocket *accept(){
-			return this->_s->accept();
-		}
-
-		TCPSocket::TCPSocketState get_state() const {
-			return this->_s->get_state();
-		}
+		void bind(unsigned short port);
+		
+		void connect(const char *name, unsigned short port);
+		void connect(const std::string name, unsigned short port);
+		
+		bool is_closed();
+		TCPSocket *accept();
+		TCPSocket::TCPSocketState get_state() const;
 };
+#ifdef DEBUG
+#undef DEBUG
+#endif

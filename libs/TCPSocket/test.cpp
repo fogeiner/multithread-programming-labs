@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
 		*/
 		delete in;
 		delete out;
-	} catch(SocketException &ex){
+	} catch(std::exception &ex){
 		fprintf(stdout, "%s\n", ex.what());
 	}
 	return 0;
