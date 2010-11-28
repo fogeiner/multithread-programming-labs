@@ -24,8 +24,8 @@ class AsyncDispatcher: public Selectable, public Async {
 
 		static void loop(int timeout_ms = 0);
 
-		bool readable();
-		bool writable();
+		bool readable() const;
+		bool writable() const;
 
 		void handle_read();
 		void handle_write();

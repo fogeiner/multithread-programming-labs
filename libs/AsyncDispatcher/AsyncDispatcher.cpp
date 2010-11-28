@@ -102,17 +102,17 @@ void AsyncDispatcher::loop(int timeout_ms){
 	}
 }
 
-bool AsyncDispatcher::readable() {
+bool AsyncDispatcher::readable() const {
 #ifdef DEBUG
 	fprintf(stderr, "default readable()\n");
 #endif
-	return true;
+	return false;
 }
-bool AsyncDispatcher::writable(){
+bool AsyncDispatcher::writable() const{
 #ifdef DEBUG
 	fprintf(stderr, "default writable()\n");
 #endif
-	return true;
+	return false;
 }
 
 void AsyncDispatcher::handle_read(){
