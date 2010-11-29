@@ -102,6 +102,10 @@ class VectorBuffer: public Buffer {
 			return this->size() == 0 ? true : false;
 		}
 
+                virtual void clear() {
+                    this->drop_first(this->size());
+                }
+
 		virtual ~VectorBuffer() {}
 };
 
