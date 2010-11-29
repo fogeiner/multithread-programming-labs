@@ -18,6 +18,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "../Fd_set/Fd_set.h"
 #include "../Buffer/Buffer.h"
@@ -176,16 +177,15 @@ class TCPSocket : public Selectable {
 public:
 
     enum TCPSocketState {
-        CREATED, CONNECTED, LISTENING, CLOSED
+        CREATED, CONNECTING, CONNECTED, LISTENING, CLOSED
     };
 private:
 
     struct Base {
         int _sock;
         int _links;
-        bool _closed;
 
-        Base(int sock, int links = 1) : _sock(sock), _links(links), _closed(true) {
+        Base(int sock, int links = 1) : _sock(sock), _links(links) {
         }
     };
 
@@ -194,6 +194,7 @@ private:
     void decrease();
 
     TCPSocket::Base *_b;
+    bool _nonblocking;
     struct sockaddr _addr;
     TCPSocketState _state;
 public:
@@ -211,6 +212,7 @@ public:
     void getsockopt(int level, int optname, void *optval, socklen_t *optlen) const;
     void setsockopt(int level, int optname, const void *optval, socklen_t optlen);
     void set_reuse_addr(int value);
+    void set_nonblocking(int value);
 
     void listen(int backlog);
     void close();
@@ -226,6 +228,7 @@ public:
 
     void connect(const char *name, unsigned short port);
     void connect(const std::string name, unsigned short port);
+    void validate_connect();
 
     bool is_closed() const;
 

@@ -1,5 +1,5 @@
 #pragma once
-#define DEBUG
+
 #include "../TCPSocket/TCPSocket.h"
 #include "../TCPSocket/Selectable.h"
 #include "Async.h"
@@ -31,6 +31,7 @@ public:
     void handle_write();
     void handle_close();
     void handle_accept();
+    void handle_connect();
 
     int fileno() const;
 
@@ -59,6 +60,3 @@ public:
     TCPSocket *accept();
     TCPSocket::TCPSocketState get_state() const;
 };
-#ifdef DEBUG
-#undef DEBUG
-#endif
