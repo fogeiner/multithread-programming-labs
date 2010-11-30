@@ -237,3 +237,6 @@ public:
     TCPSocketState get_state() const;
     int peek() const;
 };
+#ifdef DEBUG
+#undef DEBUG
+#endif

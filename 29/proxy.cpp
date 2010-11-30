@@ -1,10 +1,15 @@
 #include "../libs/Logger/Logger.h"
 #include "../libs/AsyncDispatcher/AsyncDispatcher.h"
 #include "../libs/Buffer/VectorBuffer.h"
+#include "../libs/HTTPURIParser/HTTPURIParser.h"
 
 #include <exception>
 #include <cstring>
 #include <alloca.h>
+
+#include <list>
+#include <map>
+#include <cassert>
 
 #include "config.h"
 
@@ -18,6 +23,7 @@
 
 // -------------------ClientState------------------------------
 class Client;
+
 class ClientState {
 public:
 
@@ -43,13 +49,17 @@ public:
         Logger::info("ClientState unhandled handle_close()");
     }
 
+    virtual void handle_connect(Client *c) {
+        Logger::info("ClientState unhandled handle_connect()");
+    }
+
 protected:
     void change_state(Client *c, ClientState *s);
 };
 
-
 // -------------------DownloaderState----------------------
 class Downloader;
+
 class DownloaderState {
 public:
 
@@ -75,26 +85,32 @@ public:
         Logger::info("DownloaderState unhandled handle_close()");
     }
 
+    virtual void handle_connect(Downloader *c) {
+        Logger::info("DownloaderState unhandled handle_connect()");
+    }
+
 protected:
     void change_state(Downloader *c, DownloaderState *s);
 };
 
 // ------------------Downloader---------------------------
+
 class Downloader : public AsyncDispatcher {
     friend class DownloaderState;
+    friend class DownloaderCache;
+    friend class DownloaderRequestResponse;
+    friend class DownloaderRetranslator;
 
     void change_state(DownloaderState* s) {
         this->_state = s;
     }
     DownloaderState *_state;
-    Buffer *_b;
-
+    Buffer *_in;
+    Buffer *_out;
+    //  Retranslator *_r;
+    //    CacheEntry *_ce;
+    std::string _url;
 public:
-
-    Downloader(TCPSocket *sock) : AsyncDispatcher(sock) {
-        this->_state = DownloaderConnecting::instance();
-        this->_b = new VectorBuffer();
-    }
 
     bool readable() const {
         return this->_state->readable(this);
@@ -117,7 +133,109 @@ public:
     }
 };
 
+// --------------------DownloaderRequestResponse---------------
+
+class DownloaderRequestResponse : public DownloaderState {
+private:
+
+    DownloaderRequestResponse() {
+    }
+public:
+
+    DownloaderState *instance() {
+        static DownloaderRequestResponse drr;
+        return &drr;
+    }
+
+    bool readable(const Downloader *d) {
+        return d->_out->size() == 0;
+    }
+
+    bool writable(const Downloader *d) {
+        return d->_out->size() > 0;
+    }
+
+    void handle_close(Downloader *d) {
+
+    }
+
+    void handle_read(Downloader *d) {
+        d->recv(d->_in);
+        // looking for \r\n\r\n
+    }
+
+    void handle_write(Downloader *d) {
+        int sent;
+        sent = d->send(d->_out);
+        d->_out->drop_first(sent);
+    }
+};
+
+// -----------------DownloaderRetranslator---------
+
+class DownloaderRetranslator : public DownloaderState {
+private:
+
+    DownloaderRetranslator() {
+    }
+public:
+
+    DownloaderState *instance() {
+        static DownloaderRetranslator dr;
+        return &dr;
+    }
+
+    bool readable(const Downloader *d) {
+        return true;
+    }
+
+    bool writable(const Downloader *d) {
+        return false;
+    }
+
+    void handle_close(Downloader *d) {
+
+    }
+
+    void handle_read(Downloader *d) {
+
+    }
+
+};
+
+// --------------------DownloaderCache---------------
+
+class DownloaderCache : public DownloaderState {
+private:
+
+    DownloaderCache() {
+    }
+public:
+
+    DownloaderState *instance() {
+        static DownloaderCache dc;
+        return &dc;
+    }
+
+    bool readable(const Downloader *d) {
+        return true;
+    }
+
+    bool writable(const Downloader *d) {
+        return false;
+    }
+
+    void handle_close(Downloader *d) {
+
+    }
+
+    void handle_read(Downloader *d) {
+
+    }
+};
+
 // ----------------ClientError-----------------------
+
 class ClientError : public ClientState {
 
     ClientError() {
@@ -134,16 +252,11 @@ public:
     }
 
     virtual bool writable(const Client *c);
-
-    virtual void handle_read(Client *c) {
-    }
     virtual void handle_write(Client *c);
-
-    virtual void handle_close(Client *c) {
-    }
- };
+};
 
 // ------------------ClientGettingRequest---------------------------
+
 class ClientGettingRequest : public ClientState {
 
     ClientGettingRequest() {
@@ -164,14 +277,55 @@ public:
     }
 
     virtual void handle_read(Client *c);
-
-    virtual void handle_write(Client *c) {
-    }
     virtual void handle_close(Client *c);
-
 };
 
+
+// ------------------ClientRetranslator--------------
+
+class ClientRetranslator : public ClientState {
+private:
+
+    ClientRetranslator() {
+    }
+public:
+
+    ClientState *instanse() {
+        static ClientRetranslator cr;
+        return &cr;
+    }
+
+    bool writable(const Client *c) {
+    }
+
+    void handle_write(Client *c) {
+    }
+
+};
+// ------------------ClientCache---------------------
+
+class ClientCache : public ClientState {
+private:
+
+    ClientCache() {
+    }
+public:
+
+    ClientState *instanse() {
+        static ClientCache cc;
+        return &cc;
+    }
+
+    bool writable(const Client *c) {
+
+    }
+
+    void handle_write(Client *c) {
+    }
+
+};
 // -----------------------Client--------------------------------------
+
 class Client : public AsyncDispatcher {
     friend class ClientState;
     friend class ClientGettingRequest;
@@ -211,16 +365,67 @@ public:
     }
 };
 
+
+// ----------------------Cache--------------------------------
+/*
+class CacheEntry {
+    friend class Downloader;
+private:
+    Downloader *_d;
+    std::list<Client*> _c;
+    Buffer *_b;
+    std::string _url;
+public:
+    CacheEntry(std::string url): _url(url) {
+//        _d = new Downloader(this);
+    }
+
+    void add_client(Client *c){
+        _c.push_back(c);
+    }
+};
+
+class Cache {
+private:
+    Cache();
+    static std::map<std::string, CacheEntry*> _c;
+public:
+    Cache *instance(){
+        Cache c;
+        return &c;
+    }
+
+    CacheEntry *get(std::string key) {
+        std::map<std::string, CacheEntry*>::iterator iter = _c.find(key);
+        if (iter != _c.end()){
+            return iter->second;
+        } else {
+            return NULL;
+        }
+    }
+
+    void add(std::string key, CacheEntry *ce = NULL) {
+        assert(ce != NULL);
+        _c.insert(std::pair<key, ce != NULL ? ce : new CacheEntry);
+    }
+
+    void remove(std::string key) {
+        std::map<std::string, CacheEntry*>::iterator iter = _c.find(key);
+        assert(iter != _c.end());
+        _c.erase(iter);
+    }
+};*/
+
 // ----------------------ClientState---------------------------------
 
 void ClientState::change_state(Client *c, ClientState *s) {
     c->change_state(s);
 }
 
-// -------------------ClientBadRequest------------------------------
+// -------------------ClientError------------------------------
 
 bool ClientError::writable(const Client *c) {
-    return c->_b->size() > 0;
+    return c->_b->size() >= 0;
 }
 
 void ClientError::handle_write(Client *c) {
@@ -238,6 +443,7 @@ void ClientError::handle_write(Client *c) {
 
 
 // ----------------------ClientGettingRequest-------------------------
+
 class ClientBadRequestException : public std::exception {
 };
 
@@ -310,11 +516,23 @@ void ClientGettingRequest::handle_read(Client *c) {
 #ifdef D
                 fprintf(stderr, "URL: %s\n", url);
 #endif
-
                 // XXX
+                /*               Cache *c = Cache::instance();
+                                CacheEntry *ce;
+                                // no such entry in cache
+                                if ((ce = c->get(url)) == NULL){
+                                    Logger::debug("No cache entry for the URL found");
+                    
+                                } else {
+                                    assert(false); // for now shouldn't come here
+                                    Logger::debug("Cache entry for URL found");
+                                    ce->add_client(c);
+                                }*/
+
             } catch (ClientBadRequestException &ex) {
                 Logger::debug("Bad request found");
                 c->_b->clear();
+                c->_b->append(ProxyConfig::bad_request_msg);
                 ClientState *s = ClientError::instance();
                 c->change_state(s);
             }

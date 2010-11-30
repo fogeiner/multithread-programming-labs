@@ -249,6 +249,8 @@ int TCPSocket::recv(Buffer *b, int count) {
         throw SocketStateException("Wrong state for operation");
     }
 
+    this->validate_connect();
+
     char *buf = new char[count];
 
     int read = ::recv(this->_b->_sock, buf, count, MSG_NOSIGNAL);
@@ -270,7 +272,6 @@ int TCPSocket::recv(Buffer *b, int count) {
     }
 
     delete[] buf;
-    this->validate_connect();
     return read;
 }
 
@@ -293,6 +294,8 @@ int TCPSocket::send(const Buffer *buf, int count, bool send_all) {
 
     assert(buf->size() >= count);
 
+    this->validate_connect();
+
     int to_send = count;
     int sent_total = 0;
     while (to_send != sent_total) {
@@ -308,9 +311,6 @@ int TCPSocket::send(const Buffer *buf, int count, bool send_all) {
 
         sent_total += sent;
     }
-
-    this->validate_connect();
-
 
     return sent_total;
 }
@@ -444,6 +444,12 @@ void TCPSocket::set_nonblocking(int value) {
 
 void  TCPSocket::validate_connect(){
     if(this->_state == CONNECTING){
+		int error;
+		socklen_t len = sizeof(error);
+		this->getsockopt(SOL_SOCKET, SO_ERROR, &error, &len);
+		if(error != 0){
+			throw ConnectException(error);
+		}
         this->_state = CONNECTED;
     }
 }
