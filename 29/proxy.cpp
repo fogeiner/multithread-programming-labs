@@ -100,8 +100,11 @@ class CacheEntry {
     friend class Downloader;
 private:
 
-    std::list<Client*> &clients() {
-        return _c;
+    void set_header_end_index(int index) {
+        assert(index > 0);
+
+        Logger::debug("Index of header end: %d", index);
+        _header_end_index = index;
     }
     Downloader *_d;
     std::list<Client*> _c;
@@ -110,9 +113,20 @@ private:
     std::string _url;
 public:
 
-    CacheEntry(std::string url) : _url(url) {
+    CacheEntry(std::string url) : _url(url), _header_end_index(-1) {
+        _b = new VectorBuffer();
     }
 
+    ~CacheEntry(){
+        delete _b;
+    }
+
+    void retranslator(){
+        //
+        Retranslator *r = new Retranslator(_d, _c, _b);
+
+        delete this;
+    }
     void activate();
 
     void add_client(Client *c) {
@@ -125,6 +139,11 @@ public:
 
     std::string url() const {
         return _url;
+    }
+
+    int header_end_index() {
+        assert(_header_end_index != -1);
+        return _header_end_index;
     }
 };
 
@@ -181,7 +200,7 @@ private:
     friend class ClientError;
     friend class ClientCache;
     friend class ClientRetranslator;
-
+    friend class Retranslator;
     void change_state(ClientState* s) {
         this->_state = s;
     }
@@ -254,6 +273,10 @@ class Downloader : public AsyncDispatcher {
     friend class DownloaderCache;
     friend class DownloaderRequestResponse;
     friend class DownloaderRetranslator;
+    friend class Retranslator;
+    void set_header_end_index(int index) {
+        _ce->set_header_end_index(index);
+    }
 
     void change_state(DownloaderState* s) {
         this->_state = s;
@@ -278,8 +301,8 @@ public:
     Downloader(CacheEntry *ce) : _in(NULL), _out(NULL), _r(NULL), _ce(ce) {
 
         _out = new VectorBuffer();
-       _in = ce->_b;
-       
+        _in = ce->_b;
+
         std::string url = ce->url();
         std::string netloc;
         short int port;
@@ -343,18 +366,23 @@ void DownloaderRequestResponse::handle_read(Downloader *d) {
     Logger::debug("DownloaderRequestResponse handle_read()");
     d->recv(d->_in);
 
+    const char *p;
     // XXX
-    if (strstr(d->_in->buf(), "\r\n\r\n") != NULL) {
+    if ((p = strstr(d->_in->buf(), "\r\n\r\n")) != NULL) {
         Logger::debug("Downloader found end of a response header");
+        d->set_header_end_index(p - d->_in->buf() + sizeof ("\r\n\r\n"));
 
         // HTTP/1.x 200
-        if (strstr(d->_in->buf(), "200") != d->_in->buf() + sizeof ("HTTP/1.x ")) {
+        if (strstr(d->_in->buf(), "200") != d->_in->buf() + sizeof ("HTTP/1.x")) {
             Logger::debug("Response is not 200");
-
+            // switching to retranslator mode
+            d->_ce->retranslator();
         } else {
             Logger::debug("Response is 200");
+            assert(false);
+            // switching to cache mode
         }
-    } 
+    }
 }
 
 void DownloaderRequestResponse::handle_write(Downloader *d) {
@@ -406,11 +434,14 @@ public:
     }
 
     void handle_close(Downloader *d) {
-
+        d->_r->download_finished();
+        d->close();
     }
 
     void handle_read(Downloader *d) {
-
+        d->_out->clear();
+        d->recv(d->_out);
+        d->_r->append_data(d->_out);
     }
 
 };
@@ -508,9 +539,19 @@ public:
     }
 
     bool writable(const Client *c) {
+        return c->_b->size() > 0;
     }
 
     void handle_write(Client *c) {
+        Logger::debug("Retranslating to client");
+        int sent;
+        sent = c->send(c->_b);
+        c->_b->drop_first(sent);
+
+        if(c->_r->is_download_finished() && c->_b->size() == 0){
+            Logger::debug("Retranslating to client finished");
+            c->close();
+        }
     }
 
 };
@@ -549,7 +590,38 @@ class Retranslator {
 private:
     Downloader *_d;
     std::list<Client*> _c;
+    bool _finished;
 public:
+    Retranslator(Downloader *downloader, std::list<Client*> clients, Buffer *buffer): _d(downloader), _c(clients), _finished(false) {
+        Logger::debug("Creating retranslator");
+        for(std::list<Client*>::iterator i = _c.begin();
+                i!=_c.end(); ++i){
+            Client *c = *i;
+            c->_b->clear();
+            c->_b->append(buffer);
+            c->_r = this;
+            c->change_state(ClientRetranslator::instance());
+        }
+        _d->_r = this;
+        _d->change_state(DownloaderRetranslator::instance());
+    }
+
+    void download_finished(){
+        _finished = true;
+    }
+
+    bool is_download_finished(){
+        return _finished;
+    }
+
+    void append_data(Buffer *b){
+        Logger::debug("Appending new data to clients");
+        for(std::list<Client*>::iterator i = _c.begin();
+                i!=_c.end(); ++i){
+            Client *c = *i;
+            c->_b->append(b);
+        }
+    }
 };
 
 // ----------------------ClientState---------------------------------
