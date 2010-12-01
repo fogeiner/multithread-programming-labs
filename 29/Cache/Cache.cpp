@@ -1,10 +1,10 @@
 #include "Cache.h"
-#include "Client/Client.h"
-#include "../libs/Logger/Logger.h"
-#include "../libs/Buffer/VectorBuffer.h"
-#include "Retranslator.h"
-#include "Downloader/Downloader.h"
-#include "config.h"
+#include "../Client/Client.h"
+#include "../../libs/Logger/Logger.h"
+#include "../../libs/Buffer/VectorBuffer.h"
+#include "../Retranslator/Retranslator.h"
+#include "../Downloader/Downloader.h"
+#include "../config.h"
 // ------------CacheEntry-----------------------
 
 void CacheEntry::set_header_end_index(int index) {

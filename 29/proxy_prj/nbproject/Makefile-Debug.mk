@@ -33,16 +33,25 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/1472/Cache.o \
-	${OBJECTDIR}/_ext/1472/proxy.o \
+	${OBJECTDIR}/_ext/2105459482/ClientState.o \
+	${OBJECTDIR}/_ext/2105459482/ClientError.o \
+	${OBJECTDIR}/_ext/2083495164/DownloaderRetranslator.o \
+	${OBJECTDIR}/_ext/2145794643/Cache.o \
+	${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o \
 	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
 	${OBJECTDIR}/_ext/1472/config.o \
 	${OBJECTDIR}/_ext/413176034/HTTPURIParser.o \
+	${OBJECTDIR}/_ext/1406418076/Retranslator.o \
 	${OBJECTDIR}/_ext/238894769/Logger.o \
-	${OBJECTDIR}/_ext/1472/Retranslator.o \
+	${OBJECTDIR}/_ext/2105459482/ClientGettingRequest.o \
+	${OBJECTDIR}/_ext/2105459482/ClientCache.o \
 	${OBJECTDIR}/_ext/2136648385/Proxy.o \
+	${OBJECTDIR}/_ext/1472/main.o \
 	${OBJECTDIR}/_ext/2105459482/Client.o \
 	${OBJECTDIR}/_ext/2083495164/Downloader.o \
+	${OBJECTDIR}/_ext/2083495164/DownloaderState.o \
+	${OBJECTDIR}/_ext/2105459482/ClientRetranslator.o \
+	${OBJECTDIR}/_ext/2083495164/DownloaderCache.o \
 	${OBJECTDIR}/_ext/951679554/AsyncDispatcher.o
 
 
@@ -70,15 +79,30 @@ dist/Debug/GNU-Linux-x86/proxy_prj: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/proxy_prj ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/_ext/1472/Cache.o: ../Cache.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1472
+${OBJECTDIR}/_ext/2105459482/ClientState.o: ../Client/ClientState.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
 	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/Cache.o ../Cache.cpp
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientState.o ../Client/ClientState.cpp
 
-${OBJECTDIR}/_ext/1472/proxy.o: ../proxy.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1472
+${OBJECTDIR}/_ext/2105459482/ClientError.o: ../Client/ClientError.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
 	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/proxy.o ../proxy.cpp
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientError.o ../Client/ClientError.cpp
+
+${OBJECTDIR}/_ext/2083495164/DownloaderRetranslator.o: ../Downloader/DownloaderRetranslator.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderRetranslator.o ../Downloader/DownloaderRetranslator.cpp
+
+${OBJECTDIR}/_ext/2145794643/Cache.o: ../Cache/Cache.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/Cache.o ../Cache/Cache.cpp
+
+${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o: ../Downloader/DownloaderRequestResponse.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o ../Downloader/DownloaderRequestResponse.cpp
 
 ${OBJECTDIR}/_ext/297160205/TCPSocket.o: ../../libs/TCPSocket/TCPSocket.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/297160205
@@ -95,20 +119,35 @@ ${OBJECTDIR}/_ext/413176034/HTTPURIParser.o: ../../libs/HTTPURIParser/HTTPURIPar
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/413176034/HTTPURIParser.o ../../libs/HTTPURIParser/HTTPURIParser.cpp
 
+${OBJECTDIR}/_ext/1406418076/Retranslator.o: ../Retranslator/Retranslator.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1406418076
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1406418076/Retranslator.o ../Retranslator/Retranslator.cpp
+
 ${OBJECTDIR}/_ext/238894769/Logger.o: ../../libs/Logger/Logger.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/238894769
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/238894769/Logger.o ../../libs/Logger/Logger.cpp
 
-${OBJECTDIR}/_ext/1472/Retranslator.o: ../Retranslator.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1472
+${OBJECTDIR}/_ext/2105459482/ClientGettingRequest.o: ../Client/ClientGettingRequest.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
 	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/Retranslator.o ../Retranslator.cpp
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientGettingRequest.o ../Client/ClientGettingRequest.cpp
+
+${OBJECTDIR}/_ext/2105459482/ClientCache.o: ../Client/ClientCache.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientCache.o ../Client/ClientCache.cpp
 
 ${OBJECTDIR}/_ext/2136648385/Proxy.o: ../Proxy/Proxy.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2136648385
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2136648385/Proxy.o ../Proxy/Proxy.cpp
+
+${OBJECTDIR}/_ext/1472/main.o: ../main.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1472
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/main.o ../main.cpp
 
 ${OBJECTDIR}/_ext/2105459482/Client.o: ../Client/Client.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
@@ -119,6 +158,21 @@ ${OBJECTDIR}/_ext/2083495164/Downloader.o: ../Downloader/Downloader.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/Downloader.o ../Downloader/Downloader.cpp
+
+${OBJECTDIR}/_ext/2083495164/DownloaderState.o: ../Downloader/DownloaderState.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderState.o ../Downloader/DownloaderState.cpp
+
+${OBJECTDIR}/_ext/2105459482/ClientRetranslator.o: ../Client/ClientRetranslator.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientRetranslator.o ../Client/ClientRetranslator.cpp
+
+${OBJECTDIR}/_ext/2083495164/DownloaderCache.o: ../Downloader/DownloaderCache.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderCache.o ../Downloader/DownloaderCache.cpp
 
 ${OBJECTDIR}/_ext/951679554/AsyncDispatcher.o: ../../libs/AsyncDispatcher/AsyncDispatcher.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/951679554

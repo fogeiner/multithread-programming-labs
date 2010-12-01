@@ -1,42 +1,12 @@
 #pragma once
 #include <alloca.h>
 #include "../../libs/AsyncDispatcher/AsyncDispatcher.h"
-
+#include "ClientState.h"
 class Client;
 class Retranslator;
 class CacheEntry;
 
-class ClientState {
-public:
 
-    virtual bool readable(const Client *c);
-
-
-    virtual bool writable(const Client *c);
-
-    virtual void handle_read(Client *c);
-
-    virtual void handle_write(Client *c);
-
-    virtual void handle_close(Client *c);
-
-    virtual void handle_connect(Client *c);
-
-protected:
-    void change_state(Client *c, ClientState *s);
-};
-
-class ClientError : public ClientState {
-    ClientError();
-public:
-
-    static ClientState *instance();
-
-    virtual bool readable(const Client *c);
-
-    virtual bool writable(const Client *c);
-    virtual void handle_write(Client *c);
-};
 
 class Client: public AsyncDispatcher {
 public:
@@ -71,59 +41,4 @@ public:
     void handle_read();
     void handle_write();
     void handle_close();
-};
-
-
-
-
-
-
-// ------------------ClientGettingRequest---------------------------
-
-class ClientGettingRequest : public ClientState {
-    ClientGettingRequest();
-public:
-
-    static ClientState *instance();
-
-    virtual bool readable(const Client *c);
-
-    virtual bool writable(const Client *c);
-
-    virtual void handle_read(Client *c);
-    virtual void handle_close(Client *c);
-};
-
-
-// ------------------ClientRetranslator--------------
-
-class ClientRetranslator : public ClientState {
-private:
-
-    ClientRetranslator();
-public:
-
-    static ClientState *instance();
-
-    bool writable(const Client *c);
-
-    void handle_write(Client *c);
-
-};
-// ------------------ClientCache---------------------
-
-class ClientCache : public ClientState {
-private:
-
-    ClientCache();
-public:
-
-    static ClientState *instance();
-
-    bool readable(const Client *c);
-
-    bool writable(const Client *c);
-
-    void handle_write(Client *c);
-
 };

@@ -1,27 +1,6 @@
-#include <exception>
-#include <cstring>
-#include <alloca.h>
-
-#include <list>
-#include <map>
-#include <cassert>
-
 #include "Proxy/Proxy.h"
 #include "../libs/Logger/Logger.h"
 #include "config.h"
-#define D
-
-#ifdef D
-#include <cstdio>
-#endif
-
-
-
-// --------------Proxy-----------------------------------------------
-
-
-
-// ------------------------Free functions------------------------------
 
 void init_logger() {
     Logger::set_ident(ProxyConfig::ident);

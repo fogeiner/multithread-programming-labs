@@ -1,8 +1,11 @@
 #include "Retranslator.h"
-#include "../libs/Buffer/VectorBuffer.h"
-#include "../libs/Logger/Logger.h"
-#include "Downloader/Downloader.h"
-#include "Client/Client.h"
+#include "../Downloader/DownloaderRetranslator.h"
+#include "../../libs/Buffer/VectorBuffer.h"
+#include "../../libs/Logger/Logger.h"
+#include "../Downloader/Downloader.h"
+#include "../Client/Client.h"
+#include "../Client/ClientRetranslator.h"
+
 Retranslator::Retranslator(Downloader *downloader, std::list<Client*> clients, Buffer *buffer) : _d(downloader), _c(clients), _finished(false) {
     Logger::debug("Creating retranslator");
     for (std::list<Client*>::iterator i = _c.begin();

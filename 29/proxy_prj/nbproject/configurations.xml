@@ -60,12 +60,29 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f4"
+                     displayName="Cache"
+                     projectFiles="true"
+                     kind="SOURCE_LOGICAL_FOLDER">
+        <itemPath>../Cache/Cache.cpp</itemPath>
+        <itemPath>../Cache/Cache.h</itemPath>
+      </logicalFolder>
       <logicalFolder name="f2"
                      displayName="Client"
                      projectFiles="true"
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>../Client/Client.cpp</itemPath>
         <itemPath>../Client/Client.h</itemPath>
+        <itemPath>../Client/ClientCache.cpp</itemPath>
+        <itemPath>../Client/ClientCache.h</itemPath>
+        <itemPath>../Client/ClientError.cpp</itemPath>
+        <itemPath>../Client/ClientError.h</itemPath>
+        <itemPath>../Client/ClientGettingRequest.cpp</itemPath>
+        <itemPath>../Client/ClientGettingRequest.h</itemPath>
+        <itemPath>../Client/ClientRetranslator.cpp</itemPath>
+        <itemPath>../Client/ClientRetranslator.h</itemPath>
+        <itemPath>../Client/ClientState.cpp</itemPath>
+        <itemPath>../Client/ClientState.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3"
                      displayName="Downloader"
@@ -73,6 +90,14 @@
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>../Downloader/Downloader.cpp</itemPath>
         <itemPath>../Downloader/Downloader.h</itemPath>
+        <itemPath>../Downloader/DownloaderCache.cpp</itemPath>
+        <itemPath>../Downloader/DownloaderCache.h</itemPath>
+        <itemPath>../Downloader/DownloaderRequestResponse.cpp</itemPath>
+        <itemPath>../Downloader/DownloaderRequestResponse.h</itemPath>
+        <itemPath>../Downloader/DownloaderRetranslator.cpp</itemPath>
+        <itemPath>../Downloader/DownloaderRetranslator.h</itemPath>
+        <itemPath>../Downloader/DownloaderState.cpp</itemPath>
+        <itemPath>../Downloader/DownloaderState.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
                      displayName="libs"
@@ -103,15 +128,23 @@
           <itemPath>../../libs/TCPSocket/TCPSocket.cpp</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <itemPath>../Cache.cpp</itemPath>
-      <itemPath>../Cache.h</itemPath>
-      <itemPath>../Proxy/Proxy.cpp</itemPath>
-      <itemPath>../Proxy/Proxy.h</itemPath>
-      <itemPath>../Retranslator.cpp</itemPath>
-      <itemPath>../Retranslator.h</itemPath>
+      <logicalFolder name="f6"
+                     displayName="Proxy"
+                     projectFiles="true"
+                     kind="SOURCE_LOGICAL_FOLDER">
+        <itemPath>../Proxy/Proxy.cpp</itemPath>
+        <itemPath>../Proxy/Proxy.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f5"
+                     displayName="Retranslator"
+                     projectFiles="true"
+                     kind="SOURCE_LOGICAL_FOLDER">
+        <itemPath>../Retranslator/Retranslator.cpp</itemPath>
+        <itemPath>../Retranslator/Retranslator.h</itemPath>
+      </logicalFolder>
       <itemPath>../config.cpp</itemPath>
       <itemPath>../config.h</itemPath>
-      <itemPath>../proxy.cpp</itemPath>
+      <itemPath>../main.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
