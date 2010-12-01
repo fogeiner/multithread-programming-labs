@@ -367,7 +367,7 @@ void TCPSocket::connect(const char *name, unsigned short port) {
         this->_state = CONNECTED;
     }
 
-    if (this->_nonblocking = true) {
+    if (this->_nonblocking == true) {
         ::connect(this->_b->_sock, (struct sockaddr*) &remote_addr, sizeof (remote_addr));
         this->_state = CONNECTING;
     }

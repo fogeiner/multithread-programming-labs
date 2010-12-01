@@ -14,7 +14,7 @@ void CacheEntry::set_header_end_index(int index) {
     _header_end_index = index;
 }
 
-CacheEntry::CacheEntry(std::string url) : _url(url), _header_end_index(-1) {
+CacheEntry::CacheEntry(std::string url) : _header_end_index(-1), _url(url) {
     _b = new VectorBuffer();
 }
 

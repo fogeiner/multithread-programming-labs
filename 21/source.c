@@ -67,8 +67,8 @@ void *philosopher(void *num) {
         printf("Philosopher %d: get dish %d\n", id, f);
 
 
-        pthread_mutex_lock(&forks_mutex);
         while (1) {
+			pthread_mutex_lock(&forks_mutex);
 
             int retv;
 
@@ -89,7 +89,6 @@ void *philosopher(void *num) {
                 continue;
             }
             printf("Philosopher %d: got fork %d\n", id, left_fork);
-            pthread_mutex_unlock(&forks_mutex);
             break;
         }
 
@@ -97,6 +96,8 @@ void *philosopher(void *num) {
         usleep(DELAY * (FOOD - f + 1));
 
         down_forks(left_fork, right_fork);
+		pthread_cond_broadcast(&cv);
+        pthread_mutex_unlock(&forks_mutex);
     }
     printf("Philosopher %d is done eating.\n", id);
     return (NULL);
@@ -119,5 +120,4 @@ void down_forks(int f1, int f2) {
     pthread_mutex_unlock(&forks[f1]);
     pthread_mutex_unlock(&forks[f2]);
 
-    pthread_cond_signal(&cv);
 }
