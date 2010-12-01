@@ -94,7 +94,6 @@ void *philosopher(void *num) {
 
         printf("Philosopher %d: eating.\n", id);
         usleep(DELAY * (FOOD - f + 1));
-
         down_forks(left_fork, right_fork);
 		pthread_cond_broadcast(&cv);
         pthread_mutex_unlock(&forks_mutex);
