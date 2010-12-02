@@ -13,18 +13,23 @@ class CacheEntry {
 private:
 
     void set_header_end_index(int index);
+
     Downloader *_d;
     std::list<Client*> _c;
+
+    Buffer *_query;
     Buffer *_b;
+    
     int _header_end_index;
+
     std::string _url;
 public:
 
-    CacheEntry(std::string url);
+    CacheEntry(std::string url, const Buffer *b);
 
     ~CacheEntry();
-
-    void retranslator();
+    const Buffer *get_query();
+    void start_retranslator();
     void activate();
     void add_client(Client *c);
     void remove_client(Client *c);

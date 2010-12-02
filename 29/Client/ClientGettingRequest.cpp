@@ -4,6 +4,10 @@
 #include "ClientCache.h"
 #include "../Cache/Cache.h"
 #include "../config.h"
+
+#define D
+//#undef D
+
 ClientGettingRequest::ClientGettingRequest() {
 }
 
@@ -94,9 +98,9 @@ void ClientGettingRequest::handle_read(Client *c) {
                 Cache *cache = Cache::instance();
                 CacheEntry *ce;
                 // no such entry in cache
-                if ((ce = cache->get(url)) == NULL) {
+                if (true || (ce = cache->get(url)) == NULL) {
                     Logger::debug("No cache entry for the URL found");
-                    ce = new CacheEntry(std::string(url));
+                    ce = new CacheEntry(std::string(url), c->_b);
                     ce->add_client(c);
                     cache->add(std::string(url), ce);
                     c->change_state(ClientCache::instance());

@@ -11,6 +11,22 @@ SelectException::SelectException(int err_number) {
 #endif
 }
 
+EAGAINException::EAGAINException() {
+    char buf[ERR_MSG_MAX_LENGTH];
+    char *msg_ptr;
+    msg_ptr = ::strerror_r(EAGAIN, buf, sizeof (buf));
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+    this->_err.assign(buf);
+#else
+    this->_err.assign(msg_ptr);
+#endif
+
+}
+
+const char *EAGAINException::what() const throw () {
+    return _err.c_str();
+}
+
 const char *SelectException::what() const throw () {
     return this->_err.c_str();
 }
@@ -60,7 +76,10 @@ void Select(std::list<Selectable*> *rlist,
 
     int av_fds;
     if ((av_fds = select(max_fd + 1, &rfds.fdset(), &wfds.fdset(), &xfds.fdset(), tv_p)) == -1) {
-        throw SelectException(errno);
+        if (errno == EAGAIN)
+            throw EAGAINException();
+        else
+            throw SelectException(errno);
     }
 #ifdef DEBUG
     fprintf(stderr, "Select returned %d fds\n", av_fds);
@@ -260,7 +279,10 @@ int TCPSocket::recv(Buffer *b, int count) {
 
     if (read == -1) {
         delete[] buf;
-        throw RecvException(errno);
+        if (errno == EAGAIN)
+            throw EAGAINException();
+        else
+            throw RecvException(errno);
     }
 
     if (read > 0) {
@@ -306,7 +328,10 @@ int TCPSocket::send(const Buffer *buf, int count, bool send_all) {
 #endif
 
         if (sent == -1) {
-            throw SendException(errno);
+            if (errno == EAGAIN)
+                throw EAGAINException();
+            else
+                throw SendException(errno);
         }
 
         sent_total += sent;
@@ -362,7 +387,10 @@ void TCPSocket::connect(const char *name, unsigned short port) {
 
     if (this->_nonblocking == false) {
         if (::connect(this->_b->_sock, (struct sockaddr*) &remote_addr, sizeof (remote_addr)) == -1) {
-            throw ConnectException(errno);
+            if (errno == EAGAIN)
+                throw EAGAINException();
+            else
+                throw ConnectException(errno);
         }
         this->_state = CONNECTED;
     }
@@ -393,7 +421,10 @@ TCPSocket *TCPSocket::accept() {
     fprintf(stderr, "socket %d accepted %d\n", this->_b->_sock, n_sock);
 #endif
     if (n_sock == -1) {
-        throw AcceptException(errno);
+        if (errno == EAGAIN)
+            throw EAGAINException();
+        else
+            throw AcceptException(errno);
     }
     TCPSocket *s = new TCPSocket(n_sock, &addr);
     s->_state = CONNECTED;
@@ -416,7 +447,10 @@ int TCPSocket::peek() const {
     int read;
     read = ::recv(this->_b->_sock, &b, 1, MSG_PEEK | MSG_NOSIGNAL);
     if (read == -1) {
-        throw RecvException(errno);
+        if (errno == EAGAIN)
+            throw EAGAINException();
+        else
+            throw RecvException(errno);
     }
     return read;
 }
@@ -434,7 +468,7 @@ void TCPSocket::set_nonblocking(int value) {
     }
     retv = fcntl(this->_b->_sock, F_SETFL, value != 0 ? flags | O_NONBLOCK : flags & ~O_NONBLOCK);
 
-    if(value != 0){
+    if (value != 0) {
         this->_nonblocking = true;
     } else {
         this->_nonblocking = false;
@@ -442,14 +476,18 @@ void TCPSocket::set_nonblocking(int value) {
     assert(retv == 0);
 }
 
-void  TCPSocket::validate_connect(){
-    if(this->_state == CONNECTING){
-		int error;
-		socklen_t len = sizeof(error);
-		this->getsockopt(SOL_SOCKET, SO_ERROR, &error, &len);
-		if(error != 0){
-			throw ConnectException(error);
-		}
+void TCPSocket::validate_connect() {
+    if (this->_state == CONNECTING) {
+        int error;
+        socklen_t len = sizeof (error);
+        this->getsockopt(SOL_SOCKET, SO_ERROR, &error, &len);
+        if (error != 0) {
+            // can this happen?
+            if (error == EAGAIN)
+                throw EAGAINException();
+            else
+                throw ConnectException(error);
+        }
         this->_state = CONNECTED;
     }
 }

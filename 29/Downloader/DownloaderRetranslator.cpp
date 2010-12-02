@@ -20,13 +20,18 @@ bool DownloaderRetranslator::writable(const Downloader *d) {
 }
 
 void DownloaderRetranslator::handle_close(Downloader *d) {
-    d->_r->download_finished();
+    Logger::debug("Download finished; closing socket");
+    d->_r->set_download_finished();
     d->close();
 }
 
 void DownloaderRetranslator::handle_read(Downloader *d) {
+    if(d->_r->clients_count() == 0){
+        d->close();
+        return;
+    }
     d->_out->clear();
     d->recv(d->_out);
-    d->_r->append_data(d->_out);
+    d->_r->forward_data_to_clients(d->_out);
 }
 

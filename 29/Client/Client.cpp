@@ -7,19 +7,17 @@
 #include "../Cache/Cache.h"
 #include "ClientError.h"
 #include "ClientGettingRequest.h"
+#include "ClientRetranslator.h"
+#include "ClientCache.h"
 
 void Client::change_state(ClientState* s) {
     this->_state = s;
 }
 
-Client::Client(TCPSocket *sock) : AsyncDispatcher(sock) {
+Client::Client(TCPSocket *sock) : AsyncDispatcher(sock), _ce(NULL), _r(NULL) {
     this->_state = ClientGettingRequest::instance();
     this->_bytes_sent = 0;
     this->_b = new VectorBuffer();
-}
-
-void Client::error(const char *msg) {
-    this->error(std::string(msg));
 }
 
 void Client::error(std::string msg) {
@@ -48,4 +46,10 @@ void Client::handle_close() {
     this->_state->handle_close(this);
 }
 
-
+void Client::retranslator(const Buffer *b, Retranslator *r) {
+    Logger::debug("Switching Client to retranslator mode");
+    _b->clear();
+    _b->append(b);
+    _r = r;
+    this->change_state(ClientRetranslator::instance());
+}

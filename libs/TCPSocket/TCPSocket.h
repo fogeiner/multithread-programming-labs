@@ -47,6 +47,18 @@ public:
     }
 };
 
+class EAGAINException : public std::exception {
+private:
+    std::string _err;
+    static const int ERR_MSG_MAX_LENGTH = 256;
+public:
+    EAGAINException();
+    const char *what() const throw ();
+    ~EAGAINException() throw () {
+
+    }
+};
+
 class TCPSocketException : public std::exception {
 private:
     std::string _err;

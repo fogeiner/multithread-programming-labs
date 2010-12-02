@@ -3,6 +3,7 @@
 #include "../Cache/Cache.h"
 #include "DownloaderState.h"
 #include "../../libs/Logger/Logger.h"
+#include "DownloaderRetranslator.h"
 
 DownloaderRequestResponse::DownloaderRequestResponse() {
 }
@@ -39,10 +40,18 @@ void DownloaderRequestResponse::handle_read(Downloader *d) {
         d->set_header_end_index(p - d->_in->buf() + sizeof ("\r\n\r\n"));
 
         // HTTP/1.x 200
-        if (strstr(d->_in->buf(), "200") != d->_in->buf() + sizeof ("HTTP/1.x")) {
+        if (true || strstr(d->_in->buf(), "200") != d->_in->buf() + sizeof ("HTTP/1.x")) {
             Logger::debug("Response is not 200");
+
+            Cache::instance()->remove(d->_ce->url());
+
             // switching to retranslator mode
-            d->_ce->retranslator();
+            // and removing entry from cache
+            d->_ce->start_retranslator();
+            delete d->_ce;
+
+            Logger::debug("Changing Downloader state to retranslator mode");
+            d->change_state(DownloaderRetranslator::instance());
         } else {
             Logger::debug("Response is 200");
             assert(false);
@@ -57,4 +66,3 @@ void DownloaderRequestResponse::handle_write(Downloader *d) {
     sent = d->send(d->_out);
     d->_out->drop_first(sent);
 }
-

@@ -12,10 +12,10 @@ private:
 public:
 
     Retranslator(Downloader *downloader, std::list<Client*> clients, Buffer *buffer);
-
-    void download_finished();
-
+    ~Retranslator();
+    void remove_client(Client *c);
+    void set_download_finished();
     bool is_download_finished();
-
-    void append_data(Buffer *b);
+    int clients_count() const;
+    void forward_data_to_clients(Buffer *b);
 };

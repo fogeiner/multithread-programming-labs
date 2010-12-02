@@ -6,8 +6,6 @@ class Client;
 class Retranslator;
 class CacheEntry;
 
-
-
 class Client: public AsyncDispatcher {
 public:
 
@@ -22,19 +20,25 @@ private:
     friend class ClientCache;
     friend class ClientRetranslator;
     friend class Retranslator;
+
     void change_state(ClientState* s);
+
     ClientState *_state;
-    int _bytes_sent;
+
     Buffer *_b;
-    Retranslator *_r;
+
+    int _bytes_sent;
+
     CacheEntry *_ce;
+    Retranslator *_r;
+
     enum method _m;
 public:
 
 
     Client(TCPSocket *sock);
 
-    void error(const char *msg);
+    void retranslator(const Buffer *b, Retranslator *r);
     void error(std::string msg);
     bool readable() const;
     bool writable() const;

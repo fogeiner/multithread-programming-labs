@@ -9,9 +9,8 @@ private:
 public:
 
     static ClientState *instance();
-
     bool writable(const Client *c);
-
+    bool readable(const Client *c);
     void handle_write(Client *c);
 
 };

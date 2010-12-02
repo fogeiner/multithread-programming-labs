@@ -12,15 +12,17 @@ class Downloader : public AsyncDispatcher {
     friend class DownloaderRequestResponse;
     friend class DownloaderRetranslator;
     friend class Retranslator;
-    void set_header_end_index(int index);
 
     void change_state(DownloaderState* s);
 
+    void set_header_end_index(int index);
     void form_query();
 
     DownloaderState *_state;
+
     Buffer *_in;
     Buffer *_out;
+
     Retranslator *_r;
     CacheEntry *_ce;
 

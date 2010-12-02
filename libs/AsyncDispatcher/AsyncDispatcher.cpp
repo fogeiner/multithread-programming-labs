@@ -101,14 +101,14 @@ void AsyncDispatcher::loop(int timeout_ms) {
                 }
             }
             assert(ad != NULL);
-            if (ad->_s->get_state() == TCPSocket::CONNECTING) {
-                ad->_s->validate_connect();
-                ad->handle_connect();
-            }
             if (ad->_s->get_state() == TCPSocket::CONNECTED) {
                 ad->handle_write();
             }
 
+            if (ad->_s->get_state() == TCPSocket::CONNECTING) {
+                ad->_s->validate_connect();
+                ad->handle_connect();
+            }
         }
     }
 }

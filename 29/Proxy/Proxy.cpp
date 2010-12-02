@@ -2,6 +2,7 @@
 #include "../config.h"
 #include "../../libs/Logger/Logger.h"
 #include "../Client/Client.h"
+
 Proxy::Proxy() {
     this->set_reuse_addr(1);
     this->bind(ProxyConfig::listening_port);

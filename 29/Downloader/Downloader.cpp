@@ -24,7 +24,8 @@ void Downloader::form_query() {
     _out->append(_ce->url().c_str());
     _out->append(" HTTP/1.0\r\n\r\n");
     Logger::debug("Formed request: ");
-    Logger::debug(_out->buf());
+    // can be dangerous
+    // Logger::debug(_out->buf());
 }
 
 Downloader::Downloader(CacheEntry *ce) : _in(NULL), _out(NULL), _r(NULL), _ce(ce) {
@@ -43,7 +44,8 @@ Downloader::Downloader(CacheEntry *ce) : _in(NULL), _out(NULL), _r(NULL), _ce(ce
     delete pu;
 
     this->connect(netloc, port);
-    this->form_query();
+    //this->form_query();
+    this->_out->append(ce->get_query());
     this->_state = DownloaderRequestResponse::instance();
 }
 
