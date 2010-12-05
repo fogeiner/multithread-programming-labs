@@ -8,7 +8,7 @@ private:
     DownloaderCache();
 public:
 
-    DownloaderState *instance();
+    static DownloaderState *instance();
 
     bool readable(const Downloader *d);
 

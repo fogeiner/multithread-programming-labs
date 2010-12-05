@@ -1,6 +1,8 @@
 #include "DownloaderCache.h"
 #include "Downloader.h"
 #include "DownloaderState.h"
+#include "../Cache/Cache.h"
+#include "../../libs/Logger/Logger.h"
 
 DownloaderCache::DownloaderCache() {
 }
@@ -19,9 +21,13 @@ bool DownloaderCache::writable(const Downloader *d) {
 }
 
 void DownloaderCache::handle_close(Downloader *d) {
-
+    Logger::debug("DownloaderCache handle_close()");
+    d->_ce->download_finished();
+    d->close();
+    Logger::debug("Cache download finished");
 }
 
 void DownloaderCache::handle_read(Downloader *d) {
-
+    Logger::debug("DownloaderCache handle_read()");
+    d->recv(d->_ce->get_buffer());
 }

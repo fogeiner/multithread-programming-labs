@@ -15,9 +15,6 @@ class Downloader : public AsyncDispatcher {
 
     void change_state(DownloaderState* s);
 
-    void set_header_end_index(int index);
-    void form_query();
-
     DownloaderState *_state;
 
     Buffer *_in;

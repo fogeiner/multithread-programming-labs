@@ -2,6 +2,7 @@
 #include "Downloader.h"
 #include "../Cache/Cache.h"
 #include "DownloaderState.h"
+#include "DownloaderCache.h"
 #include "../../libs/Logger/Logger.h"
 #include "DownloaderRetranslator.h"
 
@@ -37,10 +38,8 @@ void DownloaderRequestResponse::handle_read(Downloader *d) {
     // XXX
     if ((p = strstr(d->_in->buf(), "\r\n\r\n")) != NULL) {
         Logger::debug("Downloader found end of a response header");
-        d->set_header_end_index(p - d->_in->buf() + sizeof ("\r\n\r\n"));
-
         // HTTP/1.x 200
-        if (true || strstr(d->_in->buf(), "200") != d->_in->buf() + sizeof ("HTTP/1.x")) {
+        if (strstr(d->_in->buf(), "200") != d->_in->buf() + sizeof ("HTTP/1.x")) {
             Logger::debug("Response is not 200");
 
             Cache::instance()->remove(d->_ce->url());
@@ -54,7 +53,9 @@ void DownloaderRequestResponse::handle_read(Downloader *d) {
             d->change_state(DownloaderRetranslator::instance());
         } else {
             Logger::debug("Response is 200");
-            assert(false);
+            Logger::debug("Changing Downloader state to cache mode");
+            d->change_state(DownloaderCache::instance());
+          //  assert(false);
             // switching to cache mode
         }
     }

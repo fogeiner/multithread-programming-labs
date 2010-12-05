@@ -6,14 +6,7 @@
 #include "../Downloader/Downloader.h"
 #include "../config.h"
 
-void CacheEntry::set_header_end_index(int index) {
-    assert(index > 0);
-
-    Logger::debug("Index of header end: %d", index);
-    _header_end_index = index;
-}
-
-CacheEntry::CacheEntry(std::string url, const Buffer *query) : _header_end_index(-1), _url(url) {
+CacheEntry::CacheEntry(std::string url, const Buffer *query) : _d(NULL), _url(url) {
     Logger::debug("Creating new CacheEntry");
     _b = new VectorBuffer();
     _query = new VectorBuffer();
@@ -63,12 +56,21 @@ const Buffer *CacheEntry::get_query() {
     return this->_query;
 }
 
-int CacheEntry::header_end_index() {
-    assert(_header_end_index != -1);
-    return _header_end_index;
+Buffer *CacheEntry::get_buffer() {
+    return this->_b;
 }
 
+int CacheEntry::data_size() const {
+    return this->_b->size();
+}
 
+void CacheEntry::download_finished() {
+    this->_d = NULL;
+}
+
+bool CacheEntry::is_download_finished() const {
+    return this->_d == NULL;
+}
 // ----------------Cache------------------
 
 Cache::Cache() {

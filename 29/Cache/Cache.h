@@ -12,15 +12,11 @@ class CacheEntry {
     friend class Downloader;
 private:
 
-    void set_header_end_index(int index);
-
     Downloader *_d;
     std::list<Client*> _c;
 
     Buffer *_query;
     Buffer *_b;
-    
-    int _header_end_index;
 
     std::string _url;
 public:
@@ -29,12 +25,15 @@ public:
 
     ~CacheEntry();
     const Buffer *get_query();
+    Buffer *get_buffer();
+    int data_size() const;
+    void download_finished();
+    bool is_download_finished() const;
     void start_retranslator();
     void activate();
     void add_client(Client *c);
     void remove_client(Client *c);
     std::string url() const;
-    int header_end_index();
 };
 
 class Cache {

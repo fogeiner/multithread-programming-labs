@@ -9,10 +9,6 @@ class CacheEntry;
 class Client: public AsyncDispatcher {
 public:
 
-    enum method {
-        HEAD, GET
-    };
-
 private:
     friend class ClientState;
     friend class ClientGettingRequest;
@@ -27,12 +23,10 @@ private:
 
     Buffer *_b;
 
-    int _bytes_sent;
-
     CacheEntry *_ce;
     Retranslator *_r;
+    int _bytes_sent;
 
-    enum method _m;
 public:
 
 

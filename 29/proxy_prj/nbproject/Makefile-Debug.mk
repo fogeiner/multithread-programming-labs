@@ -37,8 +37,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/2105459482/ClientError.o \
 	${OBJECTDIR}/_ext/2083495164/DownloaderRetranslator.o \
 	${OBJECTDIR}/_ext/2145794643/Cache.o \
-	${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o \
 	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
+	${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o \
 	${OBJECTDIR}/_ext/1472/config.o \
 	${OBJECTDIR}/_ext/413176034/HTTPURIParser.o \
 	${OBJECTDIR}/_ext/1406418076/Retranslator.o \
@@ -59,8 +59,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=
-CXXFLAGS=
+CCFLAGS=-pedantic -Wall -g
+CXXFLAGS=-pedantic -Wall -g
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -99,15 +99,15 @@ ${OBJECTDIR}/_ext/2145794643/Cache.o: ../Cache/Cache.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/Cache.o ../Cache/Cache.cpp
 
-${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o: ../Downloader/DownloaderRequestResponse.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o ../Downloader/DownloaderRequestResponse.cpp
-
 ${OBJECTDIR}/_ext/297160205/TCPSocket.o: ../../libs/TCPSocket/TCPSocket.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/297160205
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/297160205/TCPSocket.o ../../libs/TCPSocket/TCPSocket.cpp
+
+${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o: ../Downloader/DownloaderRequestResponse.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o ../Downloader/DownloaderRequestResponse.cpp
 
 ${OBJECTDIR}/_ext/1472/config.o: ../config.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472

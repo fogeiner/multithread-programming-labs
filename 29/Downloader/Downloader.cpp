@@ -11,22 +11,11 @@
 #include "../Retranslator/Retranslator.h"
 #include "../config.h"
 
-void Downloader::set_header_end_index(int index) {
-    _ce->set_header_end_index(index);
-}
 
 void Downloader::change_state(DownloaderState* s) {
     this->_state = s;
 }
 
-void Downloader::form_query() {
-    _out->append("GET ");
-    _out->append(_ce->url().c_str());
-    _out->append(" HTTP/1.0\r\n\r\n");
-    Logger::debug("Formed request: ");
-    // can be dangerous
-    // Logger::debug(_out->buf());
-}
 
 Downloader::Downloader(CacheEntry *ce) : _in(NULL), _out(NULL), _r(NULL), _ce(ce) {
 
@@ -44,7 +33,7 @@ Downloader::Downloader(CacheEntry *ce) : _in(NULL), _out(NULL), _r(NULL), _ce(ce
     delete pu;
 
     this->connect(netloc, port);
-    //this->form_query();
+
     this->_out->append(ce->get_query());
     this->_state = DownloaderRequestResponse::instance();
 }

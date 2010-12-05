@@ -14,9 +14,8 @@ void Client::change_state(ClientState* s) {
     this->_state = s;
 }
 
-Client::Client(TCPSocket *sock) : AsyncDispatcher(sock), _ce(NULL), _r(NULL) {
+Client::Client(TCPSocket *sock) : AsyncDispatcher(sock), _ce(NULL), _r(NULL), _bytes_sent(0) {
     this->_state = ClientGettingRequest::instance();
-    this->_bytes_sent = 0;
     this->_b = new VectorBuffer();
 }
 

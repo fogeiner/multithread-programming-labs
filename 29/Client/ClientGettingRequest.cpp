@@ -24,7 +24,6 @@ bool ClientGettingRequest::writable(const Client *c) {
     return false;
 }
 
-
 void ClientGettingRequest::handle_read(Client *c) {
     Logger::debug("ClientGettingRequest::handle_read()");
     try {
@@ -61,18 +60,13 @@ void ClientGettingRequest::handle_read(Client *c) {
                 fprintf(stderr, "query: %s\n", query);
 #endif
 
-                c->_m = Client::GET;
                 // we have to support only HEAD and GET
                 // (GET|HEAD) URL HTTP/1.X
                 p = strstr(query, "GET");
                 if (p == NULL || p != query) {
-                    p = strstr(query, "HEAD");
-                    c->_m = Client::HEAD;
-                }
-                if (p == NULL || p != query) {
-                    // it's not a query that we support; going to ClientBadRequestState
                     throw ClientBadRequestException();
                 }
+
 
                 // now we have to get URL
                 // it starts with http and ends
@@ -98,17 +92,21 @@ void ClientGettingRequest::handle_read(Client *c) {
                 Cache *cache = Cache::instance();
                 CacheEntry *ce;
                 // no such entry in cache
-                if (true || (ce = cache->get(url)) == NULL) {
+                if ((ce = cache->get(url)) == NULL) {
                     Logger::debug("No cache entry for the URL found");
                     ce = new CacheEntry(std::string(url), c->_b);
+                    c->_ce = ce;
                     ce->add_client(c);
                     cache->add(std::string(url), ce);
                     c->change_state(ClientCache::instance());
                     ce->activate();
+
                 } else {
-                    assert(false); // for now shouldn't come here
+                 
                     Logger::debug("Cache entry for URL found");
+                    c->_ce = ce;
                     ce->add_client(c);
+                    c->change_state(ClientCache::instance());
                 }
 
             } catch (ClientBadRequestException &ex) {

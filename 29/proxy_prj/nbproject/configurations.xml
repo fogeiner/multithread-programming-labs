@@ -167,6 +167,9 @@
         <platform>2</platform>
       </toolsSet>
       <compileType>
+        <ccTool>
+          <commandLine>-pedantic -Wall -g</commandLine>
+        </ccTool>
       </compileType>
     </conf>
     <conf name="Release" type="1">
