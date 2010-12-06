@@ -49,6 +49,7 @@ void Client::retranslator(const Buffer *b, Retranslator *r) {
     Logger::debug("Switching Client to retranslator mode");
     _b->clear();
     _b->append(b);
+    _b->drop_first(this->_bytes_sent);
     _r = r;
     this->change_state(ClientRetranslator::instance());
 }

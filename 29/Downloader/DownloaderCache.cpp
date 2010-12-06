@@ -1,6 +1,8 @@
 #include "DownloaderCache.h"
 #include "Downloader.h"
 #include "DownloaderState.h"
+#include "DownloaderRetranslator.h"
+#include "../config.h"
 #include "../Cache/Cache.h"
 #include "../../libs/Logger/Logger.h"
 
@@ -30,4 +32,17 @@ void DownloaderCache::handle_close(Downloader *d) {
 void DownloaderCache::handle_read(Downloader *d) {
     Logger::debug("DownloaderCache handle_read()");
     d->recv(d->_ce->get_buffer());
+
+    if (d->_ce->data_size() > ProxyConfig::max_cache_entry_size) {
+        Logger::debug("Max CacheEntry size exceeded");
+        Cache::instance()->remove(d->_ce->url());
+
+        // switching to retranslator mode
+        // and removing entry from cache
+        d->_ce->start_retranslator();
+        delete d->_ce;
+
+        Logger::debug("Changing Downloader state to retranslator mode");
+        d->change_state(DownloaderRetranslator::instance());
+    }
 }

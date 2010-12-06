@@ -4,7 +4,7 @@
 
 void init_logger() {
     Logger::set_ident(ProxyConfig::ident);
-    Logger::set_level(Logger::DEBUG);
+    Logger::set_level(Logger::EMERG);
 }
 
 int main(int argc, char *argv[]) {
