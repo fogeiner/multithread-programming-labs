@@ -19,6 +19,10 @@ Client::Client(TCPSocket *sock) : AsyncDispatcher(sock), _ce(NULL), _r(NULL), _b
     this->_b = new VectorBuffer();
 }
 
+Client::~Client(){
+    delete this->_b;
+}
+
 void Client::error(std::string msg) {
     _b->clear();
     _b->append(msg.c_str());

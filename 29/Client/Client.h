@@ -31,7 +31,7 @@ public:
 
 
     Client(TCPSocket *sock);
-
+    ~Client();
     void retranslator(const Buffer *b, Retranslator *r);
     void error(std::string msg);
     bool readable() const;
