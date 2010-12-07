@@ -15,7 +15,7 @@ bool ClientCache::readable(const Client *c) {
 }
 
 bool ClientCache::writable(const Client *c) {
-    return c->_ce->is_download_finished() || c->_bytes_sent < c->_ce->data_size(); // XXX true!
+    return c->_ce->is_download_finished() || c->_bytes_sent < c->_ce->data_size();
 }
 
 void ClientCache::handle_write(Client *c) {

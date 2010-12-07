@@ -47,23 +47,24 @@ AsyncDispatcher::~AsyncDispatcher() {
 
 void AsyncDispatcher::loop(int timeout_ms) {
     while (_sockets.size() != 0) {
-        std::list<Selectable*> rlist, wlist, xlist;
+        std::list<Selectable*> rlist, wlist;//, xlist;
 
         for (std::list<AsyncDispatcher*>::iterator i = _sockets.begin();
                 i != _sockets.end(); ++i) {
             AsyncDispatcher *s = *i;
             if (s->readable()) {
                 rlist.push_back(s->_s);
+
             }
             if (s->writable()) {
                 wlist.push_back(s->_s);
             }
-            if (s->readable() || s->writable()) {
-                xlist.push_back(s->_s);
-            }
+        //    if (s->readable() || s->writable()) {
+        //        xlist.push_back(s->_s);
+        //    }
         }
 
-        Select(&rlist, &wlist, &xlist, timeout_ms);
+        Select(&rlist, &wlist, NULL/*&xlist*/, timeout_ms);
 
         for (std::list<Selectable*>::iterator i = rlist.begin();
                 i != rlist.end(); ++i) {
@@ -76,6 +77,9 @@ void AsyncDispatcher::loop(int timeout_ms) {
                 }
             }
 
+            if (ad->_s->get_state() == TCPSocket::LISTENING) {
+                ad -> handle_accept();
+            }
             assert(ad != NULL);
             if (ad->_s->get_state() == TCPSocket::CONNECTED) {
                 if (ad->_s->peek() == 0) {
@@ -83,10 +87,6 @@ void AsyncDispatcher::loop(int timeout_ms) {
                 } else {
                     ad -> handle_read();
                 }
-            }
-
-            if (ad->_s->get_state() == TCPSocket::LISTENING) {
-                ad -> handle_accept();
             }
         }
 

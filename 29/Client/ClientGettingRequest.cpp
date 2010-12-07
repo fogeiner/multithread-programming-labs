@@ -121,6 +121,5 @@ void ClientGettingRequest::handle_read(Client *c) {
 }
 
 void ClientGettingRequest::handle_close(Client *c) {
-    delete c->_b;
     c->close();
 }
