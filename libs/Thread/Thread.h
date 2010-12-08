@@ -9,31 +9,32 @@
 class Thread {
 private:
     pthread_t _tid;
-    bool _run;
+   
     void *(*_func)(void *);
     void *_arg;
+    bool _run;
     void error_check(int retv);
 
-
     Thread & operator=(const Thread& other) {
-		assert(false);
-		return *this;
+        assert(false);
+        return *this;
     }
 
 public:
 
     Thread(void *(*f)(void *), void *arg = NULL) : _func(f), _arg(arg), _run(false) {
     }
-    
-    Thread(const Thread& other){
-		assert(_run == false);
-		_run = other._run;
-		_func = other._func;
-		_arg = other._arg;
-	}
-    ~Thread(){
-	}
-	
+
+    Thread(const Thread& other) {
+        assert(_run == false);
+        _run = other._run;
+        _func = other._func;
+        _arg = other._arg;
+    }
+
+    ~Thread() {
+    }
+
     void run();
     void detach();
     void join(void **ptr = NULL);

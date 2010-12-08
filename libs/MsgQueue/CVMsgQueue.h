@@ -14,6 +14,7 @@ private:
 public:
 
     CVMsgQueue(int queue_size = 10) :
+		_m(Mutex::ERRORCHECK_MUTEX),
     _dropped(false),
     _queue_size(queue_size){
     }
