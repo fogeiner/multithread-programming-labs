@@ -68,19 +68,23 @@ int parse_arguments(std::string url, std::string &host, std::string &path) {
 
 int GET_send_request(int &socket, std::string &url, std::string &path, std::string &host) {
 
-	std::string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
+	std::string request = "GET " + url + " HTTP/1.0\r\n\r\n";
 #ifdef DEBUG
 	fprintf(stdout, "Sending request: %s\n", request.c_str()) ;
 #endif
 
-	int send_size = request.length();
-	int sent;
+	int need_to_send = request.length();
+	int sent = 0, sent_total = 0;
 
-	sent = ::send(socket, request.c_str(), send_size, 0);
-
-	if (sent != send_size) {
-		return -1;
+	while(need_to_send != 0){
+		sent = ::send(socket, request.c_str() + sent_total, need_to_send - sent_total, MSG_NOSIGNAL);
+		if (sent == -1) {
+			return -1;
+		}
+		sent_total += sent;
+		need_to_send -= sent;
 	}
+	return 0;
 }
 
 void print_error(int err){
@@ -104,13 +108,13 @@ struct connection{
 	pthread_cond_t cv;
 	Buffer buf;
 
-	connection(int sock){
+	connection(int sock) {
 		this->socket = sock;
 		pthread_mutex_init(&cm, NULL);
 		pthread_cond_init(&cv, NULL);
 	}
 
-	~connection(){
+	~connection() {
 		pthread_mutex_destroy(&cm);
 		pthread_cond_destroy(&cv);
 	}
@@ -124,7 +128,7 @@ void *recv_thread(void *conn_ptr){
 
 	int read;
 
-	for(;;){
+	while(1) {
 		read = ::recv(con->socket, b, sizeof(b), 0);
 
 		pthread_mutex_lock(&con->cm);
@@ -135,8 +139,8 @@ void *recv_thread(void *conn_ptr){
 #ifdef DEBUG
 			fprintf(stdout, "Recv thread finished\n");
 #endif
-		pthread_cond_signal(&con->cv);
-		pthread_mutex_unlock(&con->cm);
+			pthread_cond_signal(&con->cv);
+			pthread_mutex_unlock(&con->cm);
 			pthread_exit(NULL);
 		}
 
@@ -146,8 +150,8 @@ void *recv_thread(void *conn_ptr){
 #ifdef DEBUG
 			fprintf(stdout, "Recv thread finished\n");
 #endif
-		pthread_cond_signal(&con->cv);
-		pthread_mutex_unlock(&con->cm);
+			pthread_cond_signal(&con->cv);
+			pthread_mutex_unlock(&con->cm);
 			pthread_exit(NULL);
 		}
 
@@ -203,9 +207,11 @@ void *print_thread(void *conn_ptr){
 
 			while(con->buf.is_empty()){
 				if(con->socket == connection::CLOSED_SOCKET){
+
 					if(term_restore_state() == -1){
 						print_error(errno);
 					}
+
 					pthread_mutex_unlock(&con->cm);
 					pthread_exit(NULL);
 				}
@@ -277,6 +283,7 @@ void *print_thread(void *conn_ptr){
 
 	return NULL;
 }
+
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		fprintf(stderr,  "Usage: %s  url\n", argv[0]);
@@ -297,6 +304,7 @@ int main(int argc, char *argv[]) {
 	std::string host, path, url(argv[1]);
 
 	if (parse_arguments(url, host, path) == -1) {
+		fprintf(stderr, "%s\n", "Invalid input");
 		return EXIT_FAILURE;
 	}
 
@@ -333,5 +341,4 @@ int main(int argc, char *argv[]) {
 		print_error(ret);
 		return NULL;
 	}
-
 }

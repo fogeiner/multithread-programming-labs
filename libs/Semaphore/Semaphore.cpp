@@ -1,3 +1,4 @@
+#include <cassert>
 #include "Semaphore.h"
 
 void Semaphore::error_check(int retv) {
@@ -15,9 +16,12 @@ void Semaphore::error_check(int retv) {
 }
 
 Semaphore::Semaphore(const Semaphore & other) {
+    assert(false);
 }
 
 Semaphore& Semaphore::operator=(const Semaphore & other) {
+    assert(false);
+    return *this;
 }
 
 Semaphore::Semaphore(int value, bool pshared) {
@@ -42,18 +46,18 @@ void Semaphore::wait() {
     error_check(sem_wait(&_sid));
 }
 
-Semaphore& Semaphore::operator++() {
+void Semaphore::operator++() {
     this->post();
 }
 
-Semaphore& Semaphore::operator++(int) {
+void Semaphore::operator++(int) {
     this->post();
 }
 
-Semaphore& Semaphore::operator--() {
+void Semaphore::operator--() {
     this->wait();
 }
 
-Semaphore& Semaphore::operator--(int) {
+void Semaphore::operator--(int) {
     this->wait();
 }

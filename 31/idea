@@ -1,3 +1,0 @@
-Event sources: select on the listening socket (read),
-select on client sockets if server data is availible (write),
-

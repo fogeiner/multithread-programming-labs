@@ -20,6 +20,31 @@
 #define DEBUG
 #undef DEBUG
 
+class RuntimeException: public std::exception{
+	private:
+		std::string _err;
+	public:
+		RuntimeException(const char *m): _err(m){}
+		RuntimeException(int error){
+				char buf[256];
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+				::strerror_r(error, buf, sizeof(buf));
+				_err.assign(buf);
+#else
+				char *msg_ptr;
+				msg_ptr = ::strerror_r(error, buf, sizeof (buf));
+				_err.assign(msg_ptr);
+#endif
+		}
+
+		const char *what() const throw() {
+			return _err.c_str();
+		}
+
+		~RuntimeException() throw (){}
+};
+
+
 int init_tcp_socket() {
     int socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     return socket;
@@ -83,9 +108,9 @@ int main(int argc, char *argv[]) {
     int rows, cols;
     if (get_terminal_width_height(STDOUT_FILENO, &cols, &rows) == -1) {
         perror("Terminal dimensions");
+        return EXIT_FAILURE;
     }
 
-    char *print_buf = new char[cols * rows];
     
 	if (!isatty(STDIN_FILENO)) {
         perror("isatty");
@@ -96,10 +121,12 @@ int main(int argc, char *argv[]) {
         perror("Saving term state");
         return EXIT_FAILURE;
     }
+
+    char *print_buf = new char[cols * rows];
+
     try {
         if (term_canon_off() == -1) {
-            perror("Term canon off");
-            return EXIT_FAILURE;
+			throw RuntimeException("Term canon off");
         }
 #ifdef DEBUG
         std::clog << "Terminal size: " << rows << "x" << cols << std::endl;
@@ -108,37 +135,41 @@ int main(int argc, char *argv[]) {
         int serv_socket = init_tcp_socket();
 
         if (serv_socket == -1) {
-            perror("socket: ");
-            return EXIT_FAILURE;
+			throw RuntimeException(errno);
         }
 
         std::string host, path, url(argv[1]);
 
         if (parse_arguments(url, host, path) == -1) {
-            return EXIT_FAILURE;
+			throw RuntimeException("Invalid input");
         }
 
         sockaddr_in remote_addr;
 
         if (init_remote_host_sockaddr(remote_addr, host.c_str(), htons(HTTP_DEFAULT_PORT)) == -1) {
-            fprintf(stderr, "Getting remote_host info: %s\n", hstrerror(h_errno));
-            return EXIT_FAILURE;
+			throw RuntimeException(hstrerror(h_errno));
         }
 
         if (connect(serv_socket, (const sockaddr*) & remote_addr, sizeof (remote_addr)) == -1) {
-            perror("connect");
-            return EXIT_FAILURE;
+			throw RuntimeException(errno);
         }
 
 
         Buffer recv_Buf;
         std::string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
-
-        // sending request
-        if (-1 == write(serv_socket, request.c_str(), request.length())) {
-            perror("write");
-            return EXIT_FAILURE;
-        }
+		int need_to_send = request.size();
+		int sent = 0, sent_total = 0;
+		while (need_to_send != 0){
+			// sending request
+			if (-1 == (sent = write(serv_socket, 
+							request.c_str() + sent_total, need_to_send - sent_total))) {
+				throw RuntimeException("write");
+			} else {
+				need_to_send -= sent;
+				sent_total += sent;
+			}
+		}
+		
 
         int next_tab_position;
         int cur_row = 0, cur_col = 0;
@@ -180,25 +211,20 @@ int main(int argc, char *argv[]) {
         int count_to_flush;
         bool stdout_write_requested = false;
 
-        for (;;) {
-            // all is read, all is shown
-            if ((serv_socket == CLOSED_SOCKET) && (recv_Buf.is_empty())) {
-                break;
-            }
+        while(!((serv_socket == CLOSED_SOCKET) && 
+				(recv_Buf.is_empty()))) {
 
             if (stdin_readrq_done) {
                 stdin_readrq_done = false;
                 if(aio_read(&stdin_readrq) == -1){
-                    perror("aio_read");
-                    break;
+					throw RuntimeException("aio_read");
                 }
             }
 
             if (socket_readrq_done && serv_socket != CLOSED_SOCKET) {
                 socket_readrq_done = false;
                 if(aio_read(&socket_readrq) == -1){
-                    perror("aio_read");
-                    break;
+					throw RuntimeException("aio_read");
                 }
             }
 
@@ -255,8 +281,7 @@ int main(int argc, char *argv[]) {
 
                 stdout_writerq.aio_nbytes = i;
                 if(aio_write(&stdout_writerq) == -1){
-                    perror("aio_write");
-                    break;
+					throw RuntimeException("aio_write");
                 }
                 rq_list[2] = &stdout_writerq;
             }
@@ -306,7 +331,8 @@ int main(int argc, char *argv[]) {
             }
 
         }
-    } catch (...) {
+    } catch (std::exception &ex) {
+		fprintf(stderr, "%s", ex.what());
         if (term_restore_state() == -1) {
             perror("Term restore state");
         }

@@ -225,5 +225,7 @@ int main(int argc, char *argv[]) {
 	if(term_restore_state() == -1){
 		std::cerr << strerror(errno) << std::endl;
 	}
+
+	return EXIT_SUCCESS;
 }
 

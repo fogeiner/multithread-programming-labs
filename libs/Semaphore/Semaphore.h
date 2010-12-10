@@ -22,17 +22,17 @@ public:
     void post();
     void wait();
     int getvalue();
-    Semaphore & operator++();
-    Semaphore & operator++(int);
-    Semaphore & operator--();
-    Semaphore & operator--(int);
+    void operator++();
+    void operator++(int);
+    void operator--();
+    void operator--(int);
 };
 
 class SemaphoreException : public std::exception {
 private:
 
+    int _err_num;
     std::string _err;
-	int _err_num;
 public:
 
     SemaphoreException(int err_num, char *err_msg) : _err_num(err_num), _err(err_msg) {
@@ -41,10 +41,10 @@ public:
     ~SemaphoreException() throw () {
 
     }
-	
-	const int err_num() const {
-		return _err_num;
-	}
+
+    const int err_num() const {
+        return _err_num;
+    }
 
     const char *what() const throw () {
         return _err.c_str();
