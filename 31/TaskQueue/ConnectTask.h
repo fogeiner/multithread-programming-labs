@@ -1,7 +1,7 @@
 #include "Task.h"
 #include "../AsyncDispatcher/Async.h"
 #include "../AsyncDispatcher/AsyncDispatcher.h"
-
+#include "../../libs/Logger/Logger.h"
 class ConnectTask : public Task {
 private:
     Async *_d;

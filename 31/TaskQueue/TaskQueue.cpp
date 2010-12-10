@@ -59,5 +59,6 @@ void TaskQueue::process(TaskQueue *task_queue) {
     while (1) {
         Task *t = task_queue->get();
         t->run();
+        delete t;
     }
 }

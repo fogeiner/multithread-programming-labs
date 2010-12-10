@@ -18,7 +18,7 @@ bool ClientRetranslator::writable(const Client *c) {
 bool ClientRetranslator::readable(const Client* c) {
     return false;
 }
-#include <cstdio>
+
 void ClientRetranslator::handle_write(Client *c) {
     Logger::debug("Retranslating to client");
 
@@ -36,7 +36,6 @@ void ClientRetranslator::handle_write(Client *c) {
             c->close();
         }
     } catch (SendException &ex) {
-        fprintf(stderr, "SendException");
         Logger::debug("SendException caught");
         Logger::debug(ex.what());
         c->_r->remove_client(c);

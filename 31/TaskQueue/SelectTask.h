@@ -1,6 +1,6 @@
 #include "Task.h"
-#include "../AsyncDispatcher/Async.h"
-#include "../AsyncDispatcher/AsyncDispatcher.h"
+
+class TaskQueue;
 
 class SelectTask : public Task {
 private:

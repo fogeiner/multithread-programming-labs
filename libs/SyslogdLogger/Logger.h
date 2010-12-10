@@ -41,6 +41,7 @@ class Logger {
 #endif 
 
 	static std::string _ident;
+	static bool _inited;
 	static enum Logger::level _priority;
 
 	static void log(enum Logger::level priority, const char *fmt, va_list ap);

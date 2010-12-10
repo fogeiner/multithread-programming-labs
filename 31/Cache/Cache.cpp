@@ -40,6 +40,19 @@ void CacheEntry::activate() {
     }
 }
 
+void CacheEntry::downloader_connect_timeout(){
+ 
+        Logger::debug("Connection to server timed out");
+        for (std::list<Client*>::iterator i = _c.begin();
+                i != _c.end(); ++i) {
+            Logger::debug("Deleting CacheEntry clients");
+            Client *c = *i;
+            c->error(ProxyConfig::server_not_found_msg);
+        }
+        Cache::instance()->remove(_url);
+    
+}
+
 void CacheEntry::add_client(Client *c) {
     _c.push_back(c);
 }

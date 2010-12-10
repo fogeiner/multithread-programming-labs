@@ -1,4 +1,10 @@
 #include "SelectTask.h"
+#include "TaskQueue.h"
+#include "AcceptTask.h"
+#include "CloseTask.h"
+#include "ConnectTask.h"
+#include "ReadTask.h"
+#include "WriteTask.h"
 
 void SelectTask::run() {
     std::list<Selectable*> rlist, wlist;
@@ -29,14 +35,17 @@ void SelectTask::run() {
         }
 
         if (ad->_s->get_state() == TCPSocket::LISTENING) {
-            ad -> handle_accept();
+            this->_tq->put(new AcceptTask(ad));
+            //ad -> handle_accept();
         }
         assert(ad != NULL);
         if (ad->_s->get_state() == TCPSocket::CONNECTED) {
             if (ad->_s->peek() == 0) {
-                ad->handle_close();
+                this->_tq->put(new CloseTask(ad));
+                //ad->handle_close();
             } else {
-                ad -> handle_read();
+                this->_tq->put(new ReadTask(ad));
+                //ad -> handle_read();
             }
         }
     }
@@ -53,13 +62,16 @@ void SelectTask::run() {
         }
         assert(ad != NULL);
         if (ad->_s->get_state() == TCPSocket::CONNECTED) {
-            ad->handle_write();
+            this->_tq->put(new WriteTask(ad));
+            //ad->handle_write();
         }
 
         if (ad->_s->get_state() == TCPSocket::CONNECTING) {
-            ad->_s->validate_connect();
-            ad->handle_connect();
+ 
+            this->_tq->put(new ConnectTask(ad));
+            //ad->handle_connect();
         }
     }
 
+    this->_tq->put(new SelectTask(this->_tq));
 }

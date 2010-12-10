@@ -11,11 +11,9 @@
 #include "../Retranslator/Retranslator.h"
 #include "../config.h"
 
-
 void Downloader::change_state(DownloaderState* s) {
     this->_state = s;
 }
-
 
 Downloader::Downloader(CacheEntry *ce) : _in(NULL), _out(NULL), _r(NULL), _ce(ce) {
 
@@ -60,4 +58,8 @@ void Downloader::handle_write() {
 
 void Downloader::handle_close() {
     this->_state->handle_close(this);
+}
+
+void Downloader::handle_connect() {
+    this->_state->handle_connect(this);
 }

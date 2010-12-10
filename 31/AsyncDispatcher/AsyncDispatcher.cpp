@@ -1,5 +1,5 @@
 #include "AsyncDispatcher.h"
-#define DEBUG
+//#define DEBUG
 std::list<AsyncDispatcher*> AsyncDispatcher::_sockets;
 
 AsyncDispatcher::AsyncDispatcher() {
@@ -228,4 +228,8 @@ TCPSocket *AsyncDispatcher::accept() {
 
 TCPSocket::TCPSocketState AsyncDispatcher::get_state() const {
     return this->_s->get_state();
+}
+
+void AsyncDispatcher::validate_connect() {
+    this->_s->validate_connect();
 }

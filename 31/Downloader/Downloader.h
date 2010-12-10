@@ -1,5 +1,5 @@
 #pragma once
-#include "../../libs/AsyncDispatcher/AsyncDispatcher.h"
+#include "../AsyncDispatcher/AsyncDispatcher.h"
 #include "DownloaderState.h"
 
 class Downloader;
@@ -33,4 +33,5 @@ public:
     void handle_read();
     void handle_write();
     void handle_close();
+    void handle_connect();
 };

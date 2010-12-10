@@ -2,8 +2,8 @@
 
 #include "../../libs/TCPSocket/TCPSocket.h"
 #include "../../libs/TCPSocket/Selectable.h"
-
-#include "Async.h"
+#include "../AsyncDispatcher/AsyncDispatcher.h"
+#include "../AsyncDispatcher/Async.h"
 #include <list>
 #include <cassert>
 
@@ -57,7 +57,7 @@ public:
 
     void connect(const char *name, unsigned short port);
     void connect(const std::string name, unsigned short port);
-
+    void validate_connect();
     bool is_closed();
     TCPSocket *accept();
     TCPSocket::TCPSocketState get_state() const;

@@ -29,7 +29,16 @@ void DownloaderRequestResponse::handle_close(Downloader *d) {
     d->close();
 }
 
-void DownloaderRequestResponse::handle_read(Downloader *d) {
+void DownloaderRequestResponse::handle_connect(Downloader *d) {
+    try {
+        d->validate_connect();
+    } catch (ConnectException &ex) {
+        d->_ce->downloader_connect_timeout();
+        d->close();
+    }
+}
+
+void DownloaderRequestResponse::handle_read(Downloader * d) {
 
     Logger::debug("DownloaderRequestResponse handle_read()");
     d->recv(d->_in);
@@ -55,13 +64,13 @@ void DownloaderRequestResponse::handle_read(Downloader *d) {
             Logger::debug("Response is 200");
             Logger::debug("Changing Downloader state to cache mode");
             d->change_state(DownloaderCache::instance());
-          //  assert(false);
+            //  assert(false);
             // switching to cache mode
         }
     }
 }
 
-void DownloaderRequestResponse::handle_write(Downloader *d) {
+void DownloaderRequestResponse::handle_write(Downloader * d) {
     Logger::debug("DownloaderRequestResponse handle_write()");
     int sent;
     sent = d->send(d->_out);

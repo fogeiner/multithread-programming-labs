@@ -5,9 +5,8 @@
 class WriteTask: public Task{
 private:
     Async *_d;
-    TaskQueue *_tq;
 public:
-    WriteTask(Async *async, TaskQueue *task_queue): _d(async), _tq(task_queue){}
+    WriteTask(Async *async): _d(async){}
     void run(){
         _d->handle_write();
     }

@@ -1,6 +1,6 @@
 #pragma once
 #include <alloca.h>
-#include "../../libs/AsyncDispatcher/AsyncDispatcher.h"
+#include "../AsyncDispatcher/AsyncDispatcher.h"
 #include "ClientState.h"
 class Client;
 class Retranslator;

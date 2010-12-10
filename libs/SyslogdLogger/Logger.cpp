@@ -1,11 +1,10 @@
 #include "Logger.h"
-#include <cstdio>
-#include <cstring>
 
 std::string Logger::_ident;
 #ifdef MT_LOGGER
 Mutex Logger::_m;
 #endif
+bool Logger::_inited(false);
 enum Logger::level Logger::_priority;
 
 void Logger::set_level(enum Logger::level priority){
@@ -85,15 +84,11 @@ void Logger::log(enum level priority, const char *fmt, va_list ap){
 	_m.lock();
 #endif
 	if(priority <= _priority){
-            int fmt_length = strlen(fmt);
-            char *cr_fmt = new char[fmt_length + 2];
-            for(unsigned int i = 0; i < strlen(fmt); ++i){
-                cr_fmt[i] = fmt[i];
-            }
-            cr_fmt[fmt_length] = '\n';
-            cr_fmt[fmt_length + 1] = '\0';
-            vfprintf(stderr, cr_fmt, ap);
-            delete cr_fmt;
+		if(false == _inited){
+			openlog(_ident.c_str(), LOG_CONS | LOG_PERROR, LOG_USER);		
+			_inited = true;
+		}
+		vsyslog(priority, fmt, ap);
 	}
 #ifdef MT_LOGGER
 	_m.unlock();

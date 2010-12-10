@@ -9,14 +9,6 @@
                      displayName="libs"
                      projectFiles="true"
                      kind="SOURCE_LOGICAL_FOLDER">
-        <logicalFolder name="f4"
-                       displayName="AsyncDispatcher"
-                       projectFiles="true"
-                       kind="SOURCE_LOGICAL_FOLDER">
-          <itemPath>../../libs/AsyncDispatcher/Async.h</itemPath>
-          <itemPath>../../libs/AsyncDispatcher/AsyncDispatcher.h</itemPath>
-          <itemPath>../../libs/AsyncDispatcher/AsyncSocket.h</itemPath>
-        </logicalFolder>
         <logicalFolder name="f2"
                        displayName="Buffer"
                        projectFiles="true"
@@ -41,13 +33,6 @@
                        projectFiles="true"
                        kind="SOURCE_LOGICAL_FOLDER">
           <itemPath>../../libs/Logger/Logger.h</itemPath>
-        </logicalFolder>
-        <logicalFolder name="f3"
-                       displayName="TCPSocket"
-                       projectFiles="true"
-                       kind="SOURCE_LOGICAL_FOLDER">
-          <itemPath>../../libs/TCPSocket/Selectable.h</itemPath>
-          <itemPath>../../libs/TCPSocket/TCPSocket.h</itemPath>
         </logicalFolder>
       </logicalFolder>
     </logicalFolder>
@@ -158,6 +143,8 @@
         <itemPath>../TaskQueue/CloseTask.h</itemPath>
         <itemPath>../TaskQueue/ConnectTask.h</itemPath>
         <itemPath>../TaskQueue/ReadTask.h</itemPath>
+        <itemPath>../TaskQueue/SelectTask.cpp</itemPath>
+        <itemPath>../TaskQueue/SelectTask.h</itemPath>
         <itemPath>../TaskQueue/Task.h</itemPath>
         <itemPath>../TaskQueue/TaskQueue.cpp</itemPath>
         <itemPath>../TaskQueue/TaskQueue.h</itemPath>

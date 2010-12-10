@@ -33,6 +33,7 @@ public:
     void activate();
     void add_client(Client *c);
     void remove_client(Client *c);
+    void downloader_connect_timeout();
     std::string url() const;
 };
 
