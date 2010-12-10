@@ -31,5 +31,5 @@ public:
     Task *get();
     int put(Task *t);
     void drop();
-    void process();
+    static void process(TaskQueue *task_queue);
 };

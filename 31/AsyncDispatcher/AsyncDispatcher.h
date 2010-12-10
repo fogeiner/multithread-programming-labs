@@ -2,6 +2,7 @@
 
 #include "../../libs/TCPSocket/TCPSocket.h"
 #include "../../libs/TCPSocket/Selectable.h"
+
 #include "Async.h"
 #include <list>
 #include <cassert>
@@ -12,6 +13,7 @@
 
 class AsyncDispatcher : public Selectable, public Async {
 private:
+    friend class SelectTask;
     static std::list<AsyncDispatcher*> _sockets;
     TCPSocket *_s;
 public:

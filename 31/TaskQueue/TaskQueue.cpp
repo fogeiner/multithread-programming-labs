@@ -55,9 +55,9 @@ void TaskQueue::drop() {
     _mutex++;
 }
 
-void TaskQueue::process() {
+void TaskQueue::process(TaskQueue *task_queue) {
     while (1) {
-        Task *t = this->get();
+        Task *t = task_queue->get();
         t->run();
     }
 }

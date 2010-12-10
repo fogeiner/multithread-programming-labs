@@ -49,6 +49,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1005991299/Semaphore.o \
 	${OBJECTDIR}/_ext/2105459482/ClientCache.o \
 	${OBJECTDIR}/_ext/2136648385/Proxy.o \
+	${OBJECTDIR}/_ext/2113231069/SelectTask.o \
 	${OBJECTDIR}/_ext/1472/main.o \
 	${OBJECTDIR}/_ext/2105459482/Client.o \
 	${OBJECTDIR}/_ext/2083495164/Downloader.o \
@@ -160,6 +161,11 @@ ${OBJECTDIR}/_ext/2136648385/Proxy.o: ../Proxy/Proxy.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/2136648385
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2136648385/Proxy.o ../Proxy/Proxy.cpp
+
+${OBJECTDIR}/_ext/2113231069/SelectTask.o: ../TaskQueue/SelectTask.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2113231069
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2113231069/SelectTask.o ../TaskQueue/SelectTask.cpp
 
 ${OBJECTDIR}/_ext/1472/main.o: ../main.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472
