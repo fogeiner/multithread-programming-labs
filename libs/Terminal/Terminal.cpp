@@ -1,4 +1,4 @@
-#include "terminal.h"
+#include "Terminal.h"
 
 static struct termios saved_tty, changed_tty;
 

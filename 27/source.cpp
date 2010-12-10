@@ -15,7 +15,7 @@
 
 #include "../libs/ChunkBuffer/Buffer.h"
 #include "../libs/Fd_set/Fd_set.h"
-#include "../libs/Terminal/terminal.h"
+#include "../libs/Terminal/Terminal.h"
 
 #define DEBUG
 #undef DEBUG
