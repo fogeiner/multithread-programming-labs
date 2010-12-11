@@ -26,6 +26,7 @@ void DownloaderRequestResponse::handle_close(Downloader *d) {
 
     Logger::debug("DownloaderRequestResponse handle_close()");
     // XXX set the status of CacheEntry
+	d->_ce->download_finished();
     d->close();
 }
 

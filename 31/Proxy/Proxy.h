@@ -1,5 +1,5 @@
 #pragma once
-#include "../../libs/AsyncDispatcher/AsyncDispatcher.h"
+#include "../AsyncDispatcher/AsyncDispatcher.h"
 class Client;
 
 class Proxy : public AsyncDispatcher {

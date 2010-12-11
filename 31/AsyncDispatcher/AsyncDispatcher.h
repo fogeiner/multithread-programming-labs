@@ -2,8 +2,7 @@
 
 #include "../../libs/TCPSocket/TCPSocket.h"
 #include "../../libs/TCPSocket/Selectable.h"
-#include "../AsyncDispatcher/AsyncDispatcher.h"
-#include "../AsyncDispatcher/Async.h"
+#include "Async.h"
 #include <list>
 #include <cassert>
 
