@@ -27,7 +27,7 @@ class RuntimeException: public std::exception{
 		RuntimeException(const char *m): _err(m){}
 		RuntimeException(int error){
 				char buf[256];
-#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE || defined( sun ) || defined( __sun )
 				::strerror_r(error, buf, sizeof(buf));
 				_err.assign(buf);
 #else
@@ -50,7 +50,7 @@ void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int
 	static const char msg_to_press_key[] = "Press space to scroll";
 	static int cur_row = 0, cur_col = 0;
 	int next_tab_position;
-	const int DEFAULT_TAB_WIDTH = 4;
+	const int DEFAULT_TAB_WIDTH = 8;
 	if (cur_row == -1){
 		std::cout << '\n';
 	}
