@@ -3,7 +3,7 @@
 inline void Mutex::error_check(int retv) {
 	if (retv != 0) {
 		char buf[256];
-#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE || defined ( sun ) || defined ( __sun )
 		::strerror_r(retv, buf, sizeof(buf));
 		throw MutexException(buf);
 #else

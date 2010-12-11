@@ -8,12 +8,17 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <strings.h>
+#include <signal.h>
 
 #include <unistd.h>
 #include <pthread.h>
 
 #define DEBUG
 #undef DEBUG
+
+#if defined( sun ) || defined ( __sun )
+#define MSG_NOSIGNAL 0
+#endif
 
 #include "../libs/ChunkBuffer/Buffer.h"
 #include "../libs/Fd_set/Fd_set.h"
@@ -195,14 +200,14 @@ void *print_thread(void *conn_ptr){
 			exit(EXIT_FAILURE);
 		}
 
-		const char msg_to_press_key[] = "Press enter to scroll...";
+		const char msg_to_press_key[] = "Press space to scroll...";
 		bool can_print = true;
 		int cur_row = 0, cur_col = 0;
 		int next_tab_position;
 		const int DEFAULT_TAB_WIDTH = 8;
 
 
-		for (;;) {
+		while(1) {
 			pthread_mutex_lock(&con->cm);
 
 			while(con->buf.is_empty()){
@@ -231,6 +236,10 @@ void *print_thread(void *conn_ptr){
 				int chunk_size = chunk->size();
 				const char *b = chunk->buf();
 
+				if(cur_row == -1){
+					putchar('\n');
+				}
+
 				for (int i = 0; i < chunk_size; ++i) {
 					switch (b[i]) {
 						case '\t':
@@ -256,8 +265,10 @@ void *print_thread(void *conn_ptr){
 						cur_row++;
 					}
 
-					if (cur_row == rows) {
-						cur_row = cur_col = 0;
+					if (cur_row == rows - 2) {
+						putchar('\n');
+						cur_row = -1;
+						cur_col = 0;
 						fputs(msg_to_press_key, stdout);
 						fflush(stdout);
 						print_screen_counter--;
@@ -285,6 +296,12 @@ void *print_thread(void *conn_ptr){
 }
 
 int main(int argc, char *argv[]) {
+	struct sigaction act;
+
+	act.sa_handler = SIG_IGN;
+	sigaction(SIGPIPE, &act, NULL);
+
+
 	if (argc != 2) {
 		fprintf(stderr,  "Usage: %s  url\n", argv[0]);
 		return EXIT_FAILURE;
