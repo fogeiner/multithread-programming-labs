@@ -57,3 +57,4 @@ void Client::retranslator(const Buffer *b, Retranslator *r) {
     _r = r;
     this->change_state(ClientRetranslator::instance());
 }
+

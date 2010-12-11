@@ -119,3 +119,4 @@ void ClientGettingRequest::handle_read(Client *c) {
 void ClientGettingRequest::handle_close(Client *c) {
     c->close();
 }
+
