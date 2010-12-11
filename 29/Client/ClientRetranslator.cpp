@@ -36,14 +36,10 @@ void ClientRetranslator::handle_write(Client *c) {
             c->close();
         }
     } catch (SendException &ex) {
-        fprintf(stderr, "SendException");
         Logger::debug("SendException caught");
         Logger::debug(ex.what());
         c->_r->remove_client(c);
         c->close();
-    } catch(EAGAINException &ex){
-
-        fprintf(stderr, "EAGAINException");
     }
 }
 

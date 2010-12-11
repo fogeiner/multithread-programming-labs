@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <strings.h>
+#include <signal.h>
 
 #include <unistd.h>
 
@@ -118,6 +119,11 @@ void get_terminal_props_and_save_state(int &screen_rows_count, int &screen_cols_
 	}
 }
 int main(int argc, char *argv[]) {
+	struct sigaction act;
+
+	act.sa_handler = SIG_IGN;
+	sigaction(SIGPIPE, &act, NULL);
+
 	if (argc != 2) {
 		std::cerr << "Usage: " << argv[0] << " url" << std::endl;
 		return EXIT_FAILURE;

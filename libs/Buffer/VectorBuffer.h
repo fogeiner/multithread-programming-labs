@@ -47,7 +47,13 @@ class VectorBuffer: public Buffer {
 		}
 
 		virtual const char* buf() const {
+#if defined( sun ) || defined( __sun )
+			return &this->_v[0];
+#endif
+
+#if defined( linux ) || defined( __linux)
 			return this->_v.data();
+#endif
 		}
 		
 		virtual int size() const {

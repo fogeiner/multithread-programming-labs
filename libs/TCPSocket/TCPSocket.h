@@ -28,6 +28,10 @@
 #include <cstdio>
 #endif
 
+#if defined( sun ) || defined( __sun )
+#define MSG_NOSIGNAL 0
+#endif
+
 template<typename T>
 inline T max(T a, T b) {
     if (a > b) return a;

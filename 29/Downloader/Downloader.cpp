@@ -61,3 +61,6 @@ void Downloader::handle_write() {
 void Downloader::handle_close() {
     this->_state->handle_close(this);
 }
+void Downloader::handle_connect() {
+    this->_state->handle_connect(this);
+}

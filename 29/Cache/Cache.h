@@ -33,6 +33,8 @@ public:
     void activate();
     void add_client(Client *c);
     void remove_client(Client *c);
+    void downloader_connect_timeout();
+
     std::string url() const;
 };
 
@@ -44,7 +46,7 @@ private:
 public:
 
     static Cache *instance();
-    static CacheEntry *get(std::string key) ;
+    static CacheEntry *get(std::string key);
     static void add(std::string key, CacheEntry *ce);
     static void remove(std::string key);
 };

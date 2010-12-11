@@ -29,6 +29,15 @@ void DownloaderRequestResponse::handle_close(Downloader *d) {
     d->close();
 }
 
+void DownloaderRequestResponse::handle_connect(Downloader *d) {
+    try {
+        d->validate_connect();
+    } catch (ConnectException &ex) {
+        d->_ce->downloader_connect_timeout();
+        d->close();
+    }
+}
+
 void DownloaderRequestResponse::handle_read(Downloader *d) {
 
     Logger::debug("DownloaderRequestResponse handle_read()");

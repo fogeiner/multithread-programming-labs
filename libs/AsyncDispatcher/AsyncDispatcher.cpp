@@ -106,7 +106,8 @@ void AsyncDispatcher::loop(int timeout_ms) {
             }
 
             if (ad->_s->get_state() == TCPSocket::CONNECTING) {
-                ad->_s->validate_connect();
+                // in case connect failed it wont'work
+//                ad->_s->validate_connect();
                 ad->handle_connect();
             }
         }
@@ -228,4 +229,8 @@ TCPSocket *AsyncDispatcher::accept() {
 
 TCPSocket::TCPSocketState AsyncDispatcher::get_state() const {
     return this->_s->get_state();
+}
+
+void AsyncDispatcher::validate_connect() {
+    this->_s->validate_connect();
 }

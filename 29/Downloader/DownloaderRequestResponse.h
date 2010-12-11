@@ -16,4 +16,5 @@ public:
     void handle_close(Downloader *d);
     void handle_read(Downloader *d);
     void handle_write(Downloader *d);
+    void handle_connect(Downloader *d);
 };

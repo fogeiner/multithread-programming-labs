@@ -18,6 +18,6 @@ class Buffer {
 		virtual Buffer &operator+=(const Buffer &another) = 0;
 		virtual Buffer &operator+=(const Buffer *another) = 0;
 		virtual char operator[](int index) const = 0;
-                virtual void clear() = 0;
+		virtual void clear() = 0;
 		virtual ~Buffer() {}
 };

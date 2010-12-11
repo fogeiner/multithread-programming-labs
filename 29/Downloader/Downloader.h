@@ -33,4 +33,5 @@ public:
     void handle_read();
     void handle_write();
     void handle_close();
+    void handle_connect();
 };

@@ -2,8 +2,14 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/1">
-        <file>file:/home/alstein/projects/mtp/libs/TCPSocket/TCPSocket.cpp</file>
-        <file>file:/home/alstein/projects/mtp/libs/TCPSocket/TCPSocket.h</file>
-        <file>file:/home/alstein/projects/mtp/29/Client/ClientGettingRequest.cpp</file>
+        <file>file:/home/alstein/projects/mtp/29/Downloader/Downloader.cpp</file>
+        <file>file:/home/alstein/projects/mtp/29/Downloader/Downloader.h</file>
+        <file>file:/home/alstein/projects/mtp/29/Downloader/DownloaderRequestResponse.cpp</file>
+        <file>file:/home/alstein/projects/mtp/libs/AsyncDispatcher/AsyncDispatcher.cpp</file>
+        <file>file:/home/alstein/projects/mtp/libs/AsyncDispatcher/AsyncDispatcher.h</file>
+        <file>file:/home/alstein/projects/mtp/29/Cache/Cache.h</file>
+        <file>file:/home/alstein/projects/mtp/29/Cache/Cache.cpp</file>
+        <file>file:/home/alstein/projects/mtp/29/Downloader/DownloaderRequestResponse.h</file>
+        <file>file:/home/alstein/projects/mtp/29/Client/ClientRetranslator.cpp</file>
     </open-files>
 </project-private>

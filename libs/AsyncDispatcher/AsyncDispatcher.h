@@ -55,7 +55,7 @@ public:
 
     void connect(const char *name, unsigned short port);
     void connect(const std::string name, unsigned short port);
-
+    void validate_connect();
     bool is_closed();
     TCPSocket *accept();
     TCPSocket::TCPSocketState get_state() const;
