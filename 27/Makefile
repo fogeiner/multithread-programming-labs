@@ -1,6 +1,6 @@
 APP = bin
 OBJ = source.o ../libs/Terminal/Terminal.o
-CXXFLAGS =  -lrt  -g
+CXXFLAGS =  -lrt  -g -lresolv -lnsl -lsocket
 CC = g++
 
 $(APP): $(OBJ)
@@ -9,7 +9,7 @@ $(APP): $(OBJ)
 source.o: source.cpp ../libs/ChunkBuffer/Buffer.h
 	$(CC) -c -o source.o source.cpp $(CXXFLAGS)
 
-../libs/Terminal/terminal.o: ../libs/Terminal/terminal.h ../libs/Terminal/terminal.cpp
+../libs/Terminal/Terminal.o: ../libs/Terminal/Terminal.h ../libs/Terminal/Terminal.cpp
 	$(CC) -o ../libs/Terminal/Terminal.o -c ../libs/Terminal/Terminal.cpp $(CXXFLAGS)
 
 clean:

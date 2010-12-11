@@ -20,30 +20,33 @@
 #define DEBUG
 #undef DEBUG
 
-class RuntimeException: public std::exception{
-	private:
-		std::string _err;
-	public:
-		RuntimeException(const char *m): _err(m){}
-		RuntimeException(int error){
-				char buf[256];
-#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
-				::strerror_r(error, buf, sizeof(buf));
-				_err.assign(buf);
+class RuntimeException : public std::exception {
+private:
+    std::string _err;
+public:
+
+    RuntimeException(const char *m) : _err(m) {
+    }
+
+    RuntimeException(int error) {
+        char buf[256];
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE || defined( sun ) || defined ( __sun )
+        ::strerror_r(error, buf, sizeof (buf));
+        _err.assign(buf);
 #else
-				char *msg_ptr;
-				msg_ptr = ::strerror_r(error, buf, sizeof (buf));
-				_err.assign(msg_ptr);
+        char *msg_ptr;
+        msg_ptr = ::strerror_r(error, buf, sizeof (buf));
+        _err.assign(msg_ptr);
 #endif
-		}
+    }
 
-		const char *what() const throw() {
-			return _err.c_str();
-		}
+    const char *what() const throw () {
+        return _err.c_str();
+    }
 
-		~RuntimeException() throw (){}
+    ~RuntimeException() throw () {
+    }
 };
-
 
 int init_tcp_socket() {
     int socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -98,7 +101,7 @@ int main(int argc, char *argv[]) {
     }
 
     const int BUFSIZE = 1024;
-	const int STDIN_BUFSIZE = 128;
+    const int STDIN_BUFSIZE = 128;
     const int HTTP_DEFAULT_PORT = 80;
     const int CLOSED_SOCKET = -1;
     const char msg_to_press_key[] = "\nPress space to scroll...";
@@ -111,8 +114,8 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    
-	if (!isatty(STDIN_FILENO)) {
+
+    if (!isatty(STDIN_FILENO)) {
         perror("isatty");
         return EXIT_FAILURE;
     }
@@ -126,7 +129,7 @@ int main(int argc, char *argv[]) {
 
     try {
         if (term_canon_off() == -1) {
-			throw RuntimeException("Term canon off");
+            throw RuntimeException("Term canon off");
         }
 #ifdef DEBUG
         std::clog << "Terminal size: " << rows << "x" << cols << std::endl;
@@ -135,41 +138,41 @@ int main(int argc, char *argv[]) {
         int serv_socket = init_tcp_socket();
 
         if (serv_socket == -1) {
-			throw RuntimeException(errno);
+            throw RuntimeException(errno);
         }
 
         std::string host, path, url(argv[1]);
 
         if (parse_arguments(url, host, path) == -1) {
-			throw RuntimeException("Invalid input");
+            throw RuntimeException("Invalid input");
         }
 
         sockaddr_in remote_addr;
 
         if (init_remote_host_sockaddr(remote_addr, host.c_str(), htons(HTTP_DEFAULT_PORT)) == -1) {
-			throw RuntimeException(hstrerror(h_errno));
+            throw RuntimeException(hstrerror(h_errno));
         }
 
         if (connect(serv_socket, (const sockaddr*) & remote_addr, sizeof (remote_addr)) == -1) {
-			throw RuntimeException(errno);
+            throw RuntimeException(errno);
         }
 
 
         Buffer recv_Buf;
         std::string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
-		int need_to_send = request.size();
-		int sent = 0, sent_total = 0;
-		while (need_to_send != 0){
-			// sending request
-			if (-1 == (sent = write(serv_socket, 
-							request.c_str() + sent_total, need_to_send - sent_total))) {
-				throw RuntimeException("write");
-			} else {
-				need_to_send -= sent;
-				sent_total += sent;
-			}
-		}
-		
+        int need_to_send = request.size();
+        int sent = 0, sent_total = 0;
+        while (need_to_send != 0) {
+            // sending request
+            if (-1 == (sent = write(serv_socket,
+                    request.c_str() + sent_total, need_to_send - sent_total))) {
+                throw RuntimeException("write");
+            } else {
+                need_to_send -= sent;
+                sent_total += sent;
+            }
+        }
+
 
         int next_tab_position;
         int cur_row = 0, cur_col = 0;
@@ -211,20 +214,20 @@ int main(int argc, char *argv[]) {
         int count_to_flush;
         bool stdout_write_requested = false;
 
-        while(!((serv_socket == CLOSED_SOCKET) && 
-				(recv_Buf.is_empty()))) {
+        while (!((serv_socket == CLOSED_SOCKET) &&
+                (recv_Buf.is_empty()))) {
 
             if (stdin_readrq_done) {
                 stdin_readrq_done = false;
-                if(aio_read(&stdin_readrq) == -1){
-					throw RuntimeException("aio_read");
+                if (aio_read(&stdin_readrq) == -1) {
+                    throw RuntimeException("aio_read");
                 }
             }
 
             if (socket_readrq_done && serv_socket != CLOSED_SOCKET) {
                 socket_readrq_done = false;
-                if(aio_read(&socket_readrq) == -1){
-					throw RuntimeException("aio_read");
+                if (aio_read(&socket_readrq) == -1) {
+                    throw RuntimeException("aio_read");
                 }
             }
 
@@ -235,7 +238,12 @@ int main(int argc, char *argv[]) {
                 int chunk_size = chunk->size();
                 const char *buf = chunk->buf();
 
-                int i;
+                int i = 0;
+                int offset = 0;
+                if(cur_row == -1){
+                    offset = 1;
+                    print_buf[0] = '\n';
+                }
                 for (i = 0; i < chunk_size; ++i) {
                     switch (buf[i]) {
                         case '\t':
@@ -253,16 +261,16 @@ int main(int argc, char *argv[]) {
                             cur_col++;
                     }
 
-                    print_buf[i] = buf[i];
+                    print_buf[i + offset] = buf[i];
 
-                    if (cur_col == cols) {
+                    if (cur_col == cols - 1) {
                         cur_col = 0;
                         cur_row++;
                     }
-                    
-					count_to_flush = i + 1;
 
-                    if (cur_row == rows) {
+                    count_to_flush = i + 1 + offset;
+
+                    if (cur_row == rows - 2) {
                         screens_to_print_count--;
 
                         if (screens_to_print_count == 0) {
@@ -271,25 +279,26 @@ int main(int argc, char *argv[]) {
 
 
                         for (int j = 0; j < sizeof (msg_to_press_key) - 1; j++, i++) {
-                            print_buf[i] = msg_to_press_key[j];
+                            print_buf[i + offset] = msg_to_press_key[j];
                         }
 
-                        cur_col = cur_row = 0;
+                        cur_col = 0;
+                        cur_row = -1;
                         break;
                     }
                 }
 
-                stdout_writerq.aio_nbytes = i;
-                if(aio_write(&stdout_writerq) == -1){
-					throw RuntimeException("aio_write");
+                stdout_writerq.aio_nbytes = i + offset;
+                if (aio_write(&stdout_writerq) == -1) {
+                    throw RuntimeException("aio_write");
                 }
                 rq_list[2] = &stdout_writerq;
             }
 
 #ifdef DEBUG
-//			std::clog << "socket requested=" << socket_readrq_done << "\n"
-//				"stdin requested=" << stdin_readrq_done << "\n" <<
-//				"stdout requested=" << stdout_write_requested << std::endl;
+            //			std::clog << "socket requested=" << socket_readrq_done << "\n"
+            //				"stdin requested=" << stdin_readrq_done << "\n" <<
+            //				"stdout requested=" << stdout_write_requested << std::endl;
 #endif
             aio_suspend(rq_list, 3, NULL);
 
@@ -297,7 +306,7 @@ int main(int argc, char *argv[]) {
                 stdin_readrq_done = true;
                 ret = aio_return(&stdin_readrq);
 #ifdef DEBUG
-				std::clog << "Read " << ret << " symbols from stdin" << std::endl;
+                std::clog << "Read " << ret << " symbols from stdin" << std::endl;
 #endif
                 screens_to_print_count += ret == 0 ? 1 : ret;
                 can_print = true;
@@ -310,7 +319,7 @@ int main(int argc, char *argv[]) {
                 aio_return(&stdout_writerq);
                 recv_Buf.pop_front();
 #ifdef DEBUG 
-				std::clog << "Returning " << count_to_flush << " symbols to buffer" << std::endl;
+                std::clog << "Returning " << count_to_flush << " symbols to buffer" << std::endl;
 #endif
                 recv_Buf.put_back_front(chunk, count_to_flush);
             }
@@ -319,7 +328,7 @@ int main(int argc, char *argv[]) {
                 socket_readrq_done = true;
                 ret = aio_return(&socket_readrq);
 #ifdef DEBUG
-				std::clog << "Read " << ret << " symbols from socket" << std::endl;
+                std::clog << "Read " << ret << " symbols from socket" << std::endl;
 #endif
                 if (ret != 0) {
                     recv_Buf.push_back(recv_buf, ret);
@@ -332,11 +341,11 @@ int main(int argc, char *argv[]) {
 
         }
     } catch (std::exception &ex) {
-		fprintf(stderr, "%s", ex.what());
+        fprintf(stderr, "%s", ex.what());
         if (term_restore_state() == -1) {
             perror("Term restore state");
         }
-		delete[] print_buf;
+        delete[] print_buf;
         return EXIT_FAILURE;
     }
 
@@ -344,7 +353,7 @@ int main(int argc, char *argv[]) {
         perror("Term restore state");
     }
 
-	delete[] print_buf;
+    delete[] print_buf;
 
     return EXIT_SUCCESS;
 }
