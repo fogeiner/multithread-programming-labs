@@ -3,11 +3,11 @@
 
 SelectException::SelectException(int err_number) {
     char buf[ERR_MSG_MAX_LENGTH];
-    char *msg_ptr;
 #if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE || defined( sun ) || defined( __sun )
     ::strerror_r(err_number, buf, sizeof (buf));
     this->_err.assign(buf);
 #else
+    char *msg_ptr;
     msg_ptr = ::strerror_r(err_number, buf, sizeof (buf));
     this->_err.assign(msg_ptr);
 #endif
@@ -15,11 +15,11 @@ SelectException::SelectException(int err_number) {
 
 EAGAINException::EAGAINException() {
     char buf[ERR_MSG_MAX_LENGTH];
-    char *msg_ptr;
 #if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE || defined( sun ) || defined( __sun )
     ::strerror_r(EAGAIN, buf, sizeof (buf));
     this->_err.assign(buf);
 #else
+    char *msg_ptr;
     msg_ptr = ::strerror_r(EAGAIN, buf, sizeof (buf));
     this->_err.assign(msg_ptr);
 #endif
@@ -117,11 +117,11 @@ void Select(std::list<Selectable*> *rlist,
 
 TCPSocketException::TCPSocketException(int err_number) {
     char buf[ERR_MSG_MAX_LENGTH];
-    char *msg_ptr;
 #if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE || defined( sun ) || defined( __sun )
     ::strerror_r(err_number, buf, sizeof (buf));
     this->_err.assign(buf);
 #else
+    char *msg_ptr;
     msg_ptr = ::strerror_r(err_number, buf, sizeof (buf));
     this->_err.assign(msg_ptr);
 #endif

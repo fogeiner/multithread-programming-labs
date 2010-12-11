@@ -234,3 +234,4 @@ TCPSocket::TCPSocketState AsyncDispatcher::get_state() const {
 void AsyncDispatcher::validate_connect() {
     this->_s->validate_connect();
 }
+

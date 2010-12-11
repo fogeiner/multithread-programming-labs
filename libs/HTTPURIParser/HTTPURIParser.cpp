@@ -78,7 +78,7 @@ ParsedURI *HTTPURIParser::parse(std::string uri){
 		fprintf(stderr, "endptr is %p\n", endptr);
 #endif
 
-		if(*endptr != '\0' || port_n < 0 || port_n > 65535){
+		if(*endptr != '\0'){
 			return NULL;
 		}
 	}

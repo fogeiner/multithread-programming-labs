@@ -17,3 +17,4 @@ public:
     void handle_close(Downloader *d);
     void handle_read(Downloader *d);
 };
+

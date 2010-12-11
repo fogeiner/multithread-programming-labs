@@ -13,3 +13,4 @@ public:
     virtual bool writable(const Client *c);
     virtual void handle_write(Client *c);
 };
+

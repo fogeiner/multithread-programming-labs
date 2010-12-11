@@ -69,7 +69,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS= -lresolv -lnsl -lsocket
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}

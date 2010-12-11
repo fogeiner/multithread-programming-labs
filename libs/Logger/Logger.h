@@ -19,10 +19,14 @@ class Logger {
 	}
 
 	public:
-	enum level {EMERG = LOG_EMERG, ALERT = LOG_ALERT, 
-		CRIT = LOG_CRIT, ERR = LOG_ERR, 
-		WARNING = LOG_WARNING, NOTICE = LOG_NOTICE, 
-		INFO = LOG_INFO, DEBUG = LOG_DEBUG};
+	enum level {EMERG = LOG_EMERG, 
+		ALERT = LOG_ALERT, 
+		CRIT = LOG_CRIT, 
+		ERROR = LOG_ERR, 
+		WARNING = LOG_WARNING, 
+		NOTICE = LOG_NOTICE, 
+		INFO = LOG_INFO, 
+		DEBUG = LOG_DEBUG};
 
 	static void set_level(enum Logger::level priority);
 	static void set_ident(const char *ident);

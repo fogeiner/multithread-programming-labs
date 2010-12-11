@@ -50,3 +50,4 @@ public:
     static void add(std::string key, CacheEntry *ce);
     static void remove(std::string key);
 };
+
