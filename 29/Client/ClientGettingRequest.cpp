@@ -25,20 +25,21 @@ bool ClientGettingRequest::writable(const Client *c) {
 }
 
 void ClientGettingRequest::handle_read(Client *c) {
-    Logger::debug("ClientGettingRequest::handle_read()");
+    try {
+        Logger::debug("ClientGettingRequest::handle_read()");
 
-    c->recv(c->_b);
+        c->recv(c->_b);
 
-    // checking if there's \r\n\r\n in request so far
-    const char *b = c->_b->buf();
-    const char *p;
-    p = strstr(b, "\r\n\r\n");
+        // checking if there's \r\n\r\n in request so far
+        const char *b = c->_b->buf();
+        const char *p;
+        p = strstr(b, "\r\n\r\n");
 
-    // there's \r\n\r\n in the buffer; time to parse!
-    if (p != NULL) {
-        Logger::debug("http_delimiter found; parsing request");
+        // there's \r\n\r\n in the buffer; time to parse!
+        if (p != NULL) {
+            Logger::debug("http_delimiter found; parsing request");
 
-        try {
+
             // firstly we shall copy the first line (if there are many)
             // it ends with \r\n
             p = strstr(b, "\r\n");
@@ -107,13 +108,14 @@ void ClientGettingRequest::handle_read(Client *c) {
                 ce->add_client(c);
                 c->change_state(ClientCache::instance());
             }
-
-        } catch (ClientBadRequestException &ex) {
-            Logger::debug("Bad request found");
-            c->error(ProxyConfig::bad_request_msg);
         }
+    } catch (ClientBadRequestException &ex) {
+        Logger::debug("Bad request found");
+        c->error(ProxyConfig::bad_request_msg);
+    } catch (RecvException &ex) {
+        Logger::error(ex.what());
+        c->close();
     }
-
 }
 
 void ClientGettingRequest::handle_close(Client *c) {

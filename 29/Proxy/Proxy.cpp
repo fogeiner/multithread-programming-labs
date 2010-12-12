@@ -2,7 +2,7 @@
 #include "../config.h"
 #include "../../libs/Logger/Logger.h"
 #include "../Client/Client.h"
-
+#include "../../libs/Logger/Logger.h"
 Proxy::Proxy() {
     this->set_reuse_addr(1);
     this->bind(ProxyConfig::listening_port);
@@ -19,5 +19,9 @@ bool Proxy::writable() const {
 
 void Proxy::handle_accept() {
     Logger::debug("New client connected");
-    new Client(this->accept());
+    try{
+        new Client(this->accept());
+    } catch(AcceptException &ex){
+        Logger::error(ex.what());
+    }
 }

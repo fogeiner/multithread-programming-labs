@@ -5,7 +5,7 @@
 
 void init_logger() {
 	Logger::set_ident(ProxyConfig::ident);
-	Logger::set_level(Logger::EMERG);
+	Logger::set_level(Logger::DEBUG);
 }
 
 int main(int argc, char *argv[]) {
@@ -15,11 +15,11 @@ int main(int argc, char *argv[]) {
 	act.sa_handler = SIG_IGN;
 	sigaction(SIGPIPE, &act, NULL);
 
-	try {
+//	try {
 		init_logger();
 		new Proxy();
 		AsyncDispatcher::loop();
-	} catch (std::exception &ex) {
-		Logger::error(ex.what());
-	}
+//	} catch (std::exception &ex) {
+//		Logger::error(ex.what());
+//	}
 }

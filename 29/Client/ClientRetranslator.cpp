@@ -12,17 +12,15 @@ ClientState *ClientRetranslator::instance() {
 }
 
 bool ClientRetranslator::writable(const Client *c) {
-    return c->_b->size() >= 0;
+    return c->_b->size() > 0 || c->_r->is_download_finished();
 }
 
 bool ClientRetranslator::readable(const Client* c) {
     return false;
 }
-#include <cstdio>
+
 void ClientRetranslator::handle_write(Client *c) {
     Logger::debug("Retranslating to client");
-
-
     try {
         if (c->_b->size() > 0) {
             int sent;

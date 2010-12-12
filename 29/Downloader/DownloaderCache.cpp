@@ -23,26 +23,32 @@ bool DownloaderCache::writable(const Downloader *d) {
 }
 
 void DownloaderCache::handle_close(Downloader *d) {
-    Logger::debug("DownloaderCache handle_close()");
+    Logger::debug("DownloaderCache::handle_close()");
     d->_ce->download_finished();
     d->close();
     Logger::debug("Cache download finished");
 }
 
 void DownloaderCache::handle_read(Downloader *d) {
-    Logger::debug("DownloaderCache handle_read()");
-    d->recv(d->_ce->get_buffer());
+    try {
+        Logger::debug("DownloaderCache::handle_read()");
+        d->recv(d->_ce->get_buffer());
 
-    if (d->_ce->data_size() > ProxyConfig::max_cache_entry_size) {
-        Logger::debug("Max CacheEntry size exceeded");
-        Cache::instance()->remove(d->_ce->url());
+        if (d->_ce->data_size() > ProxyConfig::max_cache_entry_size) {
+            Logger::debug("Max CacheEntry size exceeded");
+            Cache::instance()->remove(d->_ce->url());
 
-        // switching to retranslator mode
-        // and removing entry from cache
-        d->_ce->start_retranslator();
-        delete d->_ce;
+            // switching to retranslator mode
+            // and removing entry from cache
+            d->_ce->start_retranslator();
+            delete d->_ce;
 
-        Logger::debug("Changing Downloader state to retranslator mode");
-        d->change_state(DownloaderRetranslator::instance());
+            Logger::debug("Changing Downloader state to retranslator mode");
+            d->change_state(DownloaderRetranslator::instance());
+        }
+    } catch (RecvException &ex) {
+        Logger::error(ex.what());
+        d->_ce->download_finished();
+        d->close();
     }
 }

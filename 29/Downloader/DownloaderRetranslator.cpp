@@ -26,12 +26,18 @@ void DownloaderRetranslator::handle_close(Downloader *d) {
 }
 
 void DownloaderRetranslator::handle_read(Downloader *d) {
-    if(d->_r->clients_count() == 0){
+    try {
+        Logger::debug("DownloaderRetranslator::handle_read");
+        if (d->_r->clients_count() == 0) {
+            d->close();
+            return;
+        }
+        d->_out->clear();
+        d->recv(d->_out);
+        d->_r->forward_data_to_clients(d->_out);
+    } catch (RecvException &ex) {
+        d->_r->set_download_finished();
         d->close();
-        return;
     }
-    d->_out->clear();
-    d->recv(d->_out);
-    d->_r->forward_data_to_clients(d->_out);
 }
 
