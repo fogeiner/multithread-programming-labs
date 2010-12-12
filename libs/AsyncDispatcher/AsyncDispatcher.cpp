@@ -1,29 +1,27 @@
 #include "AsyncDispatcher.h"
+#include "../Logger/Logger.h"
 #define DEBUG
 std::list<AsyncDispatcher*> AsyncDispatcher::_sockets;
 
 AsyncDispatcher::AsyncDispatcher() {
-#ifdef DEBUG
-    fprintf(stderr, "AsyncDispatcher(); adding to lst\n");
-#endif
+Logger::debug("AsyncDispatcher(); adding to lst");
+
     this->_s = new TCPSocket();
     this->_s->set_nonblocking(1);
     this->_sockets.push_back(this);
 }
 
 AsyncDispatcher::AsyncDispatcher(TCPSocket *socket) {
-#ifdef DEBUG
-    fprintf(stderr, "AsyncDispatcher(TCPSocket *socket); adding to lst\n");
-#endif
+Logger::debug("AsyncDispatcher(TCPSocket *socket); adding to lst");
+
     this->_s = socket;
     this->_s->set_nonblocking(1);
     this->_sockets.push_back(this);
 }
 
 AsyncDispatcher::AsyncDispatcher(int sock) {
-#ifdef DEBUG
-    fprintf(stderr, "AsyncDispatcher(int sock); adding to lst\n");
-#endif
+    Logger::debug("AsyncDispatcher(int sock); adding to lst");
+
     this->_s = new TCPSocket(sock);
     this->_s->set_nonblocking(1);
     this->_sockets.push_back(this);
@@ -38,16 +36,16 @@ AsyncDispatcher& AsyncDispatcher::operator=(const AsyncDispatcher &orig) {
 }
 
 AsyncDispatcher::~AsyncDispatcher() {
-#ifdef DEBUG
-    fprintf(stderr, "~AsyncDispatcher(); removing from lst\n");
-#endif
+    Logger::debug("~AsyncDispatcher(); removing from lst\n");
+
     this->_sockets.remove(this);
     delete this->_s;
 }
 
 void AsyncDispatcher::loop(int timeout_ms) {
     while (_sockets.size() != 0) {
-        std::list<Selectable*> rlist, wlist;//, xlist;
+        Logger::debug("loop next");
+        std::list<Selectable*> rlist, wlist; //, xlist;
 
         for (std::list<AsyncDispatcher*>::iterator i = _sockets.begin();
                 i != _sockets.end(); ++i) {
@@ -59,9 +57,9 @@ void AsyncDispatcher::loop(int timeout_ms) {
             if (s->writable()) {
                 wlist.push_back(s->_s);
             }
-        //    if (s->readable() || s->writable()) {
-        //        xlist.push_back(s->_s);
-        //    }
+            //    if (s->readable() || s->writable()) {
+            //        xlist.push_back(s->_s);
+            //    }
         }
 
         Select(&rlist, &wlist, NULL/*&xlist*/, timeout_ms);
@@ -107,7 +105,7 @@ void AsyncDispatcher::loop(int timeout_ms) {
 
             if (ad->_s->get_state() == TCPSocket::CONNECTING) {
                 // in case connect failed it wont'work
-//                ad->_s->validate_connect();
+                //                ad->_s->validate_connect();
                 ad->handle_connect();
             }
         }
@@ -115,47 +113,36 @@ void AsyncDispatcher::loop(int timeout_ms) {
 }
 
 bool AsyncDispatcher::readable() const {
-#ifdef DEBUG
-    fprintf(stderr, "default readable()\n");
-#endif
+    Logger::debug("default readable()\n");
+
     return false;
 }
 
 bool AsyncDispatcher::writable() const {
-#ifdef DEBUG
-    fprintf(stderr, "default writable()\n");
-#endif
+    Logger::debug("default writable()\n");
     return false;
 }
 
 void AsyncDispatcher::handle_read() {
-#ifdef DEBUG
-    fprintf(stderr, "unhandled handle_read()\n");
-#endif
+    Logger::debug("unhandled handle_read()\n");
+
 }
 
 void AsyncDispatcher::handle_write() {
-#ifdef DEBUG
-    fprintf(stderr, "unhandled handle_write()\n");
-#endif
+    Logger::debug("unhandled handle_write()\n");
 }
 
 void AsyncDispatcher::handle_close() {
-#ifdef DEBUG
-    fprintf(stderr, "unhandled handle_close()\n");
-#endif
+    Logger::debug("unhandled handle_close()\n");
 }
 
 void AsyncDispatcher::handle_accept() {
-#ifdef DEBUG
-    fprintf(stderr, "unhandled handle_accept()\n");
-#endif
+    Logger::debug("unhandled handle_accept()\n");
 }
 
 void AsyncDispatcher::handle_connect() {
-#ifdef DEBUG
-    fprintf(stderr, "unhandled handle_connect()\n");
-#endif
+    Logger::debug("unhandled handle_connect()\n");
+
 }
 
 int AsyncDispatcher::fileno() const {

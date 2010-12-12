@@ -387,17 +387,17 @@ void TCPSocket::connect(const char *name, unsigned short port) {
     const int GETHOSTBYNAME_R_BUFSIZE = 4096;
     char tmp_buf[GETHOSTBYNAME_R_BUFSIZE];
 
-struct hostent *result;
+    struct hostent *result;
 #if defined( linux ) || defined( __linux )
     struct hostent ret;
-    
+
     int h_errnop;
 
     if (gethostbyname_r(name, &ret, tmp_buf, GETHOSTBYNAME_R_BUFSIZE,
             &result, &h_errnop) == -1) {
         throw DNSException(h_errno);
     }
-    
+
     if (result == NULL) {
         throw DNSException(h_errno);
     }
@@ -406,7 +406,7 @@ struct hostent *result;
 #if defined( sun ) || defined( __sun )
     struct hostent entry;
     int h_errnop;
-    if ((result =  gethostbyname_r(name, &entry, tmp_buf, GETHOSTBYNAME_R_BUFSIZE,
+    if ((result = gethostbyname_r(name, &entry, tmp_buf, GETHOSTBYNAME_R_BUFSIZE,
             &h_errnop)) == NULL) {
         throw DNSException(h_errno);
     }
@@ -479,12 +479,12 @@ int TCPSocket::peek() const {
     char b;
     int read;
     read = ::recv(this->_b->_sock, &b, 1, MSG_PEEK | MSG_NOSIGNAL);
-    if (read == -1) {
-        if (errno == EAGAIN)
-            throw EAGAINException();
-        else
-            throw RecvException(errno);
-    }
+    //if (read == -1) {
+    //  if (errno == EAGAIN)
+    //      throw EAGAINException();
+    //  else
+    //      throw RecvException(errno);
+    //}
     return read;
 }
 
