@@ -15,14 +15,21 @@ private:
     bool _run;
     void error_check(int retv);
 
-    Thread & operator=(const Thread& other) {
-        assert(false);
-        return *this;
-    }
 
 public:
 
     Thread(void *(*f)(void *), void *arg = NULL) : _func(f), _arg(arg), _run(false) {
+    }
+
+
+    Thread & operator=(const Thread& other) {
+        if(this == &other){
+            return *this;
+        }
+        _run = other._run;
+        _func = other._func;
+        _arg = other._arg;
+        return *this;
     }
 
     Thread(const Thread& other) {

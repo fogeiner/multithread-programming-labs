@@ -33,20 +33,21 @@ private:
     void error_check(int retv);
 
     Mutex & operator=(const Mutex& other) {
-		assert(false);
-		return *this;
+        assert(false);
+        return *this;
     }
 
 public:
+
     enum mutex_type {
         NORMAL_MUTEX = PTHREAD_MUTEX_NORMAL,
         RECURSIVE_MUTEX = PTHREAD_MUTEX_RECURSIVE,
         ERRORCHECK_MUTEX = PTHREAD_MUTEX_ERRORCHECK,
-		DEFAULT_MUTEX = PTHREAD_MUTEX_DEFAULT
+        DEFAULT_MUTEX = PTHREAD_MUTEX_DEFAULT
     };
 
     Mutex(enum mutex_type type = NORMAL_MUTEX);
-	Mutex(const Mutex& other);
+    Mutex(const Mutex& other);
     ~Mutex();
 
     void lock();
