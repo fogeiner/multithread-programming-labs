@@ -13,10 +13,14 @@ private:
     // download finished; not data will be added
     bool _finished;
     
-    // 
-    bool f;
+    // flag that means
+    bool _dropped;
 
 public:
     CacheEntry();
+    void drop();
+    bool is_cached() const;
+    bool is_finished() const;
+    bool is_dropped() const;
 
 };

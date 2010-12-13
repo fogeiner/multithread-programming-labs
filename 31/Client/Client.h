@@ -14,6 +14,7 @@ public:
 private:
     friend class ClientState;
     friend class ClientGetRequest;
+    friend class ClientSendReply;
     void change_state(ClientState* s);
     ClientState *_state;
     Buffer *_in;

@@ -3,6 +3,8 @@
 #include "../../libs/HTTPURIParser/HTTPURIParser.h"
 #include "Client.h"
 #include "../BrokenUpHTTPRequest.h"
+#include "../Cache/Cache.h"
+#include "ClientSendReply.h"
 
 #include <string>
 #include <sstream>
@@ -37,7 +39,7 @@ void ClientGetRequest::handle_read(Client *c) {
         return;
     }
 
-    Logger::debug("\\r\\n\\r\\n found at the position %ld", pos);
+    //    Logger::debug("\\r\\n\\r\\n found at the position %ld", pos);
 
     try {
         std::string request = raw_request;
@@ -45,6 +47,7 @@ void ClientGetRequest::handle_read(Client *c) {
         std::string host;
         std::string path;
         unsigned short port;
+        std::string url;
 
         std::string word;
         std::istringstream iss(raw_request, std::istringstream::in);
@@ -60,6 +63,7 @@ void ClientGetRequest::handle_read(Client *c) {
         if (pu == NULL) {
             throw BadRequestException();
         }
+        url = word;
         port = pu->port_n == 0 ? 80 : pu->port_n;
         host = pu->netloc;
         path = pu->path;
@@ -75,16 +79,27 @@ void ClientGetRequest::handle_read(Client *c) {
 
         Logger::debug("Client request: %s", ("http://" + host + path).c_str());
 
-        BrokenUpHTTPRequest broken_up_request(request, method, host, path, port);
-        
+        //      Logger::debug((request + method + host + path + url).c_str());
+        BrokenUpHTTPRequest broken_up_request(request, method, host, path, port, url);
+
+        Cache *cache = Cache::instance();
+        cache->client_request(broken_up_request, c);
+
     } catch (NotImlementedException &ex) {
+
         Logger::error("ClientGetRequest::handle_read() NotImplementedException");
-        c->close();
+
+        Cache *cache = Cache::instance();
+        cache->client_error(Cache::HTTP_NOT_IMPLEMENTED, c);
     } catch (BadRequestException &ex) {
         Logger::error("ClientGetRequest::handle_read() BadRequestException");
-        c->close();
+
+        Cache *cache = Cache::instance();
+        cache->client_error(Cache::HTTP_BAD_REQUEST, c);
     }
 
+    Logger::debug("Client changing state to ClientSendReply");
+    c->change_state(ClientSendReply::instance());
 }
 
 void ClientGetRequest::handle_close(Client *c) {

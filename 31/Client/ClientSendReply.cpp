@@ -1,6 +1,12 @@
 #include "ClientSendReply.h"
 
 #include "../../libs/Logger/Logger.h"
+#include "Client.h"
+
+ClientState *ClientSendReply::instance() {
+    static ClientSendReply state;
+    return &state;
+}
 
 bool ClientSendReply::readable(const Client *c) {
     return false;
@@ -8,13 +14,15 @@ bool ClientSendReply::readable(const Client *c) {
 
 bool ClientSendReply::writable(const Client *c) {
     // depends on _out Buffer
-    return true;
+    return c->_out > 0 || c->is_finished();
 }
 
 void ClientSendReply::handle_write(Client *c) {
     Logger::debug("ClientSendReply::handle_write");
-}
-
-void ClientSendReply::handle_close(Client *c) {
-    Logger::debug("ClientSendReply::handle_close");
+    try {
+        c->_bytes_sent += c->send(c->_out);
+        c->_out->drop_first(c->_bytes_sent);
+    } catch (SendException &ex) {
+        Logger::debug("ClientSendReply::handle_write() SendException");
+    }
 }

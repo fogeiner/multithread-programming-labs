@@ -11,12 +11,20 @@ class Cache {
 private:
     static std::map<std::string, CacheEntry> _cache;
     static std::map<std::string, std::list<DownloadListener*> > _listeners;
+
     static const int MAX_CACHE_SIZE;
     static const int MAX_CACHE_ENTRY_SIZE;
     static Mutex _mutex;
-    static Cache *instance();
+
     Cache();
+
 public:
+
+    static const std::string HTTP_NOT_IMPLEMENTED;
+    static const std::string HTTP_BAD_REQUEST;
+    static const std::string HTTP_INTERNAL_ERROR;
+
+    static Cache *instance();
 
     // in case Entry is present in cache we just add whatever is ready to client's buffer
     // and add it in _listeners list for the given cache entry
@@ -25,7 +33,15 @@ public:
     // in case cache size exceeds maximum cache size
     // new requests create cache entries that work only in non-caching mode
 
-    static void request(BrokenUpHTTPRequest request, DownloadListener *download_listener);
+    static void client_request(BrokenUpHTTPRequest request, DownloadListener *download_listener);
+
+    // request sending error message;
+    // key must be one of defined static const keys that correspond to the error number
+    static void client_error(std::string key, DownloadListener *download_listener);
+
+    // in case during the send to client send failed
+    // we gonna remove client from cache
+    static void client_send_failed(std::string key, DownloadListener *download_listener);
 
     // Downloader adds recv'ed info
     // should add to buffer and given it also to DownloadListeners
@@ -38,25 +54,25 @@ public:
     // current time and original url
 
     // return new key (or the old one)
-    static std::string add_data(std::string key, const Buffer *b);
+    static std::string downloader_add_data(std::string key, const Buffer *b);
 
     // Downloader successfully finished download
     // should mark CacheEntry as finished and keep it
-    static void finished(std::string key);
+    static void downloader_finished(std::string key);
 
     // Downloader failed to connect to server
     // Send 504 error Gateway timeout to clients
     // and remove entry
-    static void connect_failed(std::string key);
+    static void downloader_connect_failed(std::string key);
 
     // Downloader failed during send; it means 
     // there's nothing to be sent to clients that's why
     // Send 500 error Internal error to clients
     // and remove entry
-    static void send_failed(std::string key);
+    static void downloader_send_failed(std::string key);
 
     // Downloader failed during recv (ECONNREFUSED)
     // Send whatever there's downloaded in cache
     // and remove entry
-    static void recv_failed(std::string key);
+    static void downloader_recv_failed(std::string key);
 };

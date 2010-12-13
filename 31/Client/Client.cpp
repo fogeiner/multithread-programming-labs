@@ -58,7 +58,7 @@ void Client::finished() {
 }
 
 void Client::cancelled() {
-    Logger::debug("Client::finished()");
+    Logger::debug("Client::cancelled()");
     _cancelled = true;
 }
 
