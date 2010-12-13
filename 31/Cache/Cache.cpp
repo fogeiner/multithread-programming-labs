@@ -6,5 +6,5 @@ Cache *Cache::instance(){
 }
 
 Cache::Cache(){
-    
+    // adding Entries with errors
 }

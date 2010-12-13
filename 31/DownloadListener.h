@@ -1,5 +1,6 @@
 #pragma once
 
+class Buffer;
 class DownloadListener {
 public:
     virtual void add_data(const Buffer *b, bool absolute = false) = 0;

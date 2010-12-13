@@ -2,6 +2,7 @@
 #include "../../libs/Logger/Logger.h"
 #include "../../libs/HTTPURIParser/HTTPURIParser.h"
 #include "Client.h"
+#include "../BrokenUpHTTPRequest.h"
 
 #include <string>
 #include <sstream>
@@ -19,7 +20,11 @@ bool ClientGetRequest::writable(const Client *c) {
     return false;
 }
 
-class BadRequestException{};
+class NotImlementedException {
+};
+
+class BadRequestException {
+};
 
 void ClientGetRequest::handle_read(Client *c) {
     Logger::debug("ClientGetRequest::handle_read()");
@@ -45,14 +50,14 @@ void ClientGetRequest::handle_read(Client *c) {
         std::istringstream iss(raw_request, std::istringstream::in);
 
         iss >> word;
-        if(word != "GET"){
-            throw BadRequestException();
+        if (word != "GET") {
+            throw NotImlementedException();
         }
         method = word;
 
         iss >> word;
         ParsedURI *pu = HTTPURIParser::parse(word);
-        if(pu == NULL){
+        if (pu == NULL) {
             throw BadRequestException();
         }
         port = pu->port_n == 0 ? 80 : pu->port_n;
@@ -61,14 +66,20 @@ void ClientGetRequest::handle_read(Client *c) {
         delete pu;
 
         iss >> word;
-        if(word != "HTTP/1.1" && word != "HTTP/1.0"){
+        if (word != "HTTP/1.1" && word != "HTTP/1.0") {
             throw BadRequestException();
         }
 
-        request.erase(request.end()-2, request.end());
+        request.erase(request.end() - 2, request.end());
         request.append("Connection: close\r\n\r\n");
 
         Logger::debug("Client request: %s", ("http://" + host + path).c_str());
+
+        BrokenUpHTTPRequest broken_up_request(request, method, host, path, port);
+        
+    } catch (NotImlementedException &ex) {
+        Logger::error("ClientGetRequest::handle_read() NotImplementedException");
+        c->close();
     } catch (BadRequestException &ex) {
         Logger::error("ClientGetRequest::handle_read() BadRequestException");
         c->close();

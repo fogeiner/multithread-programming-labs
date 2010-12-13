@@ -1,5 +1,7 @@
 #include "ClientSendReply.h"
 
+#include "../../libs/Logger/Logger.h"
+
 bool ClientSendReply::readable(const Client *c) {
     return false;
 }

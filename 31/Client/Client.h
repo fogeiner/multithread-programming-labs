@@ -5,7 +5,7 @@
 #include "../../libs/Buffer/VectorBuffer.h"
 
 #include "ClientState.h"
-#include "DownloadListener.h"
+#include "../DownloadListener.h"
 class Client;
 
 class Client : public AsyncDispatcher, public DownloadListener {
@@ -36,6 +36,6 @@ public:
     void finished();
     void cancelled();
 
-    bool is_finished() const = 0;
-    bool is_cancelled() const = 0;
+    bool is_finished() const;
+    bool is_cancelled() const;
 };
