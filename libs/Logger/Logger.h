@@ -1,9 +1,8 @@
 #pragma once 
 
-#include <syslog.h>
 #include <stdarg.h>
 #include <string>
-#include <assert.h>
+#include <cassert>
 
 #ifdef MT_LOGGER
 #include "../Mutex/Mutex.h"
@@ -19,17 +18,16 @@ class Logger {
 	}
 
 	public:
-	enum level {EMERG = LOG_EMERG, 
-		ALERT = LOG_ALERT, 
-		CRIT = LOG_CRIT, 
-		ERROR = LOG_ERR, 
-		WARNING = LOG_WARNING, 
-		NOTICE = LOG_NOTICE, 
-		INFO = LOG_INFO, 
-		DEBUG = LOG_DEBUG};
+	enum level {EMERG, 
+		ALERT, 
+		CRIT, 
+		ERR, 
+		WARN, 
+		NOTICE, 
+		INFO, 
+		DEBUG};
 
 	static void set_level(enum Logger::level priority);
-	static void set_ident(const char *ident);
 	static void debug(const char *fmt, ...);
 	static void info(const char *fmt, ...);
 	static void warning(const char *fmt, ...);
@@ -44,7 +42,6 @@ class Logger {
 	static Mutex _m;
 #endif 
 
-	static std::string _ident;
 	static enum Logger::level _priority;
 
 	static void log(enum Logger::level priority, const char *fmt, va_list ap);

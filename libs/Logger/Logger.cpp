@@ -2,7 +2,6 @@
 #include <cstdio>
 #include <cstring>
 
-std::string Logger::_ident;
 #ifdef MT_LOGGER
 Mutex Logger::_m;
 #endif
@@ -18,15 +17,6 @@ void Logger::set_level(enum Logger::level priority){
 #endif
 }
 
-void Logger::set_ident(const char *ident) {
-#ifdef MT_LOGGER
-	_m.lock();
-#endif
-	_ident = ident;
-#ifdef MT_LOGGER
-	_m.unlock();
-#endif
-}
 
 void Logger::debug(const char *fmt, ...){
 	va_list ap;
@@ -44,13 +34,13 @@ void Logger::info(const char *fmt, ...){
 void Logger::warning(const char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
-	log(WARNING, fmt, ap);
+	log(WARN, fmt, ap);
 	va_end(ap);
 }
 void Logger::error(const char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
-	log(ERROR, fmt, ap);
+	log(ERR, fmt, ap);
 	va_end(ap);
 }
 void Logger::critical(const char *fmt, ...){
