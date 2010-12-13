@@ -22,6 +22,10 @@ void ClientSendReply::handle_write(Client *c) {
     try {
         c->_bytes_sent += c->send(c->_out);
         c->_out->drop_first(c->_bytes_sent);
+
+        if(c->_out->size() == 0 && c->is_finished()){
+            Cache::client_finished(c->_key, c);
+        }
     } catch (SendException &ex) {
         Logger::debug("ClientSendReply::handle_write() SendException");
     }

@@ -1,6 +1,6 @@
 #include "CacheEntry.h"
 
-CacheEntry::CacheEntry(){
+CacheEntry::CacheEntry() {
 
 }
 
@@ -17,5 +17,9 @@ bool CacheEntry::is_finished() const {
 }
 
 bool CacheEntry::is_dropped() const {
+
+}
+
+const Buffer *CacheEntry::data() const {
 
 }

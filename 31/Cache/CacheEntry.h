@@ -3,7 +3,7 @@
 #include "../../libs/Buffer/VectorBuffer.h"
 #include <list>
 
-class CacheEntry  {
+class CacheEntry {
 private:
     Buffer *_data;
 
@@ -12,8 +12,8 @@ private:
 
     // download finished; not data will be added
     bool _finished;
-    
-    // flag that means
+
+    // flag that means that CacheEntry was set to retranslator mode
     bool _dropped;
 
 public:
@@ -22,5 +22,5 @@ public:
     bool is_cached() const;
     bool is_finished() const;
     bool is_dropped() const;
-
+    const Buffer *data() const;
 };

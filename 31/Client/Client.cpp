@@ -10,7 +10,8 @@ void Client::change_state(ClientState* s) {
 Client::Client(TCPSocket *sock) : AsyncDispatcher(sock),
 _bytes_sent(0),
 _finished(false),
-_cancelled(false) {
+_cancelled(false),
+_mutex(Mutex::ERRORCHECK_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
     this->change_state(ClientGetRequest::instance());
@@ -30,19 +31,43 @@ bool Client::writable() const {
 }
 
 void Client::handle_read() {
-    this->_state->handle_read(this);
+    _mutex.lock();
+    try {
+        this->_state->handle_read(this);
+    } catch (std::exception &ex) {
+        _mutex.unlock();
+        throw;
+    }
+    _mutex.unlock();
 }
 
 void Client::handle_write() {
-    this->_state->handle_write(this);
+    _mutex.lock();
+    try {
+        this->_state->handle_write(this);
+    } catch (std::exception &ex) {
+        _mutex.unlock();
+        throw;
+    }
+    _mutex.unlock();
 }
 
 void Client::handle_close() {
-    this->_state->handle_close(this);
+    _mutex.lock();
+    try {
+        this->_state->handle_close(this);
+    } catch (std::exception &ex) {
+        _mutex.unlock();
+        throw;
+    }
+    _mutex.unlock();
 }
 
-void Client::add_data(const Buffer *b, bool absolute) {
+void Client::add_data(std::string key, const Buffer *b, bool absolute) {
+    _mutex.lock();
     Logger::debug("Client::add_data(%p, absolute=%d)", b, absolute);
+    _key = key;
+
     if (absolute) {
         _out->append(b);
     } else {
@@ -50,6 +75,7 @@ void Client::add_data(const Buffer *b, bool absolute) {
         _out->append(subbuf);
         delete subbuf;
     }
+    _mutex.unlock();
 }
 
 void Client::finished() {

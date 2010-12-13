@@ -47,7 +47,6 @@ void ClientGetRequest::handle_read(Client *c) {
         std::string host;
         std::string path;
         unsigned short port;
-        std::string url;
 
         std::string word;
         std::istringstream iss(raw_request, std::istringstream::in);
@@ -63,7 +62,7 @@ void ClientGetRequest::handle_read(Client *c) {
         if (pu == NULL) {
             throw BadRequestException();
         }
-        url = word;
+        c->_key = word;
         port = pu->port_n == 0 ? 80 : pu->port_n;
         host = pu->netloc;
         path = pu->path;
@@ -80,22 +79,17 @@ void ClientGetRequest::handle_read(Client *c) {
         Logger::debug("Client request: %s", ("http://" + host + path).c_str());
 
         //      Logger::debug((request + method + host + path + url).c_str());
-        BrokenUpHTTPRequest broken_up_request(request, method, host, path, port, url);
+        BrokenUpHTTPRequest broken_up_request(request, method, host, path, port, c->_key);
 
-        Cache *cache = Cache::instance();
-        cache->client_request(broken_up_request, c);
+ 
+        Cache::client_request(c->_key, c, &broken_up_request);
 
     } catch (NotImlementedException &ex) {
-
         Logger::error("ClientGetRequest::handle_read() NotImplementedException");
-
-        Cache *cache = Cache::instance();
-        cache->client_error(Cache::HTTP_NOT_IMPLEMENTED, c);
+        Cache::client_request(Cache::HTTP_NOT_IMPLEMENTED, c);
     } catch (BadRequestException &ex) {
         Logger::error("ClientGetRequest::handle_read() BadRequestException");
-
-        Cache *cache = Cache::instance();
-        cache->client_error(Cache::HTTP_BAD_REQUEST, c);
+        Cache::client_request(Cache::HTTP_BAD_REQUEST, c);
     }
 
     Logger::debug("Client changing state to ClientSendReply");

@@ -3,7 +3,7 @@
 
 #include "../AsyncDispatcher/AsyncDispatcher.h"
 #include "../../libs/Buffer/VectorBuffer.h"
-
+#include "../../libs/Mutex/Mutex.h"
 #include "ClientState.h"
 #include "../DownloadListener.h"
 class Client;
@@ -22,6 +22,8 @@ private:
     int _bytes_sent;
     bool _finished;
     bool _cancelled;
+    std::string _key;
+    Mutex _mutex;
 public:
 
     Client(TCPSocket *sock);

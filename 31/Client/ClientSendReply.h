@@ -1,5 +1,6 @@
 #pragma once
 #include "ClientState.h"
+#include "../Cache/Cache.h"
 
 class Client;
 

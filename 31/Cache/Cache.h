@@ -33,15 +33,11 @@ public:
     // in case cache size exceeds maximum cache size
     // new requests create cache entries that work only in non-caching mode
 
-    static void client_request(BrokenUpHTTPRequest request, DownloadListener *download_listener);
-
-    // request sending error message;
-    // key must be one of defined static const keys that correspond to the error number
-    static void client_error(std::string key, DownloadListener *download_listener);
+    static void client_request(std::string key, DownloadListener *download_listener, BrokenUpHTTPRequest *request = NULL);
 
     // in case during the send to client send failed
     // we gonna remove client from cache
-    static void client_send_failed(std::string key, DownloadListener *download_listener);
+    static void client_finished(std::string key, DownloadListener *download_listener);
 
     // Downloader adds recv'ed info
     // should add to buffer and given it also to DownloadListeners
