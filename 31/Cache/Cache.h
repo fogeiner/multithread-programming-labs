@@ -1,5 +1,6 @@
 #pragma once
 #include "CacheEntry.h"
+#include "../config.h"
 #include "../BrokenUpHTTPRequest.h"
 #include "../../libs/Mutex/Mutex.h"
 #include <string>
@@ -9,16 +10,35 @@
 class Cache {
 private:
     static std::map<std::string, CacheEntry> _cache;
-    static std::map<std::string, std::list<DownloadListener*> > _listners;
+    static std::map<std::string, std::list<DownloadListener*> > _listeners;
+    static const int MAX_CACHE_SIZE;
+    static const int MAX_CACHE_ENTRY_SIZE;
     static Mutex _mutex;
     static Cache *instance();
     Cache();
 public:
+
+    // in case Entry is present in cache we just add whatever is ready to client's buffer
+    // and add it in _listeners list for the given cache entry
+    // otherwise create new cache entry, new downloader and subscribe client to it
+
+    // in case cache size exceeds maximum cache size
+    // new requests create cache entries that work only in non-caching mode
+
     static void request(BrokenUpHTTPRequest request, DownloadListener *download_listener);
 
     // Downloader adds recv'ed info
     // should add to buffer and given it also to DownloadListeners
-    static void add_data(std::string key, const Buffer *b);
+
+    // in case after the operation cache entry exceeds maximum size
+    // cache entry is set in non-caching mode with the
+    // key alteration
+    // each client gets it's own cache entry with unique cache
+    // key can be composed out of number of client in listeners list,
+    // current time and original url
+
+    // return new key (or the old one)
+    static std::string add_data(std::string key, const Buffer *b);
 
     // Downloader successfully finished download
     // should mark CacheEntry as finished and keep it
