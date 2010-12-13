@@ -42,8 +42,12 @@ void SelectTask::run() {
         }
     }
 
+    AsyncDispatcher::_sockets_mutex.unlock();
+
+
     Select(&rlist, &wlist, NULL, 0);
 
+    AsyncDispatcher::_sockets_mutex.lock();
     for (std::list<Selectable*>::iterator i = rlist.begin();
             i != rlist.end(); ++i) {
 
@@ -101,6 +105,5 @@ void SelectTask::run() {
     }
 
     AsyncDispatcher::_sockets_mutex.unlock();
-
     this->_tq->put(new SelectTask(this->_tq));
 }

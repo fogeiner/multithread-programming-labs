@@ -45,6 +45,15 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f4"
+                     displayName="Cache"
+                     projectFiles="true"
+                     kind="SOURCE_LOGICAL_FOLDER">
+        <itemPath>../Cache/Cache.cpp</itemPath>
+        <itemPath>../Cache/Cache.h</itemPath>
+        <itemPath>../Cache/CacheEntry.cpp</itemPath>
+        <itemPath>../Cache/CacheEntry.h</itemPath>
+      </logicalFolder>
       <logicalFolder name="f2"
                      displayName="Client"
                      projectFiles="true"
@@ -53,8 +62,11 @@
         <itemPath>../Client/Client.h</itemPath>
         <itemPath>../Client/ClientGetRequest.cpp</itemPath>
         <itemPath>../Client/ClientGetRequest.h</itemPath>
+        <itemPath>../Client/ClientSendReply.cpp</itemPath>
+        <itemPath>../Client/ClientSendReply.h</itemPath>
         <itemPath>../Client/ClientState.cpp</itemPath>
         <itemPath>../Client/ClientState.h</itemPath>
+        <itemPath>../Client/DownloadListener.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3"
                      displayName="Downloader"

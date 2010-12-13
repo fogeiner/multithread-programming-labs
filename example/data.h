@@ -2,9 +2,8 @@
 #define DATA_H
 #include"task.h"
 
-class Data
-{
-    private:
+class Data {
+private:
     void* data;
     int length;
     bool cached;
@@ -13,16 +12,16 @@ class Data
     // 4 MB
     unsigned int count;
     tasks* task;
-    
-    public:
+
+public:
     Data();
     Data(const void* data, int length, bool ended);
     Data(const Data& old);
-    
+
     tasks* getDownloadTask() const;
     void setDownloadTask(tasks* newTask);
-    
-    const Data& operator = (const Data& other);
+
+    const Data & operator =(const Data& other);
     bool addData(void* data, int len, bool ended);
     int getLength() const;
     void* getData() const;

@@ -3,115 +3,128 @@
 #include <vector>
 #include <cassert>
 
-class VectorBuffer: public Buffer {
-	private:
-		std::vector<char> _v;
+class VectorBuffer : public Buffer {
+private:
+    std::vector<char> _v;
 
-	public:
-		VectorBuffer(){}
-		VectorBuffer(const char *buf){
-			this->append(buf);
-		}
+public:
 
-		VectorBuffer(const VectorBuffer &orig): 
-			_v(orig._v) {
-		}
+    VectorBuffer() {
+    }
 
-		VectorBuffer &operator=(const VectorBuffer &orig){
-			if (this == &orig){
-				return *this;
-			}
+    VectorBuffer(const char *buf) {
+        this->append(buf);
+    }
 
-			_v = orig._v;
-			return *this;
-		}
+    VectorBuffer(const VectorBuffer &orig) :
+    _v(orig._v) {
+    }
 
-		VectorBuffer(const char *buf, int length): _v(buf, buf+length) {
-		}
+    VectorBuffer & operator=(const VectorBuffer &orig) {
+        if (this == &orig) {
+            return *this;
+        }
 
-		virtual void append(const Buffer *buffer) {
-			this->append(buffer->buf(), buffer->size());
-		}
-		virtual void append(const Buffer &buffer) {
-			this->append(&buffer);
-		}
-		virtual void append(const char *buf, int length){
-			this->_v.insert(this->_v.end(), buf, buf + length);
-		}
+        _v = orig._v;
+        return *this;
+    }
 
-		virtual void append(const char *buf){
-			int i;
-			for(i = 0; *(buf+i) != '\0'; ++i)
-				;
-			this->_v.insert(this->_v.end(), buf, buf + i);
-		}
+    VectorBuffer(const char *buf, int length) : _v(buf, buf + length) {
+    }
 
-		virtual const char* buf() const {
+    virtual void append(const Buffer *buffer) {
+        this->append(buffer->buf(), buffer->size());
+    }
+
+    virtual void append(const Buffer &buffer) {
+        this->append(&buffer);
+    }
+
+    virtual void append(const char *buf, int length) {
+        this->_v.insert(this->_v.end(), buf, buf + length);
+    }
+
+    virtual void append(const char *buf) {
+        int i;
+        for (i = 0; *(buf + i) != '\0'; ++i)
+            ;
+        this->_v.insert(this->_v.end(), buf, buf + i);
+    }
+
+    virtual const char* buf() const {
 #if defined( sun ) || defined( __sun )
-			return &this->_v[0];
+        return &this->_v[0];
 #endif
 
 #if defined( linux ) || defined( __linux)
-			return this->_v.data();
+        return this->_v.data();
 #endif
-		}
-		
-		virtual int size() const {
-			return this->_v.size();
-		}
-		
-		virtual Buffer *subbuf(int start, int end) const {
-			assert(start >= 0);
-			assert(end >= 0);
-			assert(end >= start);
-			assert(end <= this->size());
+    }
 
-			return new VectorBuffer(&_v[start], end - start);
-		}
+    virtual int size() const {
+        return this->_v.size();
+    }
 
-		virtual Buffer *first(int count) const {
-			return this->subbuf(0, count);
-		}
-		virtual Buffer *last(int count) const {
-			int size = this->size();
-			return this->subbuf(size - count, size);
-		}
-		virtual void drop_first(int count) {
-			assert(count <= this->size());
-			this->_v.erase(this->_v.begin(), this->_v.begin() + count);
-		}
-		virtual void drop_last(int count) {
-			assert(count <= this->size());
-			this->_v.erase(this->_v.begin() + this->size() - count, this->_v.end());
-		}
+    virtual Buffer *subbuf(int start, int end) const {
+        assert(start >= 0);
+        assert(end >= 0);
+        assert(end >= start);
+        assert(end <= this->size());
 
-		virtual char at(int index) const {
-			return (*this)[index];
-		}
-		
-		virtual char operator[](int index) const {
-			assert(index >= 0);
-			assert(index <= this->size());
-			return this->_v[index];
-		}
+        return new VectorBuffer(&_v[start], end - start);
+    }
 
-		virtual Buffer &operator+=(const Buffer &another) {
-			return (*this) += &another;
-		}
+    virtual Buffer *first(int count) const {
+        return this->subbuf(0, count);
+    }
 
-		virtual Buffer &operator+=(const Buffer *another) {
-			this->append(another);
-			return *this;
-		}
+    virtual Buffer *last(int count) const {
+        int size = this->size();
+        return this->subbuf(size - count, size);
+    }
 
-		virtual bool is_empty() const {
-			return this->size() == 0 ? true : false;
-		}
+    virtual void drop_first(int count) {
+        assert(count <= this->size());
+        this->_v.erase(this->_v.begin(), this->_v.begin() + count);
+    }
 
-                virtual void clear() {
-                    this->drop_first(this->size());
-                }
+    virtual void drop_last(int count) {
+        assert(count <= this->size());
+        this->_v.erase(this->_v.begin() + this->size() - count, this->_v.end());
+    }
 
-		virtual ~VectorBuffer() {}
+    virtual char at(int index) const {
+        return (*this)[index];
+    }
+
+    virtual char operator[](int index) const {
+        assert(index >= 0);
+        assert(index <= this->size());
+        return this->_v[index];
+    }
+
+    virtual Buffer & operator+=(const Buffer &another) {
+        return (*this) += &another;
+    }
+
+    virtual Buffer & operator+=(const Buffer *another) {
+        this->append(another);
+        return *this;
+    }
+
+    virtual bool is_empty() const {
+        return this->size() == 0 ? true : false;
+    }
+
+    virtual void clear() {
+        this->drop_first(this->size());
+    }
+
+    virtual operator std::string() const {
+        return std::string(_v.begin(), _v.end());
+    }
+
+    virtual ~VectorBuffer() {
+    }
 };
 

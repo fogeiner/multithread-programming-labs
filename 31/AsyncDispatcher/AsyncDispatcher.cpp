@@ -1,14 +1,13 @@
 #include "AsyncDispatcher.h"
 #include "../../libs/Logger/Logger.h"
-//#define DEBUG
+
 std::list<AsyncDispatcher*> AsyncDispatcher::_sockets;
 SignalPipe AsyncDispatcher::_signal_pipe;
 Mutex AsyncDispatcher::_sockets_mutex(Mutex::ERRORCHECK_MUTEX);
 
 AsyncDispatcher::AsyncDispatcher() {
-#ifdef DEBUG
-    fprintf(stderr, "AsyncDispatcher(); adding to lst\n");
-#endif
+    Logger::debug("AsyncDispatcher(); adding to lst");
+
     this->_s = new TCPSocket();
     this->_s->set_nonblocking(1);
     _sockets_mutex.lock();
@@ -18,9 +17,8 @@ AsyncDispatcher::AsyncDispatcher() {
 }
 
 AsyncDispatcher::AsyncDispatcher(TCPSocket *socket) {
-#ifdef DEBUG
-    fprintf(stderr, "AsyncDispatcher(TCPSocket *socket); adding to lst\n");
-#endif
+    Logger::debug("AsyncDispatcher(TCPSocket *socket); adding to lst");
+
     this->_s = socket;
     this->_s->set_nonblocking(1);
     _sockets_mutex.lock();
@@ -30,9 +28,8 @@ AsyncDispatcher::AsyncDispatcher(TCPSocket *socket) {
 }
 
 AsyncDispatcher::AsyncDispatcher(int sock) {
-#ifdef DEBUG
-    fprintf(stderr, "AsyncDispatcher(int sock); adding to lst\n");
-#endif
+    Logger::debug("AsyncDispatcher(int sock); adding to lst");
+
     this->_s = new TCPSocket(sock);
     this->_s->set_nonblocking(1);
     _sockets_mutex.lock();
@@ -50,9 +47,7 @@ AsyncDispatcher& AsyncDispatcher::operator=(const AsyncDispatcher &orig) {
 }
 
 AsyncDispatcher::~AsyncDispatcher() {
-#ifdef DEBUG
-    fprintf(stderr, "~AsyncDispatcher(); removing from lst\n");
-#endif
+    Logger::debug("~AsyncDispatcher(); removing from lst");
 
     delete this->_s;
 }
@@ -89,7 +84,7 @@ void AsyncDispatcher::handle_close() {
 
 void AsyncDispatcher::handle_accept() {
 
-    Logger::debug("unhandled handle_accept()\n");
+    Logger::debug("unhandled handle_accept()");
     this->activate();
 }
 

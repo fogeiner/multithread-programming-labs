@@ -5,7 +5,7 @@ namespace ProxyConfig {
 	extern const int listening_port;
 	extern const int backlog;
 	extern const char *ident;
-	extern const char *bad_request_msg;
-        extern const char *server_not_found_msg;
+	extern const char *http_error_400;
+        extern const char *http_error_503;
         extern const int max_cache_entry_size;
 }
