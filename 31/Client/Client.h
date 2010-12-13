@@ -30,12 +30,10 @@ public:
     void handle_read();
     void handle_write();
     void handle_close();
-
-    // offset shows how many bytes have been dropped from the Buffer
+    
     void add_data(const Buffer *b, bool absolute = false);
     void finished();
     void cancelled();
-
     bool is_finished() const;
     bool is_cancelled() const;
 };

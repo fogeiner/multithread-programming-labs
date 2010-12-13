@@ -12,10 +12,13 @@ void Downloader::change_state(DownloaderState* s) {
 }
 
 Downloader::Downloader() {
-
+    _in = new VectorBuffer();
+    _out = new VectorBuffer();
 }
 
 Downloader::~Downloader() {
+    delete _in;
+    delete _out;
 }
 
 bool Downloader::readable() const {
