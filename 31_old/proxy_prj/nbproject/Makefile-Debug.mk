@@ -35,29 +35,21 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/2105459482/ClientState.o \
 	${OBJECTDIR}/_ext/461788971/Thread.o \
-	${OBJECTDIR}/_ext/2105459482/ClientError.o \
-	${OBJECTDIR}/_ext/2083495164/DownloaderRetranslator.o \
-	${OBJECTDIR}/_ext/2145794643/Cache.o \
 	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
-	${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o \
+	${OBJECTDIR}/_ext/2105459482/ClientGetRequest.o \
 	${OBJECTDIR}/_ext/1159880425/SignalPipe.o \
 	${OBJECTDIR}/_ext/1472/config.o \
 	${OBJECTDIR}/_ext/413176034/HTTPURIParser.o \
 	${OBJECTDIR}/_ext/2113231069/TaskQueue.o \
-	${OBJECTDIR}/_ext/1406418076/Retranslator.o \
 	${OBJECTDIR}/_ext/238894769/Logger.o \
-	${OBJECTDIR}/_ext/2105459482/ClientGettingRequest.o \
 	${OBJECTDIR}/_ext/1327237076/AsyncDispatcher.o \
 	${OBJECTDIR}/_ext/1005991299/Semaphore.o \
-	${OBJECTDIR}/_ext/2105459482/ClientCache.o \
 	${OBJECTDIR}/_ext/2136648385/Proxy.o \
 	${OBJECTDIR}/_ext/2113231069/SelectTask.o \
-	${OBJECTDIR}/_ext/1472/main.o \
 	${OBJECTDIR}/_ext/2105459482/Client.o \
+	${OBJECTDIR}/_ext/1472/main.o \
 	${OBJECTDIR}/_ext/2083495164/Downloader.o \
 	${OBJECTDIR}/_ext/2083495164/DownloaderState.o \
-	${OBJECTDIR}/_ext/2105459482/ClientRetranslator.o \
-	${OBJECTDIR}/_ext/2083495164/DownloaderCache.o \
 	${OBJECTDIR}/_ext/1948483646/Mutex.o
 
 
@@ -95,30 +87,15 @@ ${OBJECTDIR}/_ext/461788971/Thread.o: ../../libs/Thread/Thread.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/461788971/Thread.o ../../libs/Thread/Thread.cpp
 
-${OBJECTDIR}/_ext/2105459482/ClientError.o: ../Client/ClientError.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientError.o ../Client/ClientError.cpp
-
-${OBJECTDIR}/_ext/2083495164/DownloaderRetranslator.o: ../Downloader/DownloaderRetranslator.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderRetranslator.o ../Downloader/DownloaderRetranslator.cpp
-
-${OBJECTDIR}/_ext/2145794643/Cache.o: ../Cache/Cache.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/Cache.o ../Cache/Cache.cpp
-
 ${OBJECTDIR}/_ext/297160205/TCPSocket.o: ../../libs/TCPSocket/TCPSocket.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/297160205
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/297160205/TCPSocket.o ../../libs/TCPSocket/TCPSocket.cpp
 
-${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o: ../Downloader/DownloaderRequestResponse.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
+${OBJECTDIR}/_ext/2105459482/ClientGetRequest.o: ../Client/ClientGetRequest.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
 	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderRequestResponse.o ../Downloader/DownloaderRequestResponse.cpp
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientGetRequest.o ../Client/ClientGetRequest.cpp
 
 ${OBJECTDIR}/_ext/1159880425/SignalPipe.o: ../../libs/SignalPipe/SignalPipe.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1159880425
@@ -140,20 +117,10 @@ ${OBJECTDIR}/_ext/2113231069/TaskQueue.o: ../TaskQueue/TaskQueue.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2113231069/TaskQueue.o ../TaskQueue/TaskQueue.cpp
 
-${OBJECTDIR}/_ext/1406418076/Retranslator.o: ../Retranslator/Retranslator.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1406418076
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1406418076/Retranslator.o ../Retranslator/Retranslator.cpp
-
 ${OBJECTDIR}/_ext/238894769/Logger.o: ../../libs/Logger/Logger.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/238894769
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/238894769/Logger.o ../../libs/Logger/Logger.cpp
-
-${OBJECTDIR}/_ext/2105459482/ClientGettingRequest.o: ../Client/ClientGettingRequest.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientGettingRequest.o ../Client/ClientGettingRequest.cpp
 
 ${OBJECTDIR}/_ext/1327237076/AsyncDispatcher.o: ../AsyncDispatcher/AsyncDispatcher.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1327237076
@@ -165,11 +132,6 @@ ${OBJECTDIR}/_ext/1005991299/Semaphore.o: ../../libs/Semaphore/Semaphore.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1005991299/Semaphore.o ../../libs/Semaphore/Semaphore.cpp
 
-${OBJECTDIR}/_ext/2105459482/ClientCache.o: ../Client/ClientCache.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientCache.o ../Client/ClientCache.cpp
-
 ${OBJECTDIR}/_ext/2136648385/Proxy.o: ../Proxy/Proxy.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2136648385
 	${RM} $@.d
@@ -180,15 +142,15 @@ ${OBJECTDIR}/_ext/2113231069/SelectTask.o: ../TaskQueue/SelectTask.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2113231069/SelectTask.o ../TaskQueue/SelectTask.cpp
 
-${OBJECTDIR}/_ext/1472/main.o: ../main.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1472
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/main.o ../main.cpp
-
 ${OBJECTDIR}/_ext/2105459482/Client.o: ../Client/Client.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/Client.o ../Client/Client.cpp
+
+${OBJECTDIR}/_ext/1472/main.o: ../main.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1472
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/main.o ../main.cpp
 
 ${OBJECTDIR}/_ext/2083495164/Downloader.o: ../Downloader/Downloader.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
@@ -199,16 +161,6 @@ ${OBJECTDIR}/_ext/2083495164/DownloaderState.o: ../Downloader/DownloaderState.cp
 	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderState.o ../Downloader/DownloaderState.cpp
-
-${OBJECTDIR}/_ext/2105459482/ClientRetranslator.o: ../Client/ClientRetranslator.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientRetranslator.o ../Client/ClientRetranslator.cpp
-
-${OBJECTDIR}/_ext/2083495164/DownloaderCache.o: ../Downloader/DownloaderCache.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderCache.o ../Downloader/DownloaderCache.cpp
 
 ${OBJECTDIR}/_ext/1948483646/Mutex.o: ../../libs/Mutex/Mutex.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1948483646

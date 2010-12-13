@@ -3,23 +3,23 @@
 #include "../../libs/TCPSocket/TCPSocket.h"
 #include "../../libs/TCPSocket/Selectable.h"
 #include "../../libs/SignalPipe/SignalPipe.h"
+
 #include "../../libs/Mutex/Mutex.h"
 #include "../TaskQueue/SwitchControlledAsync.h"
+
 #include <list>
 #include <cassert>
-
-#ifdef DEBUG
-#include <cstdio>
-#endif
 
 class AsyncDispatcher : public Selectable, public SwitchControlledAsync {
 private:
     friend class SelectTask;
+
     static std::list<AsyncDispatcher*> _sockets;
     static Mutex _sockets_mutex;
-    TCPSocket *_s;
     static SignalPipe _signal_pipe;
     bool _on;
+    TCPSocket *_s;
+
 public:
     AsyncDispatcher();
     AsyncDispatcher(int sock);

@@ -1,4 +1,5 @@
 #include "../../libs/Logger/Logger.h"
+
 #include "SelectTask.h"
 #include "TaskQueue.h"
 #include "AcceptTask.h"
@@ -8,10 +9,11 @@
 #include "WriteTask.h"
 
 void SelectTask::run() {
-    Logger::debug("SelectTask run");
+    Logger::debug("SelectTask::run() run");
     std::list<Selectable*> rlist, wlist;
 
     AsyncDispatcher::_sockets_mutex.lock();
+
     std::list<AsyncDispatcher*> delete_list;
     for (std::list<AsyncDispatcher*>::iterator d = AsyncDispatcher::_sockets.begin();
             d != AsyncDispatcher::_sockets.end(); ++d) {
@@ -24,18 +26,18 @@ void SelectTask::run() {
             d != delete_list.end(); ++d) {
         AsyncDispatcher::_sockets.remove(*d);
         delete *d;
-     }
+    }
 
     rlist.push_back(&AsyncDispatcher::_signal_pipe);
 
     for (std::list<AsyncDispatcher*>::iterator i = AsyncDispatcher::_sockets.begin();
             i != AsyncDispatcher::_sockets.end(); ++i) {
         AsyncDispatcher *s = *i;
-        if (s->readable()) {
+        if (!s->is_closed() && s->is_active() && s->readable()) {
             rlist.push_back(s->_s);
 
         }
-        if (s->writable()) {
+        if (!s->is_closed() && s->is_active() && s->writable()) {
             wlist.push_back(s->_s);
         }
     }
@@ -62,7 +64,6 @@ void SelectTask::run() {
         if (ad->_s->get_state() == TCPSocket::LISTENING) {
             ad->deactivate();
             this->_tq->put(new AcceptTask(ad));
-            //ad -> handle_accept();
         }
         assert(ad != NULL);
         if (ad->_s->get_state() == TCPSocket::CONNECTED) {
@@ -73,7 +74,6 @@ void SelectTask::run() {
             } else {
                 ad->deactivate();
                 this->_tq->put(new ReadTask(ad));
-                //ad -> handle_read();
             }
         }
     }
@@ -92,13 +92,11 @@ void SelectTask::run() {
         if (ad->_s->get_state() == TCPSocket::CONNECTED) {
             ad->deactivate();
             this->_tq->put(new WriteTask(ad));
-            //ad->handle_write();
         }
 
         if (ad->_s->get_state() == TCPSocket::CONNECTING) {
             ad->deactivate();
             this->_tq->put(new ConnectTask(ad));
-            //ad->handle_connect();
         }
     }
 

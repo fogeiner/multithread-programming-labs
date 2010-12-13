@@ -1,7 +1,9 @@
+#include "../../libs/Logger/Logger.h"
 #include "TaskQueue.h"
 #include "Task.h"
 
 #include <list>
+#include <exception>
 
 TaskQueue::~TaskQueue() {
 }
@@ -56,10 +58,14 @@ void TaskQueue::drop() {
 }
 
 void *TaskQueue::process(void *task_queue_ptr) {
-    TaskQueue *task_queue = static_cast<TaskQueue*>(task_queue_ptr);
+    TaskQueue *task_queue = static_cast<TaskQueue*> (task_queue_ptr);
     while (1) {
         Task *t = task_queue->get();
-        t->run();
+        try {
+            t->run();
+        } catch (std::exception &ex) {
+            Logger::error("TaskQueue::process() %s", ex.what());
+        }
         delete t;
     }
     return NULL;

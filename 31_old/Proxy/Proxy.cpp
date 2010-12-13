@@ -10,7 +10,7 @@ Proxy::Proxy() {
 }
 
 bool Proxy::readable() const {
-    return this->is_active();
+    return true;
 }
 
 bool Proxy::writable() const {
@@ -20,5 +20,4 @@ bool Proxy::writable() const {
 void Proxy::handle_accept() {
     Logger::debug("New client connected");
     new Client(this->accept());
-    this->activate();
 }
