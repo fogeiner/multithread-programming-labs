@@ -58,8 +58,11 @@
           <itemPath>../Cache/ClientRetranslator.h</itemPath>
           <itemPath>../Cache/DirectRetranslator.cpp</itemPath>
           <itemPath>../Cache/DirectRetranslator.h</itemPath>
-          <itemPath>../Cache/DownloaderRetranslator.h</itemPath>
+          <itemPath>../Cache/DownloadRetranslator.h</itemPath>
+          <itemPath>../Cache/Retranslator.cpp</itemPath>
           <itemPath>../Cache/Retranslator.h</itemPath>
+          <itemPath>../Cache/RetranslatorState.cpp</itemPath>
+          <itemPath>../Cache/RetranslatorState.h</itemPath>
         </logicalFolder>
         <itemPath>../Cache/Cache.cpp</itemPath>
         <itemPath>../Cache/Cache.h</itemPath>

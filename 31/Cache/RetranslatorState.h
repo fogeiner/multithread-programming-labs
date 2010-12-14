@@ -1,6 +1,6 @@
 #pragma once
-#include "Retranslator.h"
-
+class Retranslator;
+class Buffer;
 class RetranslatorState {
 public:
     virtual void client_finished(Retranslator *r);

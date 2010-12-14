@@ -11,14 +11,14 @@
 class Cache {
 private:
     static std::map<std::string, CacheEntry> _cache;
-    static std::map<std::string, std::list<ClientListener*> > _listeners;
+    static std::map<std::string, Retranslator*> _retranslators;
 
-    static const int MAX_CACHE_SIZE;
-    static const int MAX_CACHE_ENTRY_SIZE;
     static Mutex _mutex;
 
     Cache();
 public:
+    static const int MAX_CACHE_SIZE;
+    static const int MAX_CACHE_ENTRY_SIZE;
 
     static const std::string HTTP_NOT_IMPLEMENTED;
     static const std::string HTTP_BAD_REQUEST;
@@ -28,6 +28,9 @@ public:
     static void init();
 
     static Cache *instance();
+};
+
+/*
 
     // in case Entry is present in cache we just add whatever is ready to client's buffer
     // and add it in _listeners list for the given cache entry
@@ -64,7 +67,7 @@ public:
     // and remove entry
     static void downloader_connect_failed(std::string key);
 
-    // Downloader failed during send; it means 
+    // Downloader failed during send; it means
     // there's nothing to be sent to clients that's why
     // Send 500 error Internal error to clients
     // and remove entry
@@ -74,4 +77,5 @@ public:
     // Send whatever there's downloaded in cache
     // and remove entry
     static void downloader_recv_failed(std::string key);
-};
+
+ */

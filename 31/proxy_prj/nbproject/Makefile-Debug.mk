@@ -56,7 +56,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/2105459482/Client.o \
 	${OBJECTDIR}/_ext/2083495164/Downloader.o \
 	${OBJECTDIR}/_ext/2083495164/DownloaderSendRequestRecvResponse.o \
+	${OBJECTDIR}/_ext/2145794643/RetranslatorState.o \
 	${OBJECTDIR}/_ext/2083495164/DownloaderState.o \
+	${OBJECTDIR}/_ext/2145794643/Retranslator.o \
 	${OBJECTDIR}/_ext/1948483646/Mutex.o
 
 
@@ -199,10 +201,20 @@ ${OBJECTDIR}/_ext/2083495164/DownloaderSendRequestRecvResponse.o: ../Downloader/
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderSendRequestRecvResponse.o ../Downloader/DownloaderSendRequestRecvResponse.cpp
 
+${OBJECTDIR}/_ext/2145794643/RetranslatorState.o: ../Cache/RetranslatorState.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/RetranslatorState.o ../Cache/RetranslatorState.cpp
+
 ${OBJECTDIR}/_ext/2083495164/DownloaderState.o: ../Downloader/DownloaderState.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderState.o ../Downloader/DownloaderState.cpp
+
+${OBJECTDIR}/_ext/2145794643/Retranslator.o: ../Cache/Retranslator.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/Retranslator.o ../Cache/Retranslator.cpp
 
 ${OBJECTDIR}/_ext/1948483646/Mutex.o: ../../libs/Mutex/Mutex.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1948483646

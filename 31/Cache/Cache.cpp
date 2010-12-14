@@ -36,8 +36,7 @@ void Cache::init() {
     _mutex.unlock();
 }
 
-void Cache::client_request(std::string key, ClientListener *download_listener, BrokenUpHTTPRequest *request) {
-    _mutex.lock();
+/*
 
     // such entry is present
     if (_cache.find(key) != _cache.end()) {
@@ -58,31 +57,5 @@ void Cache::client_request(std::string key, ClientListener *download_listener, B
         // such entry is not present
         assert(false);
     }
-    _mutex.unlock();
-}
 
-void Cache::client_finished(std::string key, ClientListener *download_listener) {
-    _mutex.lock();
-    assert(_cache.find(key) != _cache.end());
-    _listeners[key].remove(download_listener);
-    _mutex.unlock();
-}
-
-std::string Cache::downloader_add_data(std::string key, const Buffer *b) {
-    _mutex.lock();
-    assert(_cache.find(key) != _cache.end());
-
-    _mutex.unlock();
-}
-
-void Cache::downloader_finished(std::string key) {
-}
-
-void Cache::downloader_connect_failed(std::string key) {
-}
-
-void Cache::downloader_send_failed(std::string key) {
-}
-
-void Cache::downloader_recv_failed(std::string key) {
-}
+ */
