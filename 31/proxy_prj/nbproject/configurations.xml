@@ -53,6 +53,7 @@
         <itemPath>../Cache/Cache.h</itemPath>
         <itemPath>../Cache/CacheEntry.cpp</itemPath>
         <itemPath>../Cache/CacheEntry.h</itemPath>
+        <itemPath>../DownloadListener.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2"
                      displayName="Client"
@@ -66,7 +67,6 @@
         <itemPath>../Client/ClientSendReply.h</itemPath>
         <itemPath>../Client/ClientState.cpp</itemPath>
         <itemPath>../Client/ClientState.h</itemPath>
-        <itemPath>../Client/DownloadListener.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3"
                      displayName="Downloader"
@@ -74,6 +74,10 @@
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>../Downloader/Downloader.cpp</itemPath>
         <itemPath>../Downloader/Downloader.h</itemPath>
+        <itemPath>../Downloader/DownloaderRecvResponse.cpp</itemPath>
+        <itemPath>../Downloader/DownloaderRecvResponse.h</itemPath>
+        <itemPath>../Downloader/DownloaderSendRequestRecvResponse.cpp</itemPath>
+        <itemPath>../Downloader/DownloaderSendRequestRecvResponse.h</itemPath>
         <itemPath>../Downloader/DownloaderState.cpp</itemPath>
         <itemPath>../Downloader/DownloaderState.h</itemPath>
       </logicalFolder>
@@ -159,6 +163,7 @@
         <itemPath>../TaskQueue/TaskQueue.h</itemPath>
         <itemPath>../TaskQueue/WriteTask.h</itemPath>
       </logicalFolder>
+      <itemPath>../BrokenUpHTTPRequest.h</itemPath>
       <itemPath>../config.cpp</itemPath>
       <itemPath>../config.h</itemPath>
       <itemPath>../main.cpp</itemPath>

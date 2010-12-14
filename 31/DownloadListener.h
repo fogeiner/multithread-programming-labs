@@ -3,7 +3,7 @@
 class Buffer;
 class DownloadListener {
 public:
-    virtual void add_data(std::string key, const Buffer *b, bool absolute = false) = 0;
+    virtual void add_data(std::string key, const Buffer *b) = 0;
     virtual void finished() = 0;
     virtual void cancelled() = 0;
     virtual bool is_finished() const = 0;

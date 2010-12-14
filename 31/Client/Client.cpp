@@ -15,6 +15,7 @@ _mutex(Mutex::ERRORCHECK_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
     this->change_state(ClientGetRequest::instance());
+    this->activate();
 }
 
 Client::~Client() {
@@ -31,50 +32,28 @@ bool Client::writable() const {
 }
 
 void Client::handle_read() {
-    _mutex.lock();
-    try {
-        this->_state->handle_read(this);
-    } catch (std::exception &ex) {
-        _mutex.unlock();
-        throw;
-    }
-    _mutex.unlock();
+
+    this->_state->handle_read(this);
+
 }
 
 void Client::handle_write() {
-    _mutex.lock();
-    try {
-        this->_state->handle_write(this);
-    } catch (std::exception &ex) {
-        _mutex.unlock();
-        throw;
-    }
-    _mutex.unlock();
+
+    this->_state->handle_write(this);
+
 }
 
 void Client::handle_close() {
-    _mutex.lock();
-    try {
-        this->_state->handle_close(this);
-    } catch (std::exception &ex) {
-        _mutex.unlock();
-        throw;
-    }
-    _mutex.unlock();
+
+    this->_state->handle_close(this);
+
 }
 
-void Client::add_data(std::string key, const Buffer *b, bool absolute) {
+void Client::add_data(std::string key, const Buffer *b) {
     _mutex.lock();
-    Logger::debug("Client::add_data(%p, absolute=%d)", b, absolute);
+    Logger::debug("Client::add_data(%p)", b);
     _key = key;
-
-    if (absolute) {
-        _out->append(b);
-    } else {
-        Buffer *subbuf = b->last(b->size() - _bytes_sent);
-        _out->append(subbuf);
-        delete subbuf;
-    }
+    _out->append(b);
     _mutex.unlock();
 }
 

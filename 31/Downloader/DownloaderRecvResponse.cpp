@@ -1,7 +1,7 @@
 #include "DownloaderRecvResponse.h"
-
+#include "../../libs/Logger/Logger.h"
 DownloaderState *instance() {
-    DownloaderRecvResponse state;
+    static DownloaderRecvResponse state;
     return &state;
 }
 

@@ -3,6 +3,7 @@
 
 #include "TaskQueue/TaskQueue.h"
 #include "TaskQueue/SelectTask.h"
+#include "Cache/Cache.h"
 #include "Proxy/Proxy.h"
 
 #include "config.h"
@@ -26,6 +27,7 @@ int main(int argc, char *argv[]) {
     TaskQueue *task_queue = new TaskQueue();
     task_queue->put(new SelectTask(task_queue));
 
+    Cache::init();
     new Proxy();
 
     // creating threads with TaskQueue::process

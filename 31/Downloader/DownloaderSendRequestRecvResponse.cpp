@@ -1,7 +1,8 @@
 #include "DownloaderSendRequestRecvResponse.h"
+#include "../../libs/Logger/Logger.h"
 
-DownloaderState *instance() {
-    DownloaderSendRequestRecvResponse state;
+DownloaderState *DownloaderSendRequestRecvResponse::instance() {
+    static DownloaderSendRequestRecvResponse state;
     return &state;
 }
 

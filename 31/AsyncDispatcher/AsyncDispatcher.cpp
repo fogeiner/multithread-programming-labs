@@ -13,7 +13,6 @@ AsyncDispatcher::AsyncDispatcher() {
     _sockets_mutex.lock();
     this->_sockets.push_back(this);
     _sockets_mutex.unlock();
-    this->activate();
 }
 
 AsyncDispatcher::AsyncDispatcher(TCPSocket *socket) {
@@ -24,7 +23,6 @@ AsyncDispatcher::AsyncDispatcher(TCPSocket *socket) {
     _sockets_mutex.lock();
     this->_sockets.push_back(this);
     _sockets_mutex.unlock();
-    this->activate();
 }
 
 AsyncDispatcher::AsyncDispatcher(int sock) {
@@ -35,7 +33,6 @@ AsyncDispatcher::AsyncDispatcher(int sock) {
     _sockets_mutex.lock();
     this->_sockets.push_back(this);
     _sockets_mutex.unlock();
-    this->activate();
 }
 
 AsyncDispatcher::AsyncDispatcher(const AsyncDispatcher &orig) {

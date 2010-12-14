@@ -17,12 +17,13 @@ private:
     static Mutex _mutex;
 
     Cache();
-
 public:
 
     static const std::string HTTP_NOT_IMPLEMENTED;
     static const std::string HTTP_BAD_REQUEST;
     static const std::string HTTP_INTERNAL_ERROR;
+
+    static void init();
 
     static Cache *instance();
 

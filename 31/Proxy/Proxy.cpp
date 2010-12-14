@@ -7,6 +7,7 @@ Proxy::Proxy() {
     this->set_reuse_addr(1);
     this->bind(ProxyConfig::listening_port);
     this->listen(ProxyConfig::backlog);
+    this->activate();
 }
 
 bool Proxy::readable() const {

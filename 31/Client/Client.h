@@ -34,7 +34,7 @@ public:
     void handle_write();
     void handle_close();
     
-    void add_data(const Buffer *b, bool absolute = false);
+    void add_data(std::string key, const Buffer *b);
     void finished();
     void cancelled();
     bool is_finished() const;
