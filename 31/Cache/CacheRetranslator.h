@@ -2,9 +2,11 @@
 
 
 #include "Retranslator.h"
+#include "RetranslatorState.h"
 
-class CacheRetranslator : public Retranslator {
+class CacheRetranslator : public RetranslatorState {
 public:
+    static RetranslatorState *instance();
     void client_finished();
     void download_add_data(const Buffer *b);
     void download_finished();

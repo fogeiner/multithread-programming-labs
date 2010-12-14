@@ -1,9 +1,10 @@
 #pragma once
 
 #include "Retranslator.h"
-
-class DirectRetranslator : public Retranslator {
+#include "RetranslatorState.h"
+class DirectRetranslator : public RetranslatorState {
 public:
+    RetranslatorState *instance();
     void client_finished();
     void download_add_data(const Buffer *b);
     void download_finished();

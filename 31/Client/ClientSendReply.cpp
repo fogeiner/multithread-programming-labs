@@ -14,7 +14,7 @@ bool ClientSendReply::readable(const Client *c) {
 
 bool ClientSendReply::writable(const Client *c) {
     // depends on _out Buffer
-    return c->_out->size() > 0 || c->is_finished();
+    return c->_out->size() > 0 || c->_finished;
 }
 
 void ClientSendReply::handle_write(Client *c) {
@@ -27,12 +27,14 @@ void ClientSendReply::handle_write(Client *c) {
         c->_out->drop_first(sent);
         c->_mutex.unlock();
 
-        if(c->is_finished() && c->_out->size() == 0){
+        if(c->_finished && c->_out->size() == 0){
             c->_client_retranslator->client_finished();
             c->close();
         }
         
     } catch (SendException &ex) {
         Logger::debug("ClientSendReply::handle_write() SendException");
+        c->_client_retranslator->client_finished();
+        c->close();
     }
 }

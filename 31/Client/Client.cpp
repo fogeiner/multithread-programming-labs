@@ -54,8 +54,3 @@ void Client::finished() {
     Logger::debug("Client::finished()");
     _finished = true;
 }
-
-
-bool Client::is_finished() const {
-    return _finished;
-}

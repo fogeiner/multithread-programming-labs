@@ -15,6 +15,8 @@ private:
     void change_state(RetranslatorState *state);
     void delete_client(ClientListener *client_listener);
 public:
+    Retranslator();
+    
     void add_client(ClientListener *client_listener);
 
     virtual void client_finished();

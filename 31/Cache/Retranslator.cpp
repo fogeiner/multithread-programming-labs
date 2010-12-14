@@ -1,5 +1,10 @@
 #include "Retranslator.h"
 #include "RetranslatorState.h"
+#include "CacheRetranslator.h"
+
+Retranslator::Retranslator() {
+    change_state(CacheRetranslator::instance());
+}
 
 void Retranslator::delete_client(ClientListener *client_listener) {
     _clients.remove(client_listener);

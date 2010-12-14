@@ -38,6 +38,4 @@ public:
     
     void add_data(const Buffer *b);
     void finished();
-    bool is_finished() const;
-    bool is_cancelled() const;
 };
