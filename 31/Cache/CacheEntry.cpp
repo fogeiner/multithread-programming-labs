@@ -19,6 +19,7 @@ CacheEntry &CacheEntry::operator=(const CacheEntry &orig) {
     _data = new VectorBuffer();
     _data->append(orig._data);
     _state = orig._state;
+    return *this;
 }
 
 CacheEntry::~CacheEntry() {
