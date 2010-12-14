@@ -26,19 +26,19 @@ void Cache::init() {
     Cache::_size = 0;
     // adding messages with errors
     _cache[HTTP_NOT_IMPLEMENTED] = CacheEntry();
-    _cache[HTTP_NOT_IMPLEMENTED].add_data("HTTP/1.1 501 Not Implemented\r\n\r\n<html><head><title>501</title></head><body><h1>501 Not Implemented</h1><hr>Proxy</body></html>");
+    _cache[HTTP_NOT_IMPLEMENTED].add_data("HTTP/1.0 501 Not Implemented\r\n\r\n<html><head><title>501</title></head><body><h1>501 Not Implemented</h1><hr>Proxy</body></html>");
     _cache[HTTP_NOT_IMPLEMENTED].cached();
 
     _cache[HTTP_BAD_REQUEST] = CacheEntry();
-    _cache[HTTP_BAD_REQUEST].add_data("HTTP/1.1 400 Bad Request\r\n\r\n<html><head><title>400</title></head><body><h1>400 Bad Request</h1><hr>Proxy</body></html>");
+    _cache[HTTP_BAD_REQUEST].add_data("HTTP/1.0 400 Bad Request\r\n\r\n<html><head><title>400</title></head><body><h1>400 Bad Request</h1><hr>Proxy</body></html>");
     _cache[HTTP_BAD_REQUEST].cached();
 
     _cache[HTTP_INTERNAL_ERROR] = CacheEntry();
-    _cache[HTTP_INTERNAL_ERROR].add_data("HTTP/1.1 500 Internal Error\r\n\r\n<html><head><title>500</title></head><body><h1>500 Internal Error</h1><hr>Proxy</body></html>");
+    _cache[HTTP_INTERNAL_ERROR].add_data("HTTP/1.0 500 Internal Error\r\n\r\n<html><head><title>500</title></head><body><h1>500 Internal Error</h1><hr>Proxy</body></html>");
     _cache[HTTP_INTERNAL_ERROR].cached();
 
     _cache[HTTP_SERVICE_UNAVAILABLE] = CacheEntry();
-    _cache[HTTP_SERVICE_UNAVAILABLE].add_data("HTTP/1.1 503 Service Unavailable\r\n\r\n<html><head><title>503</title></head><body><h1>503 Service Unavailable</h1><hr>Proxy</body></html>");
+    _cache[HTTP_SERVICE_UNAVAILABLE].add_data("HTTP/1.0 503 Service Unavailable\r\n\r\n<html><head><title>503</title></head><body><h1>503 Service Unavailable</h1><hr>Proxy</body></html>");
     _cache[HTTP_SERVICE_UNAVAILABLE].cached();
 }
 
