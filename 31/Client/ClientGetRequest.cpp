@@ -96,7 +96,9 @@ void ClientGetRequest::handle_read(Client *c) {
         }
     } catch (RecvException &ex) {
         Logger::error("ClientGetRequest::handle_read() RecvException");
-        c->_client_retranslator->client_finished();
+        if (c->_client_retranslator != NULL) {
+            c->_client_retranslator->client_finished(c);
+        }
         c->close();
     }
     Logger::debug("Client changing state to ClientSendReply");
@@ -105,6 +107,8 @@ void ClientGetRequest::handle_read(Client *c) {
 
 void ClientGetRequest::handle_close(Client *c) {
     Logger::debug("ClientGetRequest::handle_close()");
-    c->_client_retranslator->client_finished();
+    if (c->_client_retranslator != NULL) {
+        c->_client_retranslator->client_finished(c);
+    }
     c->close();
 }

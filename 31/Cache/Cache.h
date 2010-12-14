@@ -9,6 +9,7 @@
 
 
 class Cache {
+    friend class Retranslator;
 private:
     static std::map<std::string, CacheEntry> _cache;
     static std::map<std::string, Retranslator*> _retranslators;
@@ -16,6 +17,7 @@ private:
     static Mutex _mutex;
 
     Cache();
+    void drop(std::string key);
 public:
     static const int MAX_CACHE_SIZE;
     static const int MAX_CACHE_ENTRY_SIZE;
@@ -28,7 +30,7 @@ public:
     static void init();
 
     static Cache *instance();
-    static ClientRetranslator *request(const BrokenUpHTTPRequest &request, ClientListener *client_listener);
+    static ClientRetranslator *request(BrokenUpHTTPRequest request, ClientListener *client_listener);
 };
 
 /*

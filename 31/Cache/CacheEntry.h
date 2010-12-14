@@ -4,15 +4,15 @@
 #include <list>
 
 class CacheEntry {
+public:
+
+    enum CacheEntryState {
+        INIT, CACHING, CACHED, DROPPED
+    };
+
 private:
     Buffer *_data;
-
-    // response was 200, download finished ok; size is not more than MAX_CACHE_ENTRY_SIZE
-    bool _cached;
-
-    // flag that means that CacheEntry was set to retranslator mode
-    bool _dropped;
-
+    CacheEntryState _state;
 public:
     CacheEntry();
     void drop();
@@ -22,4 +22,6 @@ public:
     void add_data(const Buffer *b);
     void add_data(const char *msg);
     const Buffer *data() const;
+
+    CacheEntryState get_state() const;
 };

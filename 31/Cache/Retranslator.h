@@ -1,6 +1,7 @@
 #pragma once
 #include "../ClientListener.h"
-
+#include "../BrokenUpHTTPRequest.h"
+#include "CacheEntry.h"
 #include "ClientRetranslator.h"
 #include "DownloadRetranslator.h"
 #include "RetranslatorState.h"
@@ -10,19 +11,22 @@ class Retranslator : public ClientRetranslator, public DownloadRetranslator {
     friend class DirectRetranslator;
     friend class CacheRetranslator;
 private:
-    RetranslatorState *state;
+    RetranslatorState *_state;
     std::list<ClientListener*> _clients;
     void change_state(RetranslatorState *state);
     void delete_client(ClientListener *client_listener);
+    bool _response_code_received;
+    const BrokenUpHTTPRequest _request;
+    CacheEntry &_ce;
 public:
-    Retranslator();
-    
-    void add_client(ClientListener *client_listener);
+    Retranslator(const BrokenUpHTTPRequest request, CacheEntry &cache_entry);
 
-    virtual void client_finished();
+    virtual void add_client(ClientListener *client_listener);
+    virtual void client_finished(ClientListener *client_listener);
     virtual void download_add_data(const Buffer *b);
     virtual void download_finished();
     virtual void download_connect_failed();
     virtual void download_send_failed();
     virtual void download_recv_failed();
+    virtual ~Retranslator(){}
 };

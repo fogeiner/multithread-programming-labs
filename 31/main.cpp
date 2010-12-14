@@ -15,6 +15,7 @@
 int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
     int threads_count;
+    std::vector<Thread> threads;
 
     if (argc < 2) {
         threads_count = 1;
@@ -27,17 +28,19 @@ int main(int argc, char *argv[]) {
     TaskQueue *task_queue = new TaskQueue();
     task_queue->put(new SelectTask(task_queue));
 
-    Cache::init();
-    new Proxy();
-
-    std::vector<Thread> threads;
     try {
+        Cache::init();
+        new Proxy();
+
         for (int i = 0; i < threads_count; ++i) {
             threads.push_back(Thread(TaskQueue::process, task_queue));
             threads[i].run();
         }
     } catch (ThreadException &ex) {
-        Logger::error("main() %s", ex.what());
+        Logger::error("ThreadException: %s", ex.what());
+    } catch (BindException &ex) {
+        Logger::error("BindException: %s", ex.what());
+        return EXIT_FAILURE;
     }
 
     Thread::exit();

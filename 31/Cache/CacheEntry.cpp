@@ -1,25 +1,17 @@
 #include "CacheEntry.h"
 
-CacheEntry::CacheEntry(): _cached(false), _dropped(false) {
+CacheEntry::CacheEntry() : _state(INIT) {
     _data = new VectorBuffer();
 }
 
 void CacheEntry::drop() {
     delete _data;
     _data = NULL;
-    _dropped = true;
+    _state = DROPPED;
 }
 
 void CacheEntry::cached() {
-    _cached = true;
-}
-
-bool CacheEntry::is_cached() const {
-    return _cached;
-}
-
-bool CacheEntry::is_dropped() const {
-    return _dropped;
+    _state = CACHED;
 }
 
 void CacheEntry::add_data(const Buffer *b) {
@@ -32,4 +24,8 @@ void CacheEntry::add_data(const char *msg) {
 
 const Buffer *CacheEntry::data() const {
     return _data;
+}
+
+CacheEntry::CacheEntryState CacheEntry::get_state() const {
+    return _state;
 }

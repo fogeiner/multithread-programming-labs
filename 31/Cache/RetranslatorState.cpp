@@ -1,7 +1,11 @@
 #include "RetranslatorState.h"
 #include "../../libs/Logger/Logger.h"
 
-void RetranslatorState::client_finished(Retranslator *r) {
+void RetranslatorState::add_client(Retranslator *r, ClientListener *client_listener){
+    Logger::info("RetranslatorState unhandled add_client()");
+}
+
+void RetranslatorState::client_finished(Retranslator *r, ClientListener *client_listener) {
     Logger::info("RetranslatorState unhandled client_finished()");
 }
 

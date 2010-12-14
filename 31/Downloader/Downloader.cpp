@@ -35,7 +35,7 @@ bool Downloader::writable() const {
 }
 
 void Downloader::handle_read() {
-    if(_cancelled) _cancel();
+    if (_cancelled) _cancel();
 
     Logger::debug("Downloader::handle_read()");
     try {
@@ -45,14 +45,11 @@ void Downloader::handle_read() {
     } catch (RecvException &ex) {
         Logger::debug("Downloader::handle_write() RecvException: %s", ex.what());
         _download_retranslator->download_recv_failed();
-    } catch (ConnectException &ex) {
-        Logger::debug("Downloader::handle_read() ConnectException: %s", ex.what());
-        _download_retranslator->download_connect_failed();
     }
 }
 
 void Downloader::handle_write() {
-    if(_cancelled) _cancel();
+    if (_cancelled) _cancel();
 
     Logger::debug("Downloader::handle_write()");
     try {
@@ -60,9 +57,6 @@ void Downloader::handle_write() {
     } catch (SendException &ex) {
         Logger::debug("Downloader::handle_write() SendException: %s", ex.what());
         _download_retranslator->download_send_failed();
-    } catch (ConnectException &ex) {
-        Logger::debug("Downloader::handle_write() ConnectException: %s", ex.what());
-        _download_retranslator->download_connect_failed();
     }
 }
 
@@ -73,15 +67,21 @@ void Downloader::handle_close() {
 }
 
 void Downloader::handle_connect() {
-    if(_cancelled) _cancel();
+    if (_cancelled) _cancel();
     Logger::debug("Downloader::handle_connect()");
+    try {
+        validate_connect();
+    } catch (ConnectException &ex) {
+        Logger::debug("Downloader::handle_read() ConnectException: %s", ex.what());
+        _download_retranslator->download_connect_failed();
+    }
 }
 
 void Downloader::cancel() {
     _cancelled = true;
 }
 
-void Downloader::_cancel(){
+void Downloader::_cancel() {
     Logger::debug("Downloader::_cancel()");
     _download_retranslator->download_finished();
     close();

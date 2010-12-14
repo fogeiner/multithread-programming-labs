@@ -39,26 +39,53 @@ void Cache::init() {
     _cache[HTTP_SERVICE_UNAVAILABLE].cached();
 }
 
-/*
+ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener) {
+    _mutex.lock();
+    std::string key = request.url;
+    ClientRetranslator *return_retranslator;
 
-    // such entry is present
+    // if such entry is already present
     if (_cache.find(key) != _cache.end()) {
         CacheEntry ce = _cache[key];
+        // if CacheEntry is CACHED append CacheEntry's buffer
+        // to client buffer and setting finished flag;
+        if (ce.get_state() == CacheEntry::CACHED) {
+            client_listener->add_data(ce.data());
+            client_listener->finished();
 
-        assert(ce.is_dropped() == false);
+            return_retranslator = NULL;
 
-        // append data to client and set finished flag
-        if (ce.is_cached()) {
-            download_listener->add_data(key, ce.data());
-            download_listener->finished();
+            // if it's CACHING we can add that client to
+            // list of clients
+        } else if (ce.get_state() == CacheEntry::CACHING) {
+            client_listener->add_data(ce.data());
+            _retranslators[key]->add_client(client_listener);
+            _mutex.unlock();
+            return_retranslator = _retranslators[key];
+
+            // that is meant to never happen
         } else {
-            // append data to client and subscribe it to the new data
-            download_listener->add_data(key, ce.data());
-            _listeners[key].push_back(download_listener);
+            assert(false);
         }
-    } else {
-        // such entry is not present
-        assert(false);
-    }
 
- */
+        // if there's no such entry we should create one
+    } else {
+        _cache[key] = CacheEntry();
+        _retranslators[key] = new Retranslator(request, _cache[key]);
+        _retranslators[key]->add_client(client_listener);
+
+        _mutex.unlock();
+        return_retranslator = _retranslators[key];
+
+    }
+    _mutex.unlock();
+    return return_retranslator;
+}
+
+
+void Cache::drop(std::string key){
+    _mutex.lock();
+    _cache.erase(key);
+    _retranslators.erase(key);
+    _mutex.unlock();
+}

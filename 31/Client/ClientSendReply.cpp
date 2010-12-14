@@ -27,14 +27,18 @@ void ClientSendReply::handle_write(Client *c) {
         c->_out->drop_first(sent);
         c->_mutex.unlock();
 
-        if(c->_finished && c->_out->size() == 0){
-            c->_client_retranslator->client_finished();
+        if (c->_finished && c->_out->size() == 0) {
+            if (c->_client_retranslator != NULL) {
+                c->_client_retranslator->client_finished(c);
+            }
             c->close();
         }
-        
+
     } catch (SendException &ex) {
         Logger::debug("ClientSendReply::handle_write() SendException");
-        c->_client_retranslator->client_finished();
+        if (c->_client_retranslator != NULL) {
+            c->_client_retranslator->client_finished(c);
+        }
         c->close();
     }
 }
