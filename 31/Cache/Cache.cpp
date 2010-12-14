@@ -6,7 +6,8 @@ const int Cache::MAX_CACHE_ENTRY_SIZE = ProxyConfig::max_cache_entry_size;
 const int Cache::MAX_CACHE_SIZE = ProxyConfig::max_cache_size;
 
 std::map<std::string, CacheEntry> Cache::_cache;
-std::map<std::string, std::list<ClientListener*> > Cache::_listeners;
+
+std::map<std::string, Retranslator*> Cache::_retranslators;
 
 const std::string Cache::HTTP_NOT_IMPLEMENTED("HTTP_NOT_IMPLEMENTED");
 const std::string Cache::HTTP_BAD_REQUEST("HTTP_BAD_REQUEST");

@@ -37,15 +37,14 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/2105459482/ClientSendReply.o \
 	${OBJECTDIR}/_ext/461788971/Thread.o \
 	${OBJECTDIR}/_ext/2145794643/Cache.o \
-	${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o \
 	${OBJECTDIR}/_ext/2105459482/ClientGetRequest.o \
+	${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o \
 	${OBJECTDIR}/_ext/1159880425/SignalPipe.o \
 	${OBJECTDIR}/_ext/2145794643/CacheEntry.o \
 	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
 	${OBJECTDIR}/_ext/1472/config.o \
 	${OBJECTDIR}/_ext/413176034/HTTPURIParser.o \
 	${OBJECTDIR}/_ext/2113231069/TaskQueue.o \
-	${OBJECTDIR}/_ext/2083495164/DownloaderRecvResponse.o \
 	${OBJECTDIR}/_ext/238894769/Logger.o \
 	${OBJECTDIR}/_ext/1327237076/AsyncDispatcher.o \
 	${OBJECTDIR}/_ext/1005991299/Semaphore.o \
@@ -55,9 +54,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1472/main.o \
 	${OBJECTDIR}/_ext/2105459482/Client.o \
 	${OBJECTDIR}/_ext/2083495164/Downloader.o \
-	${OBJECTDIR}/_ext/2083495164/DownloaderSendRequestRecvResponse.o \
 	${OBJECTDIR}/_ext/2145794643/RetranslatorState.o \
-	${OBJECTDIR}/_ext/2083495164/DownloaderState.o \
 	${OBJECTDIR}/_ext/2145794643/Retranslator.o \
 	${OBJECTDIR}/_ext/1948483646/Mutex.o
 
@@ -106,15 +103,15 @@ ${OBJECTDIR}/_ext/2145794643/Cache.o: ../Cache/Cache.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/Cache.o ../Cache/Cache.cpp
 
-${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o: ../Cache/DirectRetranslator.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o ../Cache/DirectRetranslator.cpp
-
 ${OBJECTDIR}/_ext/2105459482/ClientGetRequest.o: ../Client/ClientGetRequest.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientGetRequest.o ../Client/ClientGetRequest.cpp
+
+${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o: ../Cache/DirectRetranslator.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o ../Cache/DirectRetranslator.cpp
 
 ${OBJECTDIR}/_ext/1159880425/SignalPipe.o: ../../libs/SignalPipe/SignalPipe.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1159880425
@@ -145,11 +142,6 @@ ${OBJECTDIR}/_ext/2113231069/TaskQueue.o: ../TaskQueue/TaskQueue.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/2113231069
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2113231069/TaskQueue.o ../TaskQueue/TaskQueue.cpp
-
-${OBJECTDIR}/_ext/2083495164/DownloaderRecvResponse.o: ../Downloader/DownloaderRecvResponse.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderRecvResponse.o ../Downloader/DownloaderRecvResponse.cpp
 
 ${OBJECTDIR}/_ext/238894769/Logger.o: ../../libs/Logger/Logger.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/238894769
@@ -196,20 +188,10 @@ ${OBJECTDIR}/_ext/2083495164/Downloader.o: ../Downloader/Downloader.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/Downloader.o ../Downloader/Downloader.cpp
 
-${OBJECTDIR}/_ext/2083495164/DownloaderSendRequestRecvResponse.o: ../Downloader/DownloaderSendRequestRecvResponse.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderSendRequestRecvResponse.o ../Downloader/DownloaderSendRequestRecvResponse.cpp
-
 ${OBJECTDIR}/_ext/2145794643/RetranslatorState.o: ../Cache/RetranslatorState.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/RetranslatorState.o ../Cache/RetranslatorState.cpp
-
-${OBJECTDIR}/_ext/2083495164/DownloaderState.o: ../Downloader/DownloaderState.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2083495164
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2083495164/DownloaderState.o ../Downloader/DownloaderState.cpp
 
 ${OBJECTDIR}/_ext/2145794643/Retranslator.o: ../Cache/Retranslator.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643

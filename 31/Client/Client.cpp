@@ -8,9 +8,9 @@ void Client::change_state(ClientState* s) {
 }
 
 Client::Client(TCPSocket *sock) : AsyncDispatcher(sock),
+_client_retranslator(NULL),
 _bytes_sent(0),
 _finished(false),
-_cancelled(false),
 _mutex(Mutex::ERRORCHECK_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
@@ -32,27 +32,20 @@ bool Client::writable() const {
 }
 
 void Client::handle_read() {
-
     this->_state->handle_read(this);
-
 }
 
 void Client::handle_write() {
-
     this->_state->handle_write(this);
-
 }
 
 void Client::handle_close() {
-
     this->_state->handle_close(this);
-
 }
 
-void Client::add_data(std::string key, const Buffer *b) {
+void Client::add_data(const Buffer *b) {
     _mutex.lock();
     Logger::debug("Client::add_data(%p)", b);
-    _key = key;
     _out->append(b);
     _mutex.unlock();
 }
@@ -62,15 +55,7 @@ void Client::finished() {
     _finished = true;
 }
 
-void Client::cancelled() {
-    Logger::debug("Client::cancelled()");
-    _cancelled = true;
-}
 
 bool Client::is_finished() const {
     return _finished;
-}
-
-bool Client::is_cancelled() const {
-    return _cancelled;
 }

@@ -28,7 +28,7 @@ void ClientSendReply::handle_write(Client *c) {
         c->_mutex.unlock();
 
         if(c->is_finished() && c->_out->size() == 0){
-            Cache::client_finished(c->_key, c);
+            c->_client_retranslator->client_finished();
             c->close();
         }
         

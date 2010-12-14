@@ -1,12 +1,12 @@
 #pragma once
 #include "CacheEntry.h"
-#include "../ClientListener.h"
+#include "Retranslator.h"
 #include "../config.h"
 #include "../BrokenUpHTTPRequest.h"
 #include "../../libs/Mutex/Mutex.h"
 #include <string>
 #include <map>
-#include <list>
+
 
 class Cache {
 private:
@@ -28,6 +28,7 @@ public:
     static void init();
 
     static Cache *instance();
+    static ClientRetranslator *request(const BrokenUpHTTPRequest &request, ClientListener *client_listener);
 };
 
 /*

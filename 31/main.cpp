@@ -30,7 +30,6 @@ int main(int argc, char *argv[]) {
     Cache::init();
     new Proxy();
 
-    // creating threads with TaskQueue::process
     std::vector<Thread> threads;
     try {
         for (int i = 0; i < threads_count; ++i) {

@@ -1,21 +1,21 @@
 #pragma once
 #include "../AsyncDispatcher/AsyncDispatcher.h"
-#include "DownloaderState.h"
-#include "../../libs/Buffer/VectorBuffer.h"
+#include "../DownloadListener.h"
+#include "../Cache/DownloadRetranslator.h"
+#include "../BrokenUpHTTPRequest.h"
 
-class Downloader : public AsyncDispatcher {
-    friend class DownloaderState;
-    friend class DownloaderSendRequestRecvResponse;
-    friend class DownloaderRecvResponse;
+class Buffer;
 
-    void change_state(DownloaderState* s);
-    DownloaderState *_state;
-
+class Downloader : public AsyncDispatcher, public DownloadListener {
+private:
+    DownloadRetranslator *_download_retranslator;
     Buffer *_in;
     Buffer *_out;
+    bool _cancelled;
+    void _cancel();
 public:
 
-    Downloader();
+    Downloader(BrokenUpHTTPRequest request, DownloadRetranslator *download_retranslator);
     ~Downloader();
     bool readable() const;
     bool writable() const;
@@ -23,4 +23,6 @@ public:
     void handle_write();
     void handle_close();
     void handle_connect();
+
+    void cancel();
 };
