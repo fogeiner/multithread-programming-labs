@@ -33,8 +33,8 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/2105459482/ClientSendReply.o \
 	${OBJECTDIR}/_ext/2105459482/ClientState.o \
+	${OBJECTDIR}/_ext/2105459482/ClientSendReply.o \
 	${OBJECTDIR}/_ext/461788971/Thread.o \
 	${OBJECTDIR}/_ext/2145794643/Cache.o \
 	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
@@ -82,15 +82,15 @@ dist/Debug/GNU-Linux-x86/proxy_prj: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/proxy_prj ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/_ext/2105459482/ClientSendReply.o: ../Client/ClientSendReply.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientSendReply.o ../Client/ClientSendReply.cpp
-
 ${OBJECTDIR}/_ext/2105459482/ClientState.o: ../Client/ClientState.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientState.o ../Client/ClientState.cpp
+
+${OBJECTDIR}/_ext/2105459482/ClientSendReply.o: ../Client/ClientSendReply.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2105459482/ClientSendReply.o ../Client/ClientSendReply.cpp
 
 ${OBJECTDIR}/_ext/461788971/Thread.o: ../../libs/Thread/Thread.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/461788971

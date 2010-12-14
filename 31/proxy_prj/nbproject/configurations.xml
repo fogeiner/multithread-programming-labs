@@ -53,7 +53,9 @@
         <itemPath>../Cache/Cache.h</itemPath>
         <itemPath>../Cache/CacheEntry.cpp</itemPath>
         <itemPath>../Cache/CacheEntry.h</itemPath>
+        <itemPath>ClientRetranslator.h</itemPath>
         <itemPath>../DownloadListener.h</itemPath>
+        <itemPath>Retranslator.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2"
                      displayName="Client"
