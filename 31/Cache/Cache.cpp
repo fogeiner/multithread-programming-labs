@@ -40,6 +40,8 @@ void Cache::init() {
 }
 
 ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener) {
+    Logger::debug("Cache::request(%s)", request.url.c_str());
+    
     _mutex.lock();
     std::string key = request.url;
     ClientRetranslator *return_retranslator;
@@ -59,7 +61,6 @@ ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *
         } else if (ce.get_state() == CacheEntry::CACHING) {
             client_listener->add_data(ce.data());
             _retranslators[key]->add_client(client_listener);
-            _mutex.unlock();
             return_retranslator = _retranslators[key];
 
             // that is meant to never happen
@@ -73,9 +74,7 @@ ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *
         _retranslators[key] = new Retranslator(request, _cache[key]);
         _retranslators[key]->add_client(client_listener);
 
-        _mutex.unlock();
         return_retranslator = _retranslators[key];
-
     }
     _mutex.unlock();
     return return_retranslator;

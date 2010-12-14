@@ -116,7 +116,7 @@ void Client::handle_read() {
 }
 
 void Client::handle_write() {
-    Logger::debug("Client::handle_write");
+    Logger::debug("Client::handle_write()");
     try {
         int sent = send(_out);
         _bytes_sent += sent;

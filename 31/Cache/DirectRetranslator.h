@@ -4,7 +4,7 @@
 #include "RetranslatorState.h"
 class DirectRetranslator : public RetranslatorState {
 public:
-    RetranslatorState *instance();
+    static RetranslatorState *instance();
     virtual void add_client(Retranslator *r, ClientListener *client_listener);
     virtual void client_finished(Retranslator *r, ClientListener *client_listener);
     virtual void download_add_data(Retranslator *r, const Buffer *b);

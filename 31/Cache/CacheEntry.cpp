@@ -14,6 +14,10 @@ void CacheEntry::cached() {
     _state = CACHED;
 }
 
+void CacheEntry::caching() {
+    _state = CACHING;
+}
+
 void CacheEntry::add_data(const Buffer *b) {
     _data ->append(b);
 }

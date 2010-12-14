@@ -10,6 +10,7 @@ _request(request),
 _ce(ce) {
     change_state(CacheRetranslator::instance());
     _download_listener = new Downloader(request, this);
+    ce.caching();
 }
 
 int Retranslator::clients_count() const{

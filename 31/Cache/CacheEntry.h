@@ -17,8 +17,7 @@ public:
     CacheEntry();
     void drop();
     void cached();
-    bool is_cached() const;
-    bool is_dropped() const;
+    void caching();
     void add_data(const Buffer *b);
     void add_data(const char *msg);
     const Buffer *data() const;
