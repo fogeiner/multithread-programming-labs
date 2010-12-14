@@ -22,12 +22,16 @@ void ClientSendReply::handle_write(Client *c) {
     try {
         int sent = c->send(c->_out);
         c->_bytes_sent += sent;
-        c->_out->drop_first(sent);
 
-        if(c->_out->size() == 0 && c->is_finished()){
+        c->_mutex.lock();
+        c->_out->drop_first(sent);
+        c->_mutex.unlock();
+
+        if(c->is_finished() && c->_out->size() == 0){
             Cache::client_finished(c->_key, c);
             c->close();
         }
+        
     } catch (SendException &ex) {
         Logger::debug("ClientSendReply::handle_write() SendException");
     }
