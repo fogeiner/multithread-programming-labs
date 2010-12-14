@@ -9,6 +9,7 @@ RetranslatorState *DirectRetranslator::instance() {
 
 void DirectRetranslator::add_client(Retranslator *r, ClientListener *client_listener){
     Logger::debug("DirectRetranslator::add_client()");
+    assert(false);
 }
 
 void DirectRetranslator::client_finished(Retranslator *r, ClientListener *client_listener) {
@@ -25,10 +26,12 @@ void DirectRetranslator::download_finished(Retranslator *r) {
 
 void DirectRetranslator::download_connect_failed(Retranslator *r) {
     Logger::debug("DirectRetranslator::download_connect_failed()");
+    assert(false);
 }
 
 void DirectRetranslator::download_send_failed(Retranslator *r) {
     Logger::debug("DirectRetranslator::download_send_failed()");
+    assert(false);
 }
 
 void DirectRetranslator::download_recv_failed(Retranslator *r) {

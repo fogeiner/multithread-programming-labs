@@ -15,6 +15,8 @@ private:
     std::list<ClientListener*> _clients;
     void change_state(RetranslatorState *state);
     void delete_client(ClientListener *client_listener);
+    int clients_count() const;
+    DownloadListener *_download_listener;
     bool _response_code_received;
     const BrokenUpHTTPRequest _request;
     CacheEntry &_ce;

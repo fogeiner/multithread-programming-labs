@@ -4,7 +4,7 @@
 #include "../AsyncDispatcher/AsyncDispatcher.h"
 #include "../../libs/Buffer/VectorBuffer.h"
 #include "../../libs/Mutex/Mutex.h"
-#include "ClientState.h"
+
 #include "../ClientListener.h"
 #include "../Cache/ClientRetranslator.h"
 class Client;
@@ -13,13 +13,10 @@ class Client : public AsyncDispatcher, public ClientListener {
 public:
 
 private:
-    friend class ClientState;
-    friend class ClientGetRequest;
-    friend class ClientSendReply;
-    void change_state(ClientState* s);
 
-    ClientState *_state;
     ClientRetranslator *_client_retranslator;
+    bool _got_request;
+    bool _no_reply;
     Buffer *_in;
     Buffer *_out;
     int _bytes_sent;
@@ -36,6 +33,6 @@ public:
     void handle_write();
     void handle_close();
     
-    void add_data(const Buffer *b);
-    void finished();
+    void add_data(const Buffer *b, bool no_reply = false);
+    void finished(bool no_reply = false);
 };

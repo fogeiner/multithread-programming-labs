@@ -2,12 +2,18 @@
 #include "RetranslatorState.h"
 #include "CacheRetranslator.h"
 #include "../Downloader/Downloader.h"
+
 Retranslator::Retranslator(const BrokenUpHTTPRequest request, CacheEntry &ce) :
+_download_listener(NULL),
 _response_code_received(false),
 _request(request),
 _ce(ce) {
     change_state(CacheRetranslator::instance());
-    new Downloader(request, this);
+    _download_listener = new Downloader(request, this);
+}
+
+int Retranslator::clients_count() const{
+    return _clients.size();
 }
 
 void Retranslator::delete_client(ClientListener *client_listener) {

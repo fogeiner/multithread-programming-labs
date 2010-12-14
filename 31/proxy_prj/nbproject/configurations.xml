@@ -76,12 +76,6 @@
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>../Client/Client.cpp</itemPath>
         <itemPath>../Client/Client.h</itemPath>
-        <itemPath>../Client/ClientGetRequest.cpp</itemPath>
-        <itemPath>../Client/ClientGetRequest.h</itemPath>
-        <itemPath>../Client/ClientSendReply.cpp</itemPath>
-        <itemPath>../Client/ClientSendReply.h</itemPath>
-        <itemPath>../Client/ClientState.cpp</itemPath>
-        <itemPath>../Client/ClientState.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3"
                      displayName="Downloader"
@@ -89,12 +83,6 @@
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>../Downloader/Downloader.cpp</itemPath>
         <itemPath>../Downloader/Downloader.h</itemPath>
-        <itemPath>../Downloader/DownloaderRecvResponse.cpp</itemPath>
-        <itemPath>../Downloader/DownloaderRecvResponse.h</itemPath>
-        <itemPath>../Downloader/DownloaderSendRequestRecvResponse.cpp</itemPath>
-        <itemPath>../Downloader/DownloaderSendRequestRecvResponse.h</itemPath>
-        <itemPath>../Downloader/DownloaderState.cpp</itemPath>
-        <itemPath>../Downloader/DownloaderState.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
                      displayName="libs"

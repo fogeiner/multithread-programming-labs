@@ -50,11 +50,10 @@ ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *
         // if CacheEntry is CACHED append CacheEntry's buffer
         // to client buffer and setting finished flag;
         if (ce.get_state() == CacheEntry::CACHED) {
-            client_listener->add_data(ce.data());
+            client_listener->add_data(ce.data(), true);
             client_listener->finished();
-
             return_retranslator = NULL;
-
+            
             // if it's CACHING we can add that client to
             // list of clients
         } else if (ce.get_state() == CacheEntry::CACHING) {
