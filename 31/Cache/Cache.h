@@ -22,6 +22,7 @@ public:
     static const std::string HTTP_NOT_IMPLEMENTED;
     static const std::string HTTP_BAD_REQUEST;
     static const std::string HTTP_INTERNAL_ERROR;
+    static const std::string HTTP_SERVICE_UNAVAILABLE;
 
     static void init();
 
