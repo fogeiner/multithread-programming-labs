@@ -1,5 +1,6 @@
 #pragma once
 #include "CacheEntry.h"
+#include "../ClientListener.h"
 #include "../config.h"
 #include "../BrokenUpHTTPRequest.h"
 #include "../../libs/Mutex/Mutex.h"
@@ -10,7 +11,7 @@
 class Cache {
 private:
     static std::map<std::string, CacheEntry> _cache;
-    static std::map<std::string, std::list<DownloadListener*> > _listeners;
+    static std::map<std::string, std::list<ClientListener*> > _listeners;
 
     static const int MAX_CACHE_SIZE;
     static const int MAX_CACHE_ENTRY_SIZE;
@@ -35,11 +36,11 @@ public:
     // in case cache size exceeds maximum cache size
     // new requests create cache entries that work only in non-caching mode
 
-    static void client_request(std::string key, DownloadListener *download_listener, BrokenUpHTTPRequest *request = NULL);
+    static void client_request(std::string key, ClientListener *download_listener, BrokenUpHTTPRequest *request = NULL);
 
     // in case during the send to client send failed
     // we gonna remove client from cache
-    static void client_finished(std::string key, DownloadListener *download_listener);
+    static void client_finished(std::string key, ClientListener *download_listener);
 
     // Downloader adds recv'ed info
     // should add to buffer and given it also to DownloadListeners

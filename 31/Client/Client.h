@@ -5,10 +5,10 @@
 #include "../../libs/Buffer/VectorBuffer.h"
 #include "../../libs/Mutex/Mutex.h"
 #include "ClientState.h"
-#include "../DownloadListener.h"
+#include "../ClientListener.h"
 class Client;
 
-class Client : public AsyncDispatcher, public DownloadListener {
+class Client : public AsyncDispatcher, public ClientListener {
 public:
 
 private:

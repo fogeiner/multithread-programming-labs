@@ -49,13 +49,23 @@
                      displayName="Cache"
                      projectFiles="true"
                      kind="SOURCE_LOGICAL_FOLDER">
+        <logicalFolder name="f1"
+                       displayName="Retranslator"
+                       projectFiles="true"
+                       kind="SOURCE_LOGICAL_FOLDER">
+          <itemPath>../Cache/CacheRetranslator.cpp</itemPath>
+          <itemPath>../Cache/CacheRetranslator.h</itemPath>
+          <itemPath>../Cache/ClientRetranslator.h</itemPath>
+          <itemPath>../Cache/DirectRetranslator.cpp</itemPath>
+          <itemPath>../Cache/DirectRetranslator.h</itemPath>
+          <itemPath>../Cache/DownloaderRetranslator.h</itemPath>
+          <itemPath>../Cache/Retranslator.h</itemPath>
+        </logicalFolder>
         <itemPath>../Cache/Cache.cpp</itemPath>
         <itemPath>../Cache/Cache.h</itemPath>
         <itemPath>../Cache/CacheEntry.cpp</itemPath>
         <itemPath>../Cache/CacheEntry.h</itemPath>
-        <itemPath>ClientRetranslator.h</itemPath>
         <itemPath>../DownloadListener.h</itemPath>
-        <itemPath>Retranslator.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2"
                      displayName="Client"

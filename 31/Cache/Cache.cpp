@@ -6,7 +6,7 @@ const int Cache::MAX_CACHE_ENTRY_SIZE = ProxyConfig::max_cache_entry_size;
 const int Cache::MAX_CACHE_SIZE = ProxyConfig::max_cache_size;
 
 std::map<std::string, CacheEntry> Cache::_cache;
-std::map<std::string, std::list<DownloadListener*> > Cache::_listeners;
+std::map<std::string, std::list<ClientListener*> > Cache::_listeners;
 
 const std::string Cache::HTTP_NOT_IMPLEMENTED("HTTP_NOT_IMPLEMENTED");
 const std::string Cache::HTTP_BAD_REQUEST("HTTP_BAD_REQUEST");
@@ -36,7 +36,7 @@ void Cache::init() {
     _mutex.unlock();
 }
 
-void Cache::client_request(std::string key, DownloadListener *download_listener, BrokenUpHTTPRequest *request) {
+void Cache::client_request(std::string key, ClientListener *download_listener, BrokenUpHTTPRequest *request) {
     _mutex.lock();
 
     // such entry is present
@@ -61,7 +61,7 @@ void Cache::client_request(std::string key, DownloadListener *download_listener,
     _mutex.unlock();
 }
 
-void Cache::client_finished(std::string key, DownloadListener *download_listener) {
+void Cache::client_finished(std::string key, ClientListener *download_listener) {
     _mutex.lock();
     assert(_cache.find(key) != _cache.end());
     _listeners[key].remove(download_listener);

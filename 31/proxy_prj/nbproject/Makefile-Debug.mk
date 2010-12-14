@@ -37,10 +37,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/2105459482/ClientSendReply.o \
 	${OBJECTDIR}/_ext/461788971/Thread.o \
 	${OBJECTDIR}/_ext/2145794643/Cache.o \
-	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
+	${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o \
 	${OBJECTDIR}/_ext/2105459482/ClientGetRequest.o \
 	${OBJECTDIR}/_ext/1159880425/SignalPipe.o \
 	${OBJECTDIR}/_ext/2145794643/CacheEntry.o \
+	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
 	${OBJECTDIR}/_ext/1472/config.o \
 	${OBJECTDIR}/_ext/413176034/HTTPURIParser.o \
 	${OBJECTDIR}/_ext/2113231069/TaskQueue.o \
@@ -49,6 +50,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1327237076/AsyncDispatcher.o \
 	${OBJECTDIR}/_ext/1005991299/Semaphore.o \
 	${OBJECTDIR}/_ext/2136648385/Proxy.o \
+	${OBJECTDIR}/_ext/2145794643/CacheRetranslator.o \
 	${OBJECTDIR}/_ext/2113231069/SelectTask.o \
 	${OBJECTDIR}/_ext/1472/main.o \
 	${OBJECTDIR}/_ext/2105459482/Client.o \
@@ -102,10 +104,10 @@ ${OBJECTDIR}/_ext/2145794643/Cache.o: ../Cache/Cache.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/Cache.o ../Cache/Cache.cpp
 
-${OBJECTDIR}/_ext/297160205/TCPSocket.o: ../../libs/TCPSocket/TCPSocket.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/297160205
+${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o: ../Cache/DirectRetranslator.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
 	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/297160205/TCPSocket.o ../../libs/TCPSocket/TCPSocket.cpp
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o ../Cache/DirectRetranslator.cpp
 
 ${OBJECTDIR}/_ext/2105459482/ClientGetRequest.o: ../Client/ClientGetRequest.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2105459482
@@ -121,6 +123,11 @@ ${OBJECTDIR}/_ext/2145794643/CacheEntry.o: ../Cache/CacheEntry.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/CacheEntry.o ../Cache/CacheEntry.cpp
+
+${OBJECTDIR}/_ext/297160205/TCPSocket.o: ../../libs/TCPSocket/TCPSocket.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/297160205
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/297160205/TCPSocket.o ../../libs/TCPSocket/TCPSocket.cpp
 
 ${OBJECTDIR}/_ext/1472/config.o: ../config.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472
@@ -161,6 +168,11 @@ ${OBJECTDIR}/_ext/2136648385/Proxy.o: ../Proxy/Proxy.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/2136648385
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2136648385/Proxy.o ../Proxy/Proxy.cpp
+
+${OBJECTDIR}/_ext/2145794643/CacheRetranslator.o: ../Cache/CacheRetranslator.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/CacheRetranslator.o ../Cache/CacheRetranslator.cpp
 
 ${OBJECTDIR}/_ext/2113231069/SelectTask.o: ../TaskQueue/SelectTask.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2113231069
