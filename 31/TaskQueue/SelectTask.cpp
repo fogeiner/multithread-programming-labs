@@ -26,6 +26,7 @@ void SelectTask::run() {
     for (std::list<AsyncDispatcher*>::iterator d = delete_list.begin();
             d != delete_list.end(); ++d) {
         AsyncDispatcher::_sockets.remove(*d);
+        
         delete *d;
     }
 

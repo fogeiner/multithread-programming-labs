@@ -33,6 +33,6 @@ public:
     void handle_write();
     void handle_close();
     
-    void add_data(const Buffer *b, bool no_reply = false);
+    void add_data(const Buffer *b);
     void finished(bool no_reply = false);
 };

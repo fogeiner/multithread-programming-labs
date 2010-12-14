@@ -108,7 +108,7 @@ void Client::handle_read() {
         }
     } catch (RecvException &ex) {
         Logger::error("Client::handle_read() RecvException");
-        if (!_no_reply && _client_retranslator == NULL) {
+        if (!_no_reply) {
             _client_retranslator->client_finished(this);
         }
         close();
@@ -121,12 +121,12 @@ void Client::handle_write() {
         int sent = send(_out);
         _bytes_sent += sent;
 
-        _mutex.lock();
+   //     _mutex.lock();
         _out->drop_first(sent);
-        _mutex.unlock();
+   //     _mutex.unlock();
 
         if (_finished && _out->size() == 0) {
-            if (!_no_reply && _client_retranslator != NULL) {
+            if (!_no_reply) {
                 _client_retranslator->client_finished(this);
             }
             close();
@@ -134,7 +134,7 @@ void Client::handle_write() {
 
     } catch (SendException &ex) {
         Logger::debug("Client::handle_write() SendException");
-        if (!_no_reply && _client_retranslator != NULL) {
+        if (!_no_reply) {
             _client_retranslator->client_finished(this);
         }
         close();
@@ -143,18 +143,17 @@ void Client::handle_write() {
 
 void Client::handle_close() {
     Logger::debug("Client::handle_close()");
-    if (!_no_reply && _client_retranslator != NULL) {
+    if (!_no_reply) {
         _client_retranslator->client_finished(this);
     }
     close();
 }
 
-void Client::add_data(const Buffer *b, bool no_reply) {
-    _mutex.lock();
-    _no_reply = no_reply;
+void Client::add_data(const Buffer *b) {
+  //  _mutex.lock();
     Logger::debug("Client::add_data(%p)", b);
     _out->append(b);
-    _mutex.unlock();
+ //   _mutex.unlock();
 }
 
 void Client::finished(bool no_reply) {

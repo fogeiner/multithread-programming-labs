@@ -21,7 +21,7 @@ private:
     const BrokenUpHTTPRequest _request;
     CacheEntry &_ce;
 public:
-    Retranslator(const BrokenUpHTTPRequest request, CacheEntry &cache_entry);
+    Retranslator(const BrokenUpHTTPRequest request, CacheEntry &cache_entry, ClientListener *initial_client_listener);
 
     virtual void add_client(ClientListener *client_listener);
     virtual void client_finished(ClientListener *client_listener);

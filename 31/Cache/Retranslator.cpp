@@ -3,12 +3,13 @@
 #include "CacheRetranslator.h"
 #include "../Downloader/Downloader.h"
 
-Retranslator::Retranslator(const BrokenUpHTTPRequest request, CacheEntry &ce) :
+Retranslator::Retranslator(const BrokenUpHTTPRequest request, CacheEntry &ce, ClientListener *client_listener) :
 _download_listener(NULL),
 _response_code_received(false),
 _request(request),
 _ce(ce) {
     change_state(CacheRetranslator::instance());
+    _clients.push_back(client_listener);
     _download_listener = new Downloader(request, this);
     ce.caching();
 }

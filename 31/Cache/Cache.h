@@ -1,4 +1,5 @@
 #pragma once
+
 #include "CacheEntry.h"
 #include "Retranslator.h"
 #include "../config.h"
@@ -9,14 +10,16 @@
 
 
 class Cache {
+    friend class CacheEntry;
     friend class CacheRetranslator;
 private:
     static std::map<std::string, CacheEntry> _cache;
     static std::map<std::string, Retranslator*> _retranslators;
 
     static Mutex _mutex;
-
+    static int _size;
     Cache();
+    static void bytes_added(int bytes);
     static void drop(std::string key);
 public:
     static const int MAX_CACHE_SIZE;
@@ -31,6 +34,9 @@ public:
 
     static Cache *instance();
     static ClientRetranslator *request(BrokenUpHTTPRequest request, ClientListener *client_listener);
+    static ClientRetranslator *request(std::string url, ClientListener *client_listener);
+    static int size();
+
 };
 
 /*

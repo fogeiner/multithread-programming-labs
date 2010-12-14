@@ -1,21 +1,43 @@
 #include "CacheEntry.h"
+#include "Cache.h"
 
 CacheEntry::CacheEntry() : _state(INIT) {
     _data = new VectorBuffer();
 }
 
-void CacheEntry::drop() {
+CacheEntry::CacheEntry(const CacheEntry &orig) {
+    _data = new VectorBuffer();
+    _data->append(orig._data);
+    _state = orig._state;
+}
+
+CacheEntry &CacheEntry::operator=(const CacheEntry &orig) {
+    if(this == &orig){
+        return *this;
+    }
+
+    _data = new VectorBuffer();
+    _data->append(orig._data);
+    _state = orig._state;
+}
+
+CacheEntry::~CacheEntry() {
     delete _data;
-    _data = NULL;
-    _state = DROPPED;
 }
 
 void CacheEntry::cached() {
+    if(_state != CACHED){
+        Cache::bytes_added(this->size());
+    }
     _state = CACHED;
 }
 
 void CacheEntry::caching() {
     _state = CACHING;
+}
+
+int CacheEntry::size() const {
+    return _data->size();
 }
 
 void CacheEntry::add_data(const Buffer *b) {

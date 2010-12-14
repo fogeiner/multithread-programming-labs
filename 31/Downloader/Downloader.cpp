@@ -15,10 +15,12 @@ _cancelled(false) {
 
     try {
         this->connect(request.host, request.port);
+        this->activate();
     } catch (DNSException &ex) {
         _download_retranslator->download_connect_failed();
+        close();
     }
-    this->activate();
+
 }
 
 Downloader::~Downloader() {
@@ -35,8 +37,10 @@ bool Downloader::writable() const {
 }
 
 void Downloader::handle_read() {
-    if (_cancelled) _cancel();
-
+    if (_cancelled) {
+        _cancel();
+        return;
+    }
     Logger::debug("Downloader::handle_read()");
     try {
         recv(_in);
@@ -45,35 +49,45 @@ void Downloader::handle_read() {
     } catch (RecvException &ex) {
         Logger::debug("Downloader::handle_write() RecvException: %s", ex.what());
         _download_retranslator->download_recv_failed();
+        close();
     }
 }
 
 void Downloader::handle_write() {
-    if (_cancelled) _cancel();
-
+    if (_cancelled) {
+        _cancel();
+        return;
+    }
     Logger::debug("Downloader::handle_write()");
     try {
         _out->drop_first(send(_out));
     } catch (SendException &ex) {
         Logger::debug("Downloader::handle_write() SendException: %s", ex.what());
         _download_retranslator->download_send_failed();
+        close();
     }
 }
 
 void Downloader::handle_close() {
+
     Logger::debug("Downloader::handle_close()");
-    _download_retranslator->download_finished();
+    if (_cancelled == false)
+        _download_retranslator->download_finished();
     close();
 }
 
 void Downloader::handle_connect() {
-    if (_cancelled) _cancel();
+    if (_cancelled) {
+        _cancel();
+        return;
+    }
     Logger::debug("Downloader::handle_connect()");
     try {
         validate_connect();
     } catch (ConnectException &ex) {
         Logger::debug("Downloader::handle_read() ConnectException: %s", ex.what());
         _download_retranslator->download_connect_failed();
+        close();
     }
 }
 
@@ -83,6 +97,5 @@ void Downloader::cancel() {
 
 void Downloader::_cancel() {
     Logger::debug("Downloader::_cancel()");
-    _download_retranslator->download_finished();
     close();
 }
