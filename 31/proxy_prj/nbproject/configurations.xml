@@ -196,7 +196,7 @@
           <commandLine>-pedantic -Wall -g</commandLine>
         </ccTool>
         <linkerTool>
-          <commandLine>-lpthread -lresolv -lnsl -lsocket</commandLine>
+          <commandLine>-lpthread -lresolv -lnsl -lsocket -lrt</commandLine>
         </linkerTool>
       </compileType>
     </conf>
