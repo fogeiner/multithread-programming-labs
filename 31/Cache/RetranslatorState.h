@@ -13,4 +13,3 @@ public:
     virtual void download_recv_failed(Retranslator *r);
     virtual ~RetranslatorState(){}
 };
-

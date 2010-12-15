@@ -35,10 +35,10 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/461788971/Thread.o \
 	${OBJECTDIR}/_ext/2145794643/Cache.o \
+	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
 	${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o \
 	${OBJECTDIR}/_ext/1159880425/SignalPipe.o \
 	${OBJECTDIR}/_ext/2145794643/CacheEntry.o \
-	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
 	${OBJECTDIR}/_ext/1472/config.o \
 	${OBJECTDIR}/_ext/413176034/HTTPURIParser.o \
 	${OBJECTDIR}/_ext/2113231069/TaskQueue.o \
@@ -60,8 +60,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-pedantic -Wall -g -lrt
-CXXFLAGS=-pedantic -Wall -g -lrt
+CCFLAGS=-pedantic -Wall -g
+CXXFLAGS=-pedantic -Wall -g
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -78,7 +78,7 @@ LDLIBSOPTIONS=
 
 dist/Debug/GNU-Linux-x86/proxy_prj: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/proxy_prj ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -lpthread -lresolv -lnsl -lsocket -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/proxy_prj ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/_ext/461788971/Thread.o: ../../libs/Thread/Thread.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/461788971
@@ -89,6 +89,11 @@ ${OBJECTDIR}/_ext/2145794643/Cache.o: ../Cache/Cache.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/Cache.o ../Cache/Cache.cpp
+
+${OBJECTDIR}/_ext/297160205/TCPSocket.o: ../../libs/TCPSocket/TCPSocket.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/297160205
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/297160205/TCPSocket.o ../../libs/TCPSocket/TCPSocket.cpp
 
 ${OBJECTDIR}/_ext/2145794643/DirectRetranslator.o: ../Cache/DirectRetranslator.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
@@ -104,11 +109,6 @@ ${OBJECTDIR}/_ext/2145794643/CacheEntry.o: ../Cache/CacheEntry.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/2145794643
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2145794643/CacheEntry.o ../Cache/CacheEntry.cpp
-
-${OBJECTDIR}/_ext/297160205/TCPSocket.o: ../../libs/TCPSocket/TCPSocket.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/297160205
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/297160205/TCPSocket.o ../../libs/TCPSocket/TCPSocket.cpp
 
 ${OBJECTDIR}/_ext/1472/config.o: ../config.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472

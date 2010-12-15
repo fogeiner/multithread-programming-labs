@@ -193,8 +193,11 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <commandLine>-pedantic -Wall -g -lrt</commandLine>
+          <commandLine>-pedantic -Wall -g</commandLine>
         </ccTool>
+        <linkerTool>
+          <commandLine>-lpthread -lresolv -lnsl -lsocket</commandLine>
+        </linkerTool>
       </compileType>
     </conf>
     <conf name="Release" type="1">
