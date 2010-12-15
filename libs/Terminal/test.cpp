@@ -45,6 +45,8 @@ int main(int argc, char *argv[]){
 
 	const char *b = &buf[0];
 
+
+	//total_rows = 24, total_cols = 80;
 	for(symbol_index = 0; symbol_index < buf.size(); ++symbol_index){
 		int s = b[symbol_index];
 
@@ -62,16 +64,17 @@ int main(int argc, char *argv[]){
 
 		fputc(s, stdout);		
 
-		if(cur_col == total_cols - 1){
+		if(cur_col > total_cols - 1){
 			cur_col = 0;
 			cur_row++;
+			fputc('\n', stdout);
 		}
 
 		if(cur_row == total_rows - 3){
 			fputs("\nSLEEP\n", stdout);
 			cur_col = 0;
 			cur_row = 0;
-			sleep(2);
+			sleep(1);
 		}
 
 	}
