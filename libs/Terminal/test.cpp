@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
 	assert(term_save_state() != -1);
 	assert(term_canon_off() != -1);
 
-	const int TAB_WIDTH = 4;
+	const int TAB_WIDTH = 8;
 	int cur_col = 0, cur_row = 0;
 	int symbol_index;
 
@@ -47,25 +47,30 @@ int main(int argc, char *argv[]){
 
 	for(symbol_index = 0; symbol_index < buf.size(); ++symbol_index){
 		int s = b[symbol_index];
+
 		if(s == '\n'){
 			cur_col = 0;
 			cur_row++;
-		} else if(s == '\t'){
+		} else if(s == '\t') {
 			int tab_position = TAB_WIDTH * ((cur_col + TAB_WIDTH)/TAB_WIDTH);
 			cur_col = tab_position;
-		} else if(isprint(s)){
+		} else if(isprint(s)) {
 			cur_col++;
+		} else {
+			continue;
 		}
 
-		fputc(b[symbol_index], stdout);		
+		fputc(s, stdout);		
 
 		if(cur_col == total_cols - 1){
 			cur_col = 0;
 			cur_row++;
 		}
 
-		if(cur_row == total_rows - 1){
-			cur_col = cur_row = 0;
+		if(cur_row == total_rows - 3){
+			fputs("\nSLEEP\n", stdout);
+			cur_col = 0;
+			cur_row = 0;
 			sleep(2);
 		}
 

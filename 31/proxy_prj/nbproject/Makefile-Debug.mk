@@ -78,7 +78,7 @@ LDLIBSOPTIONS=
 
 dist/Debug/GNU-Linux-x86/proxy_prj: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
-	${LINK.cc} -lpthread -lresolv -lnsl -lsocket -lrt -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/proxy_prj ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -lpthread -lrt -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/proxy_prj ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/_ext/461788971/Thread.o: ../../libs/Thread/Thread.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/461788971

@@ -9,6 +9,7 @@
 #include <sstream>
 
 Client::Client(TCPSocket *sock) : AsyncDispatcher(sock),
+_client_retranslator(NULL),
 _got_request(false),
 _no_reply(false),
 _bytes_sent(0),
@@ -121,9 +122,9 @@ void Client::handle_write() {
         int sent = send(_out);
         _bytes_sent += sent;
 
-   //     _mutex.lock();
+        //     _mutex.lock();
         _out->drop_first(sent);
-   //     _mutex.unlock();
+        //     _mutex.unlock();
 
         if (_finished && _out->size() == 0) {
             if (!_no_reply) {
@@ -143,17 +144,17 @@ void Client::handle_write() {
 
 void Client::handle_close() {
     Logger::debug("Client::handle_close()");
-    if (!_no_reply) {
+    if (!_no_reply && _client_retranslator != NULL) {
         _client_retranslator->client_finished(this);
     }
     close();
 }
 
 void Client::add_data(const Buffer *b) {
-  //  _mutex.lock();
+    //  _mutex.lock();
     Logger::debug("Client::add_data(%p)", b);
     _out->append(b);
- //   _mutex.unlock();
+    //   _mutex.unlock();
 }
 
 void Client::finished(bool no_reply) {

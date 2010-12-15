@@ -7,7 +7,7 @@ B = Buffer
 VB = VectorBuffer
 APP = bin
 OBJ = source.o $(L)/$(T)/$(T).o $(L)/$(S)/$(S).o $(L)/$(P)/$(P).o
-CXXFLAGS = -lpthread -lresolv -lnsl -lsocket
+CXXFLAGS = -lpthread
 CC = g++
 
 $(APP): $(OBJ) Makefile

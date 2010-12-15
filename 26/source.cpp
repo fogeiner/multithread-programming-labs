@@ -50,52 +50,42 @@ public:
 
 void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int rows, int cols) {
 
-    static const char msg_to_press_key[] = "Press space to scroll";
+    const char msg_to_press_key[] = "\nPress space to scroll\n";
     static int cur_row = 0, cur_col = 0;
     int next_tab_position;
-    const int DEFAULT_TAB_WIDTH = 8;
-    if (cur_row == -1) {
-        std::cout << '\n';
-    }
+    const int TAB_WIDTH = 4;
 
     while (!screen_full && !buf->is_empty()) {
         int size = buf->size();
         const char *b = buf->buf();
 
         int i;
-        for (i = 0; i < size; ++i) {
-            switch (b[i]) {
-                case '\t':
-                    next_tab_position = DEFAULT_TAB_WIDTH *
-                            ((cur_col + DEFAULT_TAB_WIDTH) / DEFAULT_TAB_WIDTH);
-                    if (next_tab_position < cols) {
-                        cur_col = next_tab_position;
-                        break;
-                    }
-                case '\n':
-                    cur_row++;
-                    cur_col = 0;
-                    break;
-                default:
-                    cur_col++;
-            }
+		for (i = 0; i < size; ++i) {
+			int s = b[i];
 
-            std::cout << b[i];
+			if(s == '\n'){
+				cur_col = 0;
+				cur_row++;
+			} else if(s == '\t'){
+				int tab_position = TAB_WIDTH * ((cur_col + TAB_WIDTH)/TAB_WIDTH);
+				cur_col = tab_position;
+			} else if(isprint(s)){
+				cur_col++;
+			}   
+
+			std::cout << b[i];
 
             if (cur_col == cols - 1) {
                 cur_col = 0;
                 cur_row++;
             }
 
-            if (cur_row == rows - 2) {
+            if (cur_row == rows - 3) {
                 print_screen_counter--;
 
-                std::cout << '\n';
                 std::cout << msg_to_press_key;
-                std::cout.flush();
 
-                cur_row = -1;
-                cur_col = 0;
+                cur_row = cur_col = 0;
 
                 if (print_screen_counter == 0) {
                     screen_full = true;
