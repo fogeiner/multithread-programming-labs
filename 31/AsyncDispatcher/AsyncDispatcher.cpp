@@ -41,6 +41,7 @@ AsyncDispatcher::AsyncDispatcher(const AsyncDispatcher &orig) {
 
 AsyncDispatcher& AsyncDispatcher::operator=(const AsyncDispatcher &orig) {
     assert(false);
+    return *this;
 }
 
 AsyncDispatcher::~AsyncDispatcher() {
