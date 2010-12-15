@@ -40,7 +40,7 @@ void Logger::warning(const char *fmt, ...){
 void Logger::error(const char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
-	log(ERR, fmt, ap);
+	log(ERROR, fmt, ap);
 	va_end(ap);
 }
 void Logger::critical(const char *fmt, ...){

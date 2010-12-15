@@ -21,7 +21,7 @@ class Logger {
 	enum level {EMERG, 
 		ALERT, 
 		CRIT, 
-		ERR, 
+		ERROR,
 		WARN, 
 		NOTICE, 
 		INFO, 
