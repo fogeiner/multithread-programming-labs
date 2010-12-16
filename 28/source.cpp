@@ -203,8 +203,7 @@ void *print_thread(void *conn_ptr){
 		const char msg_to_press_key[] = "Press space to scroll...";
 		bool can_print = true;
 		int cur_row = 0, cur_col = 0;
-		int next_tab_position;
-		const int DEFAULT_TAB_WIDTH = 8;
+		const int TAB_WIDTH = 8;
 
 
 		while(1) {
@@ -236,37 +235,34 @@ void *print_thread(void *conn_ptr){
 				int chunk_size = chunk->size();
 				const char *b = chunk->buf();
 
+
 				if(cur_row == -1){
 					putchar('\n');
+					cur_row = 0;
 				}
 
 				for (int i = 0; i < chunk_size; ++i) {
-					switch (b[i]) {
-						case '\t':
-							next_tab_position = DEFAULT_TAB_WIDTH * 
-								((cur_col + DEFAULT_TAB_WIDTH)/DEFAULT_TAB_WIDTH);
-							if (next_tab_position <= cols){
-								cur_col += next_tab_position;
-								break;
-							}
-
-						case '\n':
-							cur_row++;
-							cur_col = 0;
-							break;
-						default:
-							cur_col++;
+					int s = b[i];
+					if(s == '\n'){
+						cur_row++;
+						cur_col = 0;
+					} else if (s == '\t'){
+						cur_col = TAB_WIDTH * ((cur_col + TAB_WIDTH)/TAB_WIDTH);
+					} else if (isprint(s)){
+						cur_col++;
+					} else {
+						continue;
 					}
 
 					putchar(b[i]);
 
-					if (cur_col == cols - 1) {
+					if (cur_col > cols - 1) {
 						cur_col = 0;
 						cur_row++;
+						putchar('\n');
 					}
 
-					if (cur_row == rows - 2) {
-						putchar('\n');
+					if (cur_row == rows - 1) {
 						cur_row = -1;
 						cur_col = 0;
 						fputs(msg_to_press_key, stdout);
@@ -275,6 +271,7 @@ void *print_thread(void *conn_ptr){
 						if(print_screen_counter == 0){
 							can_print = false;
 						}
+						i++;
 						con->buf.put_back_front(chunk, i);
 						break;
 					}

@@ -3,7 +3,7 @@ OBJ = source.o ../libs/Terminal/Terminal.o ../libs/Mutex/Mutex.o
 T_HEADER = ../libs/Terminal/Terminal.h
 B_HEADER = ../libs/ChunkBuffer/Buffer.h
 M_HEADER = ../libs/Mutex/Mutex.h
-CXXFLAGS = -lpthread -lresolv -lnsl -lsocket
+CXXFLAGS = -lpthread 
 CC = g++
 
 $(APP): $(OBJ)
