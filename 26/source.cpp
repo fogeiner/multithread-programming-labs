@@ -55,16 +55,19 @@ void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int
     int next_tab_position;
     const int TAB_WIDTH = 8;
 	
-	if(cur_row == -1) {
-		std::cout << std::endl;
-	}
 
     while (!screen_full && !buf->is_empty()) {
+		if(cur_row == -1) {
+			cur_row = 0;
+			std::cout << std::endl;
+		}
+			
         int size = buf->size();
         const char *b = buf->buf();
 
         int i;
 		for (i = 0; i < size; ++i) {
+		
 			int s = b[i];
 
 			if(s == '\n'){
@@ -84,7 +87,6 @@ void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int
             if (cur_col > cols - 1) {
                 cur_col = 0;
                 cur_row++;
-				i++;
 				std::cout << std::endl;
             }
 
@@ -101,6 +103,7 @@ void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int
                     screen_full = true;
                 }
 
+				i++;
                 break;
             }
         }
