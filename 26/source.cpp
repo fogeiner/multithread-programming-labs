@@ -50,10 +50,14 @@ public:
 
 void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int rows, int cols) {
 
-    const char msg_to_press_key[] = "\nPress space to scroll\n";
+    const char msg_to_press_key[] = "Press space to scroll";
     static int cur_row = 0, cur_col = 0;
     int next_tab_position;
-    const int TAB_WIDTH = 4;
+    const int TAB_WIDTH = 8;
+	
+	if(cur_row == -1) {
+		std::cout << std::endl;
+	}
 
     while (!screen_full && !buf->is_empty()) {
         int size = buf->size();
@@ -71,21 +75,27 @@ void print_screen(Buffer *buf, bool &screen_full, int &print_screen_counter, int
 				cur_col = tab_position;
 			} else if(isprint(s)){
 				cur_col++;
-			}   
+			}  else {
+				continue;
+			}
 
 			std::cout << b[i];
 
-            if (cur_col == cols - 1) {
+            if (cur_col > cols - 1) {
                 cur_col = 0;
                 cur_row++;
+				i++;
+				std::cout << std::endl;
             }
 
-            if (cur_row == rows - 3) {
+            if (cur_row == rows - 1) {
                 print_screen_counter--;
 
                 std::cout << msg_to_press_key;
+				std::cout.flush();
 
-                cur_row = cur_col = 0;
+                cur_row = -1;
+				cur_col = 0;
 
                 if (print_screen_counter == 0) {
                     screen_full = true;
