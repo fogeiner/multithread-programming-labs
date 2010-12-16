@@ -59,6 +59,7 @@ void Client::handle_read() {
             std::string method;
             std::string host;
             std::string path;
+            std::string version;
             unsigned short port;
             std::string url;
 
@@ -86,6 +87,7 @@ void Client::handle_read() {
             if (word != "HTTP/1.1" && word != "HTTP/1.0") {
                 throw BadRequestException();
             }
+            version = word;
 
             request.erase(request.end() - 2, request.end());
             request.append("Connection: close\r\n\r\n");
@@ -93,7 +95,9 @@ void Client::handle_read() {
             Logger::debug("Client request: %s", ("http://" + host + path).c_str());
 
             //      Logger::debug((request + method + host + path + url).c_str());
-            BrokenUpHTTPRequest broken_up_request(url, request, method, host, path, port);
+            request.erase(0, request.find("\r\n"));
+            request.insert(0, (method + " " +path + " " + version));
+            BrokenUpHTTPRequest broken_up_request(url, request, method, host, path, version, port);
 
 
             _client_retranslator = Cache::request(broken_up_request, this);

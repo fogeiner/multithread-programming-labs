@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <strings.h>
 #include <signal.h>
+#include <ctype.h>
 
 #include <unistd.h>
 
@@ -111,8 +112,8 @@ int main(int argc, char *argv[]) {
 	const int STDIN_BUFSIZE = 128;
 	const int HTTP_DEFAULT_PORT = 80;
 	const int CLOSED_SOCKET = -1;
-	const char msg_to_press_key[] = "\nPress space to scroll...";
-	const int DEFAULT_TAB_WIDTH = 8;
+	const char msg_to_press_key[] = "Press space to scroll...";
+	const int TAB_WIDTH = 8;
 
 
 	int rows, cols;
@@ -239,45 +240,46 @@ int main(int argc, char *argv[]) {
 			}
 
 			if (stdout_writerq_done && !recv_Buf.is_empty() && can_print) {
+				count_to_flush = 0;
+				
+
 				stdout_writerq_done = false;
 				stdout_write_requested = true;
 				chunk = recv_Buf.front();
 				int chunk_size = chunk->size();
 				const char *buf = chunk->buf();
 
-				int i = 0;
-				int offset = 0;
+				int buf_index = 0;
+				int print_buf_index = 0;
+
 				if(cur_row == -1){
-					offset = 1;
-					print_buf[0] = '\n';
+					cur_row = 0;
+					print_buf[print_buf_index++] = '\n';
 				}
-				for (i = 0; i < chunk_size; ++i) {
-					switch (buf[i]) {
-						case '\t':
-							next_tab_position = DEFAULT_TAB_WIDTH *
-								((cur_col + DEFAULT_TAB_WIDTH) / DEFAULT_TAB_WIDTH);
-							if (next_tab_position <= cols) {
-								cur_col += next_tab_position;
-								break;
-							}
-						case '\n':
-							cur_row++;
-							cur_col = 0;
-							break;
-						default:
-							cur_col++;
-					}
+				for (buf_index = 0; buf_index < chunk_size; ++buf_index) {
+					count_to_flush++;
 
-					print_buf[i + offset] = buf[i];
-
-					if (cur_col == cols - 1) {
+					int s = buf[buf_index];
+					if(s == '\n'){
 						cur_col = 0;
 						cur_row++;
+					} else if(s == '\t'){
+						cur_col = TAB_WIDTH * ((cur_col + TAB_WIDTH)/TAB_WIDTH);
+					} else if(isprint(s)){
+						cur_col++;
+					} else {
+						continue;
 					}
 
-					count_to_flush = i + 1 + offset;
+					print_buf[print_buf_index++] = s;
 
-					if (cur_row == rows - 2) {
+					if (cur_col > cols - 1) {
+						cur_col = 0;
+						cur_row++;
+						print_buf[print_buf_index++] = '\n';
+					}
+
+					if (cur_row == rows - 1) {
 						screens_to_print_count--;
 
 						if (screens_to_print_count == 0) {
@@ -285,17 +287,18 @@ int main(int argc, char *argv[]) {
 						}
 
 
-						for (int j = 0; j < sizeof (msg_to_press_key) - 1; j++, i++) {
-							print_buf[i + offset] = msg_to_press_key[j];
+						for (int i = 0; i < sizeof (msg_to_press_key) - 1; i++) {
+							print_buf[print_buf_index++] = msg_to_press_key[i];
 						}
 
 						cur_col = 0;
 						cur_row = -1;
+						buf_index++;
 						break;
 					}
 				}
 
-				stdout_writerq.aio_nbytes = i + offset;
+				stdout_writerq.aio_nbytes = print_buf_index;
 				if (aio_write(&stdout_writerq) == -1) {
 					throw RuntimeException("aio_write");
 				}

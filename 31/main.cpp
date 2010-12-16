@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         threads_count = atoi(argv[1]);
     }
 
-    Logger::set_level(Logger::DEBUG);
+    Logger::set_level(Logger::INFO);
 
     TaskQueue *task_queue = new TaskQueue();
     task_queue->put(new SelectTask(task_queue));

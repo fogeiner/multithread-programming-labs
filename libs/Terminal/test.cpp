@@ -20,11 +20,6 @@ int main(int argc, char *argv[]){
 	FILE *f;
 	assert((f = fopen(argv[1], "rt")) != NULL);
 
-	if(f == NULL){
-		fprintf(stderr, "Couldn't open file %s\n", argv[1]);
-		return EXIT_FAILURE;
-	}
-
 	int symbol = fgetc(f);
 	do{
 		buf.push_back((char)symbol);
@@ -45,8 +40,7 @@ int main(int argc, char *argv[]){
 
 	const char *b = &buf[0];
 
-
-	//total_rows = 24, total_cols = 80;
+	total_rows = 24, total_cols = 80;
 	for(symbol_index = 0; symbol_index < buf.size(); ++symbol_index){
 		int s = b[symbol_index];
 

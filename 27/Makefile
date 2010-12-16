@@ -1,6 +1,6 @@
 APP = bin
 OBJ = source.o ../libs/Terminal/Terminal.o
-CXXFLAGS =  -lrt  -g -lresolv -lnsl -lsocket
+CXXFLAGS = -lrt
 CC = g++
 
 $(APP): $(OBJ)
