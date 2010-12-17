@@ -27,7 +27,6 @@ AsyncDispatcher::AsyncDispatcher(TCPSocket *socket) {
 
 AsyncDispatcher::AsyncDispatcher(int sock) {
     Logger::debug("AsyncDispatcher(int sock); adding to lst");
-
     this->_s = new TCPSocket(sock);
     this->_s->set_nonblocking(1);
     _sockets_mutex.lock();
