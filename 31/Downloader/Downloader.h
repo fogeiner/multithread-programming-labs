@@ -3,6 +3,7 @@
 #include "../DownloadListener.h"
 #include "../Cache/DownloadRetranslator.h"
 #include "../BrokenUpHTTPRequest.h"
+#include "../../libs/Mutex/Mutex.h"
 
 class Buffer;
 
@@ -12,6 +13,7 @@ private:
     Buffer *_in;
     Buffer *_out;
     bool _cancelled;
+    Mutex _mutex;
     void _cancel();
 public:
 

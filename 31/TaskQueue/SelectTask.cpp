@@ -15,7 +15,7 @@ void SelectTask::run() {
 
     AsyncDispatcher::_sockets_mutex.lock();
 
-    Logger::debug("SelectTask: deleting closed AsyncDispatchers");
+  //  Logger::debug("SelectTask: deleting closed AsyncDispatchers");
     std::list<AsyncDispatcher*> delete_list;
     for (std::list<AsyncDispatcher*>::iterator d = AsyncDispatcher::_sockets.begin();
             d != AsyncDispatcher::_sockets.end(); ++d) {
@@ -25,15 +25,16 @@ void SelectTask::run() {
     }
 
     for (std::list<AsyncDispatcher*>::iterator d = delete_list.begin();
-            d != delete_list.end(); ++d) {
+            d != delete_list.end();) {
         AsyncDispatcher::_sockets.remove(*d);
-
         delete *d;
+        d = delete_list.erase(d);
     }
 
     rlist.push_back(&AsyncDispatcher::_signal_pipe);
 
-    Logger::debug("SelectTask: adding sockets");
+  //  Logger::debug("SelectTask: adding sockets");
+
     for (std::list<AsyncDispatcher*>::iterator i = AsyncDispatcher::_sockets.begin();
             i != AsyncDispatcher::_sockets.end(); ++i) {
         AsyncDispatcher *s = *i;
@@ -53,7 +54,7 @@ void SelectTask::run() {
 
     AsyncDispatcher::_sockets_mutex.lock();
 
-    Logger::debug("SelectTask: rlist analysis");
+    //Logger::debug("SelectTask: rlist analysis");
     for (std::list<Selectable*>::iterator i = rlist.begin();
             i != rlist.end(); ++i) {
 
@@ -96,7 +97,7 @@ void SelectTask::run() {
         }
     }
 
-    Logger::debug("SelectTask: wlist analysis");
+    //Logger::debug("SelectTask: wlist analysis");
     for (std::list<Selectable*>::iterator i = wlist.begin();
             i != wlist.end(); ++i) {
         AsyncDispatcher *ad = NULL;
@@ -109,7 +110,7 @@ void SelectTask::run() {
         }
 
         assert(ad != NULL);
-        
+
         ad->deactivate();
 
         switch (ad->_s->get_state()) {

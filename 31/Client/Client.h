@@ -16,19 +16,22 @@ private:
 
     ClientRetranslator *_client_retranslator;
     bool _got_request;
-    bool _no_reply;
     Buffer *_in;
     Buffer *_out;
     int _bytes_sent;
     bool _finished;
 
-    Mutex _mutex;
+    mutable Mutex _mutex;
 public:
 
     Client(TCPSocket *sock);
     ~Client();
+
+    // no mutex
     bool readable() const;
+    // mutex ; accessing size of _out
     bool writable() const;
+    
     void handle_read();
     void handle_write();
     void handle_close();

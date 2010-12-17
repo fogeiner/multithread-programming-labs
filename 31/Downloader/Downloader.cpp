@@ -8,7 +8,8 @@
 
 Downloader::Downloader(BrokenUpHTTPRequest request, DownloadRetranslator *download_retranslator) :
 _download_retranslator(download_retranslator),
-_cancelled(false) {
+_cancelled(false),
+_mutex(Mutex::ERRORCHECK_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
     _out->append(request.request.c_str(), request.request.size());
@@ -20,7 +21,6 @@ _cancelled(false) {
         _download_retranslator->download_connect_failed();
         close();
     }
-
 }
 
 Downloader::~Downloader() {
@@ -37,7 +37,9 @@ bool Downloader::writable() const {
 }
 
 void Downloader::handle_read() {
+    _mutex.lock();
     if (_cancelled) {
+        _mutex.unlock();
         _cancel();
         return;
     }
@@ -51,10 +53,13 @@ void Downloader::handle_read() {
         _download_retranslator->download_recv_failed();
         close();
     }
+    _mutex.unlock();
 }
 
 void Downloader::handle_write() {
+    _mutex.lock();
     if (_cancelled) {
+        _mutex.unlock();
         _cancel();
         return;
     }
@@ -66,21 +71,27 @@ void Downloader::handle_write() {
         _download_retranslator->download_send_failed();
         close();
     }
+    _mutex.unlock();
 }
 
 void Downloader::handle_close() {
-
     Logger::debug("Downloader::handle_close()");
-    if (_cancelled == false)
+    _mutex.lock();
+    if (_cancelled == false) {
         _download_retranslator->download_finished();
+    }
+    _mutex.unlock();
     close();
 }
 
 void Downloader::handle_connect() {
+    _mutex.lock();
     if (_cancelled) {
+        _mutex.unlock();
         _cancel();
         return;
     }
+
     Logger::debug("Downloader::handle_connect()");
     try {
         validate_connect();
@@ -89,10 +100,13 @@ void Downloader::handle_connect() {
         _download_retranslator->download_connect_failed();
         close();
     }
+    _mutex.unlock();
 }
 
 void Downloader::cancel() {
+    _mutex.lock();
     _cancelled = true;
+    _mutex.unlock();
 }
 
 void Downloader::_cancel() {

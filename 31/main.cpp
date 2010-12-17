@@ -12,8 +12,24 @@
 #include <vector>
 #include <csignal>
 
+#include <execinfo.h>
+
+void handler() {
+    void *trace_elems[20];
+    int trace_elem_count(backtrace(trace_elems, 20));
+    char **stack_syms(backtrace_symbols(trace_elems, trace_elem_count));
+    for (int i = 0; i < trace_elem_count; ++i) {
+        Logger::emergent(stack_syms[i]);
+    }
+    free(stack_syms);
+
+    exit(1);
+}
+
 int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
+    std::set_terminate(handler);
+
     int threads_count;
     std::vector<Thread> threads;
 

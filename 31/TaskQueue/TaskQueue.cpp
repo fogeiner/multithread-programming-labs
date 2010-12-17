@@ -61,13 +61,14 @@ void *TaskQueue::process(void *task_queue_ptr) {
     TaskQueue *task_queue = static_cast<TaskQueue*> (task_queue_ptr);
     while (1) {
         Task *t = task_queue->get();
-        Logger::debug("TaskQueue::process() got task");
+      //  Logger::debug("TaskQueue::process() got task");
         try {
             t->run();
         } catch (std::exception &ex) {
             Logger::error("TaskQueue::process() %s", ex.what());
+            throw;
         }
-        Logger::debug("TaskQueue::process() finished task");
+        //Logger::debug("TaskQueue::process() finished task");
         delete t;
     }
     return NULL;

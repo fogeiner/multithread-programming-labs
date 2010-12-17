@@ -7,19 +7,22 @@ Retranslator::Retranslator(const BrokenUpHTTPRequest request, CacheEntry &ce, Cl
 _download_listener(NULL),
 _response_code_received(false),
 _request(request),
-_ce(ce) {
+_ce(ce),
+_mutex(Mutex::ERRORCHECK_MUTEX) {
     change_state(CacheRetranslator::instance());
     _clients.push_back(client_listener);
     _download_listener = new Downloader(request, this);
     ce.caching();
 }
 
-int Retranslator::clients_count() const{
+int Retranslator::clients_count() const {
     return _clients.size();
 }
 
 void Retranslator::delete_client(ClientListener *client_listener) {
+    _mutex.lock();
     _clients.remove(client_listener);
+    _mutex.unlock();
 }
 
 void Retranslator::add_client(ClientListener *client_listener) {

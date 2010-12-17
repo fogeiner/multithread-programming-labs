@@ -1,4 +1,5 @@
 #pragma once
+#include "../../libs/Mutex/Mutex.h"
 #include "../ClientListener.h"
 #include "../BrokenUpHTTPRequest.h"
 #include "CacheEntry.h"
@@ -20,6 +21,7 @@ private:
     bool _response_code_received;
     const BrokenUpHTTPRequest _request;
     CacheEntry &_ce;
+    Mutex _mutex;
 public:
     Retranslator(const BrokenUpHTTPRequest request, CacheEntry &cache_entry, ClientListener *initial_client_listener);
 

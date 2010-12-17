@@ -27,6 +27,7 @@ public:
 class Mutex {
     friend class CondVar;
 private:
+    int _locks_count;
     pthread_mutex_t _mid;
     pthread_mutexattr_t _mattrid;
 
@@ -53,5 +54,6 @@ public:
     void lock();
     void unlock();
     bool trylock();
+    int locks_count() const;
 
 };

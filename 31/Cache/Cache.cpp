@@ -20,7 +20,7 @@ const std::string Cache::HTTP_INTERNAL_ERROR("HTTP_INTERNAL_ERROR");
 // couldn't connect
 const std::string Cache::HTTP_SERVICE_UNAVAILABLE("HTTP_SERVICE_UNAVAILABLE");
 
-Mutex Cache::_mutex(Mutex::ERRORCHECK_MUTEX);
+Mutex Cache::_mutex(Mutex::RECURSIVE_MUTEX);
 
 void Cache::init() {
     Cache::_size = 0;
@@ -50,7 +50,7 @@ ClientRetranslator *Cache::request(std::string url, ClientListener *client_liste
 ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener) {
     Logger::debug("Cache::request(%s)", request.url.c_str());
 
-    //   _mutex.lock();
+    _mutex.lock();
     std::string key = request.url;
     ClientRetranslator *return_retranslator;
 
@@ -86,21 +86,23 @@ ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *
 
         return_retranslator = _retranslators[key];
     }
-    //    _mutex.unlock();
+    _mutex.unlock();
     return return_retranslator;
 }
 
 void Cache::drop(std::string key) {
-    //   _mutex.lock();
+    _mutex.lock();
     Logger::info("Cache DROP %s", key.c_str());
     Cache::_size -= _cache[key].size();
     _cache.erase(key);
     _retranslators.erase(key);
-    //  _mutex.unlock();
+    _mutex.unlock();
 }
 
 void Cache::bytes_added(int bytes){
+    _mutex.lock();
     Cache::_size += bytes;
+    _mutex.unlock();
 }
 
 int Cache::size(){
