@@ -69,7 +69,7 @@ ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *
             // list of clients
         } else if (ce.get_state() == CacheEntry::CACHING) {
             Logger::info("Cache CACHING %s", key.c_str());
-            client_listener->add_data(ce.data());
+    //        client_listener->add_data(ce.data());
             _retranslators[key]->add_client(client_listener);
             return_retranslator = _retranslators[key];
 
