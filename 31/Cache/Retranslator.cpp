@@ -8,7 +8,7 @@ _download_listener(NULL),
 _response_code_received(false),
 _request(request),
 _ce(ce),
-_mutex(Mutex::ERRORCHECK_MUTEX) {
+_mutex(Mutex::RECURSIVE_MUTEX) {
     change_state(CacheRetranslator::instance());
     _clients.push_back(client_listener);
     _download_listener = new Downloader(request, this);

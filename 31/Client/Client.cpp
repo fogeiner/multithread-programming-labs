@@ -30,6 +30,7 @@ bool Client::readable() const {
 }
 
 bool Client::writable() const {
+
     if (_got_request == false) {
         return false;
     }
@@ -105,19 +106,21 @@ void Client::handle_read() {
             BrokenUpHTTPRequest broken_up_request(url, request, method, host, path, version, port);
 
             // XXX
-            _client_retranslator = Cache::request(broken_up_request, this);
+            Cache::request(broken_up_request, this);
+
         } catch (NotImlementedException &ex) {
             Logger::error("Client::handle_read() NotImplementedException");
             BrokenUpHTTPRequest broken_up_request(Cache::HTTP_NOT_IMPLEMENTED);
 
             // XXX
-            _client_retranslator = Cache::request(broken_up_request, this);
+            Cache::request(broken_up_request, this);
+
         } catch (BadRequestException &ex) {
             Logger::error("Client::handle_read() BadRequestException");
             BrokenUpHTTPRequest broken_up_request(Cache::HTTP_BAD_REQUEST);
 
             // XXX
-            _client_retranslator = Cache::request(broken_up_request, this);
+            Cache::request(broken_up_request, this);
         }
     } catch (RecvException &ex) {
         Logger::error("Client::handle_read() RecvException");
@@ -133,30 +136,32 @@ void Client::handle_read() {
 
 void Client::handle_write() {
     Logger::debug("Client::handle_write()");
-    _mutex.lock();
 
     try {
-
+        _mutex.lock();
         int sent = send(_out);
         _bytes_sent += sent;
 
         _out->drop_first(sent);
-
         if (_finished && (_out->size() == 0)) {
             if (_client_retranslator != NULL) {
                 _client_retranslator->client_finished(this);
             }
+            _mutex.unlock();
             close();
+            return;
         }
-
+        _mutex.unlock();
     } catch (SendException &ex) {
         Logger::debug("Client::handle_write() SendException");
+        
         if (_client_retranslator != NULL) {
             _client_retranslator->client_finished(this);
         }
+        _mutex.unlock();
         close();
     }
-    _mutex.unlock();
+
 }
 
 void Client::handle_close() {
@@ -171,15 +176,30 @@ void Client::handle_close() {
 
 void Client::add_data(const Buffer *b) {
     _mutex.lock();
+    if (_finished) {
+        _mutex.unlock();
+        return;
+    }
     Logger::debug("Client::add_data(%p)", b);
     _out->append(b);
     _mutex.unlock();
 }
 
-void Client::finished(bool no_reply) {
+void Client::finished() {
     Logger::debug("Client::finished()");
     _mutex.lock();
-    _client_retranslator = NULL;
+    this->set_retranslator(NULL);
     _finished = true;
+    _mutex.unlock();
+}
+
+void Client::set_retranslator(ClientRetranslator* client_retranslator) {
+    Logger::debug("Client::set_retranslator(%p)", client_retranslator);
+    _mutex.lock();
+    if (!_finished) {
+        _client_retranslator = client_retranslator;
+    } else {
+        Logger::debug("Client::set_retranslator() ignoring because _finished");
+    }
     _mutex.unlock();
 }

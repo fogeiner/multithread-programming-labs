@@ -33,8 +33,8 @@ public:
     static void init();
 
     static Cache *instance();
-    static ClientRetranslator *request(BrokenUpHTTPRequest request, ClientListener *client_listener);
-    static ClientRetranslator *request(std::string url, ClientListener *client_listener);
+    static void request(BrokenUpHTTPRequest request, ClientListener *client_listener);
+    static void request(std::string url, ClientListener *client_listener);
     static int size();
 
 };

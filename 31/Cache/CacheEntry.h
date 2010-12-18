@@ -1,6 +1,7 @@
 #pragma once
 #include "../DownloadListener.h"
 #include "../../libs/Buffer/VectorBuffer.h"
+#include "../../libs/Mutex/Mutex.h"
 #include <list>
 
 class CacheEntry {
@@ -25,6 +26,9 @@ public:
     void add_data(const Buffer *b);
     void add_data(const char *msg);
     const Buffer *data() const;
+
+    void lock();
+    void unlock();
 
     CacheEntryState get_state() const;
 };

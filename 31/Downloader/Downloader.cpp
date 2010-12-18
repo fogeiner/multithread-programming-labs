@@ -9,7 +9,7 @@
 Downloader::Downloader(BrokenUpHTTPRequest request, DownloadRetranslator *download_retranslator) :
 _download_retranslator(download_retranslator),
 _cancelled(false),
-_mutex(Mutex::ERRORCHECK_MUTEX) {
+_mutex(Mutex::RECURSIVE_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
     _out->append(request.request.c_str(), request.request.size());

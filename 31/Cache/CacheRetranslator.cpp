@@ -21,16 +21,17 @@ void CacheRetranslator::add_client(Retranslator *r, ClientListener *client_liste
 }
 
 void CacheRetranslator::client_finished(Retranslator *r, ClientListener *client_listener) {
-    Logger::debug("CacheRetranslator::client_finished()");
-    r->_mutex.lock();
+    Logger::debug("CacheRetranslator::client_finished() start");
     r->delete_client(client_listener);
-    r->_mutex.unlock();
+    Logger::debug("CacheRetranslator::client_finished() end");
 }
 
 void CacheRetranslator::download_add_data(Retranslator *r, const Buffer *b) {
     Logger::debug("CacheRetranslator::download_add_data()");
     r->_mutex.lock();
     if (r->clients_count() == 0) {
+            Logger::debug("CacheRetranslator::download_add_data() no clients; cancelling download");
+
         r->_download_listener->cancel();
 
         if (r->_ce.get_state() != CacheEntry::CACHED) {
@@ -91,6 +92,7 @@ void CacheRetranslator::download_add_data(Retranslator *r, const Buffer *b) {
         r->_mutex.unlock();
         return;
     }
+
     r->_mutex.unlock();
 }
 
@@ -101,7 +103,7 @@ void CacheRetranslator::download_finished(Retranslator *r) {
     Logger::info("Cache DONE %s", r->_request.url.c_str());
     for (std::list<ClientListener*>::iterator i = r->_clients.begin();
             i != r->_clients.end(); ++i) {
-        (*i)->finished(true);
+        (*i)->finished();
     }
     r->_mutex.unlock();
     delete r;
@@ -147,7 +149,7 @@ void CacheRetranslator::download_recv_failed(Retranslator *r) {
     Cache::drop(r->_request.url);
     for (std::list<ClientListener*>::iterator i = r->_clients.begin();
             i != r->_clients.end(); ++i) {
-        (*i)->finished(true);
+        (*i)->finished();
     }
     r->_mutex.unlock();
     delete r;

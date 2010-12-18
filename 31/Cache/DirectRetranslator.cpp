@@ -35,7 +35,7 @@ void DirectRetranslator::download_finished(Retranslator *r) {
     Logger::debug("DirectRetranslator::download_finished()");
     for (std::list<ClientListener*>::iterator i = r->_clients.begin();
             i != r->_clients.end(); ++i) {
-        (*i)->finished(true);
+        (*i)->finished();
     }
     delete r;
 }
@@ -54,7 +54,7 @@ void DirectRetranslator::download_recv_failed(Retranslator *r) {
     Logger::debug("DirectRetranslator::download_recv_failed()");
     for (std::list<ClientListener*>::iterator i = r->_clients.begin();
             i != r->_clients.end(); ++i) {
-        (*i)->finished(true);
+        (*i)->finished();
     }
     delete r;
 }

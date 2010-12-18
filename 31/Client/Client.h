@@ -35,7 +35,8 @@ public:
     void handle_read();
     void handle_write();
     void handle_close();
-    
+
+    void set_retranslator(ClientRetranslator *client_retranslator);
     void add_data(const Buffer *b);
-    void finished(bool no_reply = false);
+    void finished();
 };

@@ -42,12 +42,12 @@ void Cache::init() {
     _cache[HTTP_SERVICE_UNAVAILABLE].cached();
 }
 
-ClientRetranslator *Cache::request(std::string url, ClientListener *client_listener) {
+void Cache::request(std::string url, ClientListener *client_listener) {
     
     return Cache::request(BrokenUpHTTPRequest(url), client_listener);
 }
 
-ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener) {
+void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener) {
     Logger::debug("Cache::request(%s)", request.url.c_str());
 
     _mutex.lock();
@@ -62,14 +62,13 @@ ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *
         if (ce.get_state() == CacheEntry::CACHED) {
             Logger::info("Cache HIT %s", key.c_str());
             client_listener->add_data(ce.data());
-            client_listener->finished(true);
+            client_listener->finished();
             return_retranslator = NULL;
             
             // if it's CACHING we can add that client to
             // list of clients
         } else if (ce.get_state() == CacheEntry::CACHING) {
             Logger::info("Cache CACHING %s", key.c_str());
-            client_listener->add_data(ce.data());
             _retranslators[key]->add_client(client_listener);
             return_retranslator = _retranslators[key];
 
@@ -87,7 +86,7 @@ ClientRetranslator *Cache::request(BrokenUpHTTPRequest request, ClientListener *
         return_retranslator = _retranslators[key];
     }
     _mutex.unlock();
-    return return_retranslator;
+    client_listener->set_retranslator(return_retranslator);
 }
 
 void Cache::drop(std::string key) {
