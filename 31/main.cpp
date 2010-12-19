@@ -14,9 +14,9 @@
 
 #include <execinfo.h>
 
-void handler() {
-    void *trace_elems[20];
-    int trace_elem_count(backtrace(trace_elems, 20));
+void term_handler() {
+    void *trace_elems[50];
+    int trace_elem_count(backtrace(trace_elems, 50));
     char **stack_syms(backtrace_symbols(trace_elems, trace_elem_count));
     for (int i = 0; i < trace_elem_count; ++i) {
         Logger::emergent(stack_syms[i]);
@@ -26,9 +26,14 @@ void handler() {
     exit(1);
 }
 
+void sig_handler(int sig) {
+    term_handler();
+}
+
 int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
-    std::set_terminate(handler);
+    std::set_terminate(term_handler);
+    signal(SIGSEGV, sig_handler);
 
     int threads_count;
     std::vector<Thread> threads;
@@ -52,6 +57,7 @@ int main(int argc, char *argv[]) {
             threads.push_back(Thread(TaskQueue::process, task_queue));
             threads[i].run();
         }
+        //TaskQueue::process(task_queue);
     } catch (ThreadException &ex) {
         Logger::error("ThreadException: %s", ex.what());
     } catch (BindException &ex) {

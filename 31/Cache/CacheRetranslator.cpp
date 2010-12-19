@@ -84,7 +84,7 @@ void CacheRetranslator::download_add_data(Retranslator *r, const Buffer *b) {
         }
     }
 
-    if (r->_ce.size() > ProxyConfig::max_cache_entry_size) {
+    if (r->_ce.size() > Cache::MAX_CACHE_ENTRY_SIZE) {
         Logger::debug("CacheRetranslator::download_add_data() Switching to DirectRetranslator due to CacheEntry overflow");
         Logger::info("Dropping: cache entry max size exceeded");
         Cache::drop(r->_request.url);

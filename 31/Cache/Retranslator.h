@@ -32,5 +32,37 @@ public:
     virtual void download_connect_failed();
     virtual void download_send_failed();
     virtual void download_recv_failed();
-    virtual ~Retranslator(){}
+
+    virtual ~Retranslator() {
+    }
+};
+
+class DummyRetranslator : public ClientRetranslator, public DownloadRetranslator {
+public:
+
+    static DummyRetranslator *instance() {
+        static DummyRetranslator dr;
+        return &dr;
+    }
+
+    void add_client(ClientListener *client_listener) {
+    }
+
+    void client_finished(ClientListener *client_listener) {
+    }
+
+    void download_add_data(const Buffer *b) {
+    }
+
+    void download_finished() {
+    }
+
+    void download_connect_failed() {
+    }
+
+    void download_send_failed() {
+    }
+
+    void download_recv_failed() {
+    }
 };

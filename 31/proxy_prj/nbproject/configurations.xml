@@ -68,6 +68,7 @@
         <itemPath>../Cache/Cache.h</itemPath>
         <itemPath>../Cache/CacheEntry.cpp</itemPath>
         <itemPath>../Cache/CacheEntry.h</itemPath>
+        <itemPath>../ClientListener.h</itemPath>
         <itemPath>../DownloadListener.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2"

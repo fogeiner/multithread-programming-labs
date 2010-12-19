@@ -43,17 +43,18 @@ void Cache::init() {
 }
 
 void Cache::request(std::string url, ClientListener *client_listener) {
-    
+
     return Cache::request(BrokenUpHTTPRequest(url), client_listener);
 }
 
 void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener) {
     Logger::debug("Cache::request(%s)", request.url.c_str());
 
-    _mutex.lock();
     std::string key = request.url;
-    ClientRetranslator *return_retranslator;
+    ClientRetranslator *retranslator;
 
+    _mutex.lock();
+    
     // if such entry is already present
     if (_cache.find(key) != _cache.end()) {
         CacheEntry ce = _cache[key];
@@ -63,14 +64,15 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
             Logger::info("Cache HIT %s", key.c_str());
             client_listener->add_data(ce.data());
             client_listener->finished();
-            return_retranslator = NULL;
-            
+            _mutex.unlock();
+            return;
+
             // if it's CACHING we can add that client to
             // list of clients
         } else if (ce.get_state() == CacheEntry::CACHING) {
             Logger::info("Cache CACHING %s", key.c_str());
             _retranslators[key]->add_client(client_listener);
-            return_retranslator = _retranslators[key];
+            retranslator = _retranslators[key];
 
             // that is meant to never happen
         } else {
@@ -82,11 +84,12 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
         Logger::info("Cache NEW %s", key.c_str());
         _cache[key] = CacheEntry();
         _retranslators[key] = new Retranslator(request, _cache[key], client_listener);
+        retranslator = _retranslators[key];
 
-        return_retranslator = _retranslators[key];
     }
+
+    client_listener->set_retranslator(retranslator);
     _mutex.unlock();
-    client_listener->set_retranslator(return_retranslator);
 }
 
 void Cache::drop(std::string key) {
@@ -98,12 +101,12 @@ void Cache::drop(std::string key) {
     _mutex.unlock();
 }
 
-void Cache::bytes_added(int bytes){
+void Cache::bytes_added(int bytes) {
     _mutex.lock();
     Cache::_size += bytes;
     _mutex.unlock();
 }
 
-int Cache::size(){
+int Cache::size() {
     return Cache::_size;
 }
