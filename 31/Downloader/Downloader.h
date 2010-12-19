@@ -14,7 +14,6 @@ private:
     Buffer *_out;
     bool _cancelled;
     Mutex _mutex;
-    void _cancel();
 public:
 
     Downloader(BrokenUpHTTPRequest request, DownloadRetranslator *download_retranslator);

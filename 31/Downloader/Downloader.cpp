@@ -19,7 +19,6 @@ _mutex(Mutex::RECURSIVE_MUTEX) {
         this->activate();
     } catch (DNSException &ex) {
         _download_retranslator->download_connect_failed();
-        _download_retranslator = DummyRetranslator::instance();
         close();
     }
 }
@@ -41,7 +40,7 @@ bool Downloader::writable() const {
 
 void Downloader::handle_read() {
     if (_cancelled) {
-        _cancel();
+		close();
         return;
     }
     Logger::debug("Downloader::handle_read()");
@@ -52,14 +51,13 @@ void Downloader::handle_read() {
     } catch (RecvException &ex) {
         Logger::debug("Downloader::handle_write() RecvException: %s", ex.what());
         _download_retranslator->download_recv_failed();
-        _download_retranslator = DummyRetranslator::instance();
         close();
     }
 }
 
 void Downloader::handle_write() {
     if (_cancelled) {
-        _cancel();
+		close();
         return;
     }
     Logger::debug("Downloader::handle_write()");
@@ -69,7 +67,6 @@ void Downloader::handle_write() {
     } catch (SendException &ex) {
         Logger::debug("Downloader::handle_write() SendException: %s", ex.what());
         _download_retranslator->download_send_failed();
-        _download_retranslator = DummyRetranslator::instance();
         close();
     }
 }
@@ -77,13 +74,12 @@ void Downloader::handle_write() {
 void Downloader::handle_close() {
     Logger::debug("Downloader::handle_close()");
     _download_retranslator->download_finished();
-    _download_retranslator = DummyRetranslator::instance();
     close();
 }
 
 void Downloader::handle_connect() {
     if (_cancelled) {
-        _cancel();
+		close();
         return;
     }
 
@@ -93,7 +89,6 @@ void Downloader::handle_connect() {
     } catch (ConnectException &ex) {
         Logger::debug("Downloader::handle_read() ConnectException: %s", ex.what());
         _download_retranslator->download_connect_failed();
-        _download_retranslator = DummyRetranslator::instance();
         close();
     }
 }
@@ -103,8 +98,3 @@ void Downloader::cancel() {
     _cancelled = true;
 }
 
-void Downloader::_cancel() {
-    Logger::debug("Downloader::_cancel()");
-    close();
-    _download_retranslator = DummyRetranslator::instance();
-}

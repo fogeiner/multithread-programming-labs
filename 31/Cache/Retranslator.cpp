@@ -9,7 +9,7 @@ _response_code_received(false),
 _request(request),
 _ce(ce),
 _clients_mutex(Mutex::RECURSIVE_MUTEX),
-_finished_clients_mutex(Mutex::ERRORCHECK_MUTEX){
+_finished_clients_mutex(Mutex::ERRORCHECK_MUTEX) {
     ce.caching();
     change_state(CacheRetranslator::instance());
     _clients.push_back(client_listener);;

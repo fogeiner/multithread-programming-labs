@@ -142,9 +142,9 @@ void Client::handle_write() {
 
         _out->drop_first(sent);
         if (_finished && (_out->size() == 0)) {
+            _mutex.unlock();
             _client_retranslator->client_finished(this);
             this->finished();
-            _mutex.unlock();
             close();
             
             return;
@@ -152,9 +152,9 @@ void Client::handle_write() {
         _mutex.unlock();
     } catch (SendException &ex) {
         Logger::debug("Client::handle_write() SendException");
+        _mutex.unlock();
         _client_retranslator->client_finished(this);
         this->finished();
-        _mutex.unlock();
         close();
     }
 

@@ -22,10 +22,10 @@ void CacheRetranslator::add_client(Retranslator *r, ClientListener *client_liste
 
 void CacheRetranslator::client_finished(Retranslator *r, ClientListener *client_listener) {
     Logger::debug("CacheRetranslator::client_finished() start");
-    r->_finished_clients_mutex.lock();
-    r->_finished_clients.push_back(client_listener);
-    r->_finished_clients_mutex.unlock();
-    //r->delete_client(client_listener);
+//    r->_finished_clients_mutex.lock();
+  //  r->_finished_clients.push_back(client_listener);
+ //   r->_finished_clients_mutex.unlock();
+    r->delete_client(client_listener);
     Logger::debug("CacheRetranslator::client_finished() end");
 }
 
