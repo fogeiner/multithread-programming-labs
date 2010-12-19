@@ -11,7 +11,12 @@ public:
     }
 
     void run() {
-        _d->handle_close();
+        try {
+            _d->handle_close();
+        } catch (std::exception &ex) {
+            _d->activate();
+            throw;
+        }
         _d->activate();
     }
 };

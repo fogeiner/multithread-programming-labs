@@ -115,6 +115,7 @@ void Client::handle_read() {
 
         } catch (BadRequestException &ex) {
             Logger::error("Client::handle_read() BadRequestException");
+
             BrokenUpHTTPRequest broken_up_request(Cache::HTTP_BAD_REQUEST);
 
             Cache::request(broken_up_request, this);
@@ -122,6 +123,7 @@ void Client::handle_read() {
     } catch (RecvException &ex) {
         Logger::error("Client::handle_read() RecvException");
         _client_retranslator->client_finished(this);
+        this->finished();
         close();
     }
 
@@ -140,16 +142,19 @@ void Client::handle_write() {
 
         _out->drop_first(sent);
         if (_finished && (_out->size() == 0)) {
-            _mutex.unlock();
             _client_retranslator->client_finished(this);
+            this->finished();
+            _mutex.unlock();
             close();
+            
             return;
         }
         _mutex.unlock();
     } catch (SendException &ex) {
         Logger::debug("Client::handle_write() SendException");
-        _mutex.unlock();
         _client_retranslator->client_finished(this);
+        this->finished();
+        _mutex.unlock();
         close();
     }
 
@@ -158,6 +163,7 @@ void Client::handle_write() {
 void Client::handle_close() {
     Logger::debug("Client::handle_close()");
     _client_retranslator->client_finished(this);
+    this->finished();
     close();
 }
 

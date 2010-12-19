@@ -14,6 +14,7 @@ class Retranslator : public ClientRetranslator, public DownloadRetranslator {
 private:
     RetranslatorState *_state;
     std::list<ClientListener*> _clients;
+    std::list<ClientListener*> _finished_clients;
     void change_state(RetranslatorState *state);
     void delete_client(ClientListener *client_listener);
     int clients_count() const;
@@ -21,7 +22,8 @@ private:
     bool _response_code_received;
     const BrokenUpHTTPRequest _request;
     CacheEntry &_ce;
-    Mutex _mutex;
+    Mutex _clients_mutex;
+    Mutex _finished_clients_mutex;
 public:
     Retranslator(const BrokenUpHTTPRequest request, CacheEntry &cache_entry, ClientListener *initial_client_listener);
 

@@ -11,7 +11,12 @@ public:
     }
 
     void run() {
-        _d->handle_read();
+        try {
+            _d->handle_read();
+        } catch (std::exception &ex) {
+            _d->activate();
+            throw;
+        }
         _d->activate();
     }
 };

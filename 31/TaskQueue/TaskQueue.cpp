@@ -66,7 +66,7 @@ void *TaskQueue::process(void *task_queue_ptr) {
             t->run();
         } catch (std::exception &ex) {
             Logger::error("TaskQueue::process() %s", ex.what());
-            throw;
+        //    throw;
         }
         //Logger::debug("TaskQueue::process() finished task");
         delete t;

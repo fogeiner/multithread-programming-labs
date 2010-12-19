@@ -15,7 +15,7 @@ void SelectTask::run() {
 
     AsyncDispatcher::_sockets_mutex.lock();
 
-  //  Logger::debug("SelectTask: deleting closed AsyncDispatchers");
+    //  Logger::debug("SelectTask: deleting closed AsyncDispatchers");
     std::list<AsyncDispatcher*> delete_list;
     for (std::list<AsyncDispatcher*>::iterator d = AsyncDispatcher::_sockets.begin();
             d != AsyncDispatcher::_sockets.end(); ++d) {
@@ -31,21 +31,23 @@ void SelectTask::run() {
         d = delete_list.erase(d);
     }
 
-    rlist.push_back(&AsyncDispatcher::_signal_pipe);
 
-  //  Logger::debug("SelectTask: adding sockets");
+
+    //  Logger::debug("SelectTask: adding sockets");
 
     for (std::list<AsyncDispatcher*>::iterator i = AsyncDispatcher::_sockets.begin();
             i != AsyncDispatcher::_sockets.end(); ++i) {
         AsyncDispatcher *s = *i;
         if (!s->is_closed() && s->is_active() && s->readable()) {
             rlist.push_back(s->_s);
-
         }
         if (!s->is_closed() && s->is_active() && s->writable()) {
             wlist.push_back(s->_s);
         }
     }
+
+
+    rlist.push_back(&AsyncDispatcher::_signal_pipe);
 
     AsyncDispatcher::_sockets_mutex.unlock();
 
@@ -75,6 +77,7 @@ void SelectTask::run() {
         assert(ad != NULL);
 
         ad->deactivate();
+
         switch (ad->_s->get_state()) {
             case TCPSocket::LISTENING:
             {
@@ -110,6 +113,9 @@ void SelectTask::run() {
         }
 
         assert(ad != NULL);
+
+        if (!ad->is_active())
+            continue;
 
         ad->deactivate();
 

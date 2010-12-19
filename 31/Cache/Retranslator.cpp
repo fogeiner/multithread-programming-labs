@@ -8,7 +8,8 @@ _download_listener(NULL),
 _response_code_received(false),
 _request(request),
 _ce(ce),
-_mutex(Mutex::RECURSIVE_MUTEX) {
+_clients_mutex(Mutex::RECURSIVE_MUTEX),
+_finished_clients_mutex(Mutex::ERRORCHECK_MUTEX){
     ce.caching();
     change_state(CacheRetranslator::instance());
     _clients.push_back(client_listener);;
@@ -20,9 +21,9 @@ int Retranslator::clients_count() const {
 }
 
 void Retranslator::delete_client(ClientListener *client_listener) {
-    _mutex.lock();
+    _clients_mutex.lock();
     _clients.remove(client_listener);
-    _mutex.unlock();
+    _clients_mutex.unlock();
 }
 
 void Retranslator::add_client(ClientListener *client_listener) {

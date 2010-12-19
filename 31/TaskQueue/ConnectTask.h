@@ -2,6 +2,7 @@
 #include "SwitchControlledAsync.h"
 #include "../AsyncDispatcher/AsyncDispatcher.h"
 #include "../../libs/Logger/Logger.h"
+
 class ConnectTask : public Task {
 private:
     SwitchControlledAsync *_d;
@@ -11,7 +12,12 @@ public:
     }
 
     void run() {
-        _d->handle_connect();
+        try {
+            _d->handle_connect();
+        } catch (std::exception &ex) {
+            _d->activate();
+            throw;
+        }
         _d->activate();
     }
 };
