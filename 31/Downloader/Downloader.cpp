@@ -9,7 +9,7 @@
 Downloader::Downloader(BrokenUpHTTPRequest request, DownloadRetranslator *download_retranslator) :
 _download_retranslator(download_retranslator),
 _cancelled(false),
-_mutex(Mutex::ERRORCHECK_MUTEX) {
+_mutex(Mutex::RECURSIVE_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
     _out->append(request.request.c_str(), request.request.size());
@@ -18,8 +18,10 @@ _mutex(Mutex::ERRORCHECK_MUTEX) {
         this->connect(request.host, request.port);
         this->activate();
     } catch (DNSException &ex) {
+        _mutex.lock();
         _download_retranslator->download_connect_failed();
         _download_retranslator = DummyRetranslator::instance();
+        _mutex.unlock();
         close();
     }
 }
@@ -47,12 +49,16 @@ void Downloader::handle_read() {
     Logger::debug("Downloader::handle_read()");
     try {
         recv(_in);
+        _mutex.lock();
         _download_retranslator->download_add_data(_in);
+        _mutex.unlock();
         _in->clear();
     } catch (RecvException &ex) {
         Logger::debug("Downloader::handle_write() RecvException: %s", ex.what());
+        _mutex.lock();
         _download_retranslator->download_recv_failed();
         _download_retranslator = DummyRetranslator::instance();
+        _mutex.unlock();
         close();
     }
 }
@@ -68,16 +74,20 @@ void Downloader::handle_write() {
         _out->drop_first(send(_out));
     } catch (SendException &ex) {
         Logger::debug("Downloader::handle_write() SendException: %s", ex.what());
+        _mutex.lock();
         _download_retranslator->download_send_failed();
         _download_retranslator = DummyRetranslator::instance();
+        _mutex.unlock();
         close();
     }
 }
 
 void Downloader::handle_close() {
     Logger::debug("Downloader::handle_close()");
+    _mutex.lock();
     _download_retranslator->download_finished();
     _download_retranslator = DummyRetranslator::instance();
+    _mutex.unlock();
     close();
 }
 
@@ -92,14 +102,18 @@ void Downloader::handle_connect() {
         validate_connect();
     } catch (ConnectException &ex) {
         Logger::debug("Downloader::handle_read() ConnectException: %s", ex.what());
+        _mutex.lock();
         _download_retranslator->download_connect_failed();
         _download_retranslator = DummyRetranslator::instance();
+        _mutex.unlock();
         close();
     }
 }
 
 void Downloader::cancel() {
+    _mutex.lock();
     _download_retranslator = DummyRetranslator::instance();
     _cancelled = true;
+    _mutex.unlock();
 }
 
