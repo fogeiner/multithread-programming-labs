@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
     std::set_terminate(term_handler);
     signal(SIGSEGV, sig_handler);
+    signal(SIGABRT, sig_handler);
 
     int threads_count;
     std::vector<Thread> threads;
@@ -55,9 +56,9 @@ int main(int argc, char *argv[]) {
 
         for (int i = 0; i < threads_count; ++i) {
             threads.push_back(Thread(TaskQueue::process, task_queue));
-            threads[i].run();
+        //    threads[i].run();
         }
-        //TaskQueue::process(task_queue);
+        TaskQueue::process(task_queue);
     } catch (ThreadException &ex) {
         Logger::error("ThreadException: %s", ex.what());
     } catch (BindException &ex) {

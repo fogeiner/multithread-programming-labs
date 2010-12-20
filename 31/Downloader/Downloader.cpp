@@ -9,7 +9,7 @@
 Downloader::Downloader(BrokenUpHTTPRequest request, DownloadRetranslator *download_retranslator) :
 _download_retranslator(download_retranslator),
 _cancelled(false),
-_mutex(Mutex::RECURSIVE_MUTEX) {
+_mutex(Mutex::ERRORCHECK_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
     _out->append(request.request.c_str(), request.request.size());
@@ -19,6 +19,7 @@ _mutex(Mutex::RECURSIVE_MUTEX) {
         this->activate();
     } catch (DNSException &ex) {
         _download_retranslator->download_connect_failed();
+        _download_retranslator = DummyRetranslator::instance();
         close();
     }
 }
@@ -40,7 +41,7 @@ bool Downloader::writable() const {
 
 void Downloader::handle_read() {
     if (_cancelled) {
-		close();
+        close();
         return;
     }
     Logger::debug("Downloader::handle_read()");
@@ -51,13 +52,14 @@ void Downloader::handle_read() {
     } catch (RecvException &ex) {
         Logger::debug("Downloader::handle_write() RecvException: %s", ex.what());
         _download_retranslator->download_recv_failed();
+        _download_retranslator = DummyRetranslator::instance();
         close();
     }
 }
 
 void Downloader::handle_write() {
     if (_cancelled) {
-		close();
+        close();
         return;
     }
     Logger::debug("Downloader::handle_write()");
@@ -67,6 +69,7 @@ void Downloader::handle_write() {
     } catch (SendException &ex) {
         Logger::debug("Downloader::handle_write() SendException: %s", ex.what());
         _download_retranslator->download_send_failed();
+        _download_retranslator = DummyRetranslator::instance();
         close();
     }
 }
@@ -74,12 +77,13 @@ void Downloader::handle_write() {
 void Downloader::handle_close() {
     Logger::debug("Downloader::handle_close()");
     _download_retranslator->download_finished();
+    _download_retranslator = DummyRetranslator::instance();
     close();
 }
 
 void Downloader::handle_connect() {
     if (_cancelled) {
-		close();
+        close();
         return;
     }
 
@@ -89,6 +93,7 @@ void Downloader::handle_connect() {
     } catch (ConnectException &ex) {
         Logger::debug("Downloader::handle_read() ConnectException: %s", ex.what());
         _download_retranslator->download_connect_failed();
+        _download_retranslator = DummyRetranslator::instance();
         close();
     }
 }

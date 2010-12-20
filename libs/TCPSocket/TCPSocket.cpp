@@ -252,9 +252,9 @@ void TCPSocket::close() {
 #ifdef DEBUG
         fprintf(stderr, "socket %d closing\n", _b->_sock);
 #endif
+        this->_state = CLOSED;
         ::close(_b->_sock);
         delete this->_b;
-        this->_state = CLOSED;
     }
 }
 

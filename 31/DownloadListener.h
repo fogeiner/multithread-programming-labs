@@ -2,7 +2,7 @@
 
 class DownloadListener {
 public:
-    virtual void cancel() = 0;
+    virtual void cancel() {};
 
     virtual ~DownloadListener() {
     }

@@ -13,7 +13,7 @@ _client_retranslator(DummyRetranslator::instance()),
 _got_request(false),
 _bytes_sent(0),
 _finished(false),
-_mutex(Mutex::RECURSIVE_MUTEX) {
+_mutex(Mutex::ERRORCHECK_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
     this->activate();

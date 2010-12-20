@@ -51,10 +51,10 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
     Logger::debug("Cache::request(%s)", request.url.c_str());
 
     std::string key = request.url;
-    ClientRetranslator *retranslator;
+    Retranslator *retranslator;
 
     _mutex.lock();
-    
+
     // if such entry is already present
     if (_cache.find(key) != _cache.end()) {
         CacheEntry ce = _cache[key];
@@ -63,17 +63,18 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
         if (ce.get_state() == CacheEntry::CACHED) {
             Logger::info("Cache HIT %s", key.c_str());
             client_listener->add_data(ce.data());
-            client_listener->finished();
             _mutex.unlock();
+            
+            client_listener->finished();
             return;
 
             // if it's CACHING we can add that client to
             // list of clients
         } else if (ce.get_state() == CacheEntry::CACHING) {
             Logger::info("Cache CACHING %s", key.c_str());
-            _retranslators[key]->add_client(client_listener);
             retranslator = _retranslators[key];
-
+            retranslator->add_client(client_listener);
+            
             // that is meant to never happen
         } else {
             assert(false);
@@ -83,9 +84,9 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
     } else {
         Logger::info("Cache NEW %s", key.c_str());
         _cache[key] = CacheEntry();
-        _retranslators[key] = new Retranslator(request, _cache[key], client_listener);
-        retranslator = _retranslators[key];
-
+        retranslator = new Retranslator(request, _cache[key], client_listener);
+        retranslator->start_download();
+        _retranslators[key] = retranslator;
     }
 
     client_listener->set_retranslator(retranslator);
@@ -96,8 +97,8 @@ void Cache::drop(std::string key) {
     _mutex.lock();
     Logger::info("Cache DROP %s", key.c_str());
     Cache::_size -= _cache[key].size();
-    _cache.erase(key);
     _retranslators.erase(key);
+    _cache.erase(key);
     _mutex.unlock();
 }
 

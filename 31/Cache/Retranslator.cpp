@@ -4,16 +4,18 @@
 #include "../Downloader/Downloader.h"
 
 Retranslator::Retranslator(const BrokenUpHTTPRequest request, CacheEntry &ce, ClientListener *client_listener) :
-_download_listener(NULL),
+_download_listener(DummyDownloadListener::instance()),
 _response_code_received(false),
 _request(request),
 _ce(ce),
-_clients_mutex(Mutex::RECURSIVE_MUTEX),
-_finished_clients_mutex(Mutex::ERRORCHECK_MUTEX) {
+_clients_mutex(Mutex::RECURSIVE_MUTEX) {
     ce.caching();
     change_state(CacheRetranslator::instance());
-    _clients.push_back(client_listener);;
-    _download_listener = new Downloader(request, this);
+    _clients.push_back(client_listener);
+}
+
+void Retranslator::start_download() {
+    _download_listener = new Downloader(_request, this);
 }
 
 int Retranslator::clients_count() const {

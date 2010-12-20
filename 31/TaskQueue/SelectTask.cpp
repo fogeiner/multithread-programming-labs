@@ -86,10 +86,10 @@ void SelectTask::run() {
             }
             case TCPSocket::CONNECTED:
             {
-                if (ad->_s->peek() == 0) {
+                int peeked = ad->_s->peek();
+                if (peeked == 0) {
                     this->_tq->put(new CloseTask(ad));
-                    //ad->handle_close();
-                } else {
+                } else if (peeked > 0) {
                     this->_tq->put(new ReadTask(ad));
                 }
                 break;
