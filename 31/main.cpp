@@ -18,15 +18,18 @@ void term_handler() {
     void *trace_elems[50];
     int trace_elem_count(backtrace(trace_elems, 50));
     char **stack_syms(backtrace_symbols(trace_elems, trace_elem_count));
+    Logger::emergent("Trace start:");
     for (int i = 0; i < trace_elem_count; ++i) {
         Logger::emergent(stack_syms[i]);
     }
+    Logger::emergent("Trace end.");
     free(stack_syms);
 
     exit(1);
 }
 
 void sig_handler(int sig) {
+    Logger::emergent("Signal %d", sig);
     term_handler();
 }
 

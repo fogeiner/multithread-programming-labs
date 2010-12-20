@@ -13,14 +13,15 @@ _client_retranslator(DummyRetranslator::instance()),
 _got_request(false),
 _bytes_sent(0),
 _finished(false),
-_mutex(Mutex::RECURSIVE_MUTEX) {
+_out_mutex(Mutex::RECURSIVE_MUTEX),
+_callback_mutex(Mutex::RECURSIVE_MUTEX) {
     _in = new VectorBuffer();
     _out = new VectorBuffer();
     this->activate();
 }
 
 Client::~Client() {
-    Logger::debug("Client::~Client(); locks_count %d", _mutex.locks_count());
+    Logger::debug("Client::~Client(); locks_count %d", _out_mutex.locks_count());
     delete _in;
     delete _out;
 }
@@ -34,9 +35,9 @@ bool Client::writable() const {
     if (_got_request == false) {
         return false;
     }
-    _mutex.lock();
+    _out_mutex.lock();
     bool ret = _finished || _out->size() > 0;
-    _mutex.unlock();
+    _out_mutex.unlock();
 
     return ret;
 }
@@ -122,8 +123,10 @@ void Client::handle_read() {
         }
     } catch (RecvException &ex) {
         Logger::error("Client::handle_read() RecvException");
+        _callback_mutex.lock();
         _client_retranslator->client_finished(this);
         this->finished();
+        _callback_mutex.unlock();
         close();
     }
 
@@ -135,26 +138,31 @@ void Client::handle_write() {
     Logger::debug("Client::handle_write()");
 
     try {
-        _mutex.lock();
+        _out_mutex.lock();
 
         int sent = send(_out);
         _bytes_sent += sent;
 
         _out->drop_first(sent);
         if (_finished && (_out->size() == 0)) {
-            _mutex.unlock();
+            _out_mutex.unlock();
+            _callback_mutex.lock();
             _client_retranslator->client_finished(this);
             this->finished();
+            _callback_mutex.unlock();
+
             close();
-            
+
             return;
         }
-        _mutex.unlock();
+        _out_mutex.unlock();
     } catch (SendException &ex) {
         Logger::debug("Client::handle_write() SendException");
-        _mutex.unlock();
+        _out_mutex.unlock();
+        _callback_mutex.lock();
         _client_retranslator->client_finished(this);
         this->finished();
+        _callback_mutex.unlock();
         close();
     }
 
@@ -162,33 +170,40 @@ void Client::handle_write() {
 
 void Client::handle_close() {
     Logger::debug("Client::handle_close()");
+    _callback_mutex.lock();
     _client_retranslator->client_finished(this);
     this->finished();
+    _callback_mutex.unlock();
     close();
 }
 
 void Client::add_data(const Buffer *b) {
-    _mutex.lock();
     if (_finished) {
-        _mutex.unlock();
         return;
     }
+
+    _out_mutex.lock();
+
     Logger::debug("Client::add_data(%p)", b);
     _out->append(b);
-    _mutex.unlock();
+    _out_mutex.unlock();
 }
 
 void Client::finished() {
     Logger::debug("Client::finished()");
+    _callback_mutex.lock();
     this->set_retranslator(DummyRetranslator::instance());
     _finished = true;
+    _callback_mutex.unlock();
 }
 
 void Client::set_retranslator(ClientRetranslator* client_retranslator) {
     Logger::debug("Client::set_retranslator(%p)", client_retranslator);
+    _callback_mutex.lock();
     if (!_finished) {
         _client_retranslator = client_retranslator;
     } else {
         Logger::debug("Client::set_retranslator() ignoring because _finished");
     }
+    _callback_mutex.unlock();
 }

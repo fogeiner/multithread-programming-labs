@@ -21,7 +21,8 @@ private:
     int _bytes_sent;
     bool _finished;
 
-    mutable Mutex _mutex;
+    mutable Mutex _out_mutex;
+    mutable Mutex _callback_mutex;
 public:
 
     Client(TCPSocket *sock);
