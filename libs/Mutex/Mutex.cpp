@@ -37,13 +37,11 @@ Mutex::~Mutex() {
 void Mutex::lock() {
     error_check(pthread_mutex_lock(&_mid));
     _locks_count++;
-
 }
 
 void Mutex::unlock() {
     error_check(pthread_mutex_unlock(&_mid));
     _locks_count--;
-
 }
 
 bool Mutex::trylock() {
