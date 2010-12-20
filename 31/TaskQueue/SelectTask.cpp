@@ -19,7 +19,7 @@ void SelectTask::run() {
     std::list<AsyncDispatcher*> delete_list;
     for (std::list<AsyncDispatcher*>::iterator d = AsyncDispatcher::_sockets.begin();
             d != AsyncDispatcher::_sockets.end(); ++d) {
-        if ((*d)->is_closed()) {
+        if ((*d)->is_closed() && (*d)->is_active()) {
             delete_list.push_back(*d);
         }
     }

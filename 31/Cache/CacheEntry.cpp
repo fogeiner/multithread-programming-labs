@@ -27,14 +27,18 @@ CacheEntry::~CacheEntry() {
 }
 
 void CacheEntry::cached() {
+    Cache::_cache_mutex.lock();
     if(_state != CACHED){
-        Cache::bytes_added(this->size());
+        Cache::_size += data()->size();
     }
     _state = CACHED;
+    Cache::_cache_mutex.unlock();
 }
 
 void CacheEntry::caching() {
+    Cache::_cache_mutex.lock();
     _state = CACHING;
+    Cache::_cache_mutex.unlock();
 }
 
 int CacheEntry::size() const {

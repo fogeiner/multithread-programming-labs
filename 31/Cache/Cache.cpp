@@ -20,7 +20,8 @@ const std::string Cache::HTTP_INTERNAL_ERROR("HTTP_INTERNAL_ERROR");
 // couldn't connect
 const std::string Cache::HTTP_SERVICE_UNAVAILABLE("HTTP_SERVICE_UNAVAILABLE");
 
-Mutex Cache::_mutex(Mutex::RECURSIVE_MUTEX);
+Mutex Cache::_cache_mutex(Mutex::RECURSIVE_MUTEX);
+Mutex Cache::_retraslators_mutex(Mutex::RECURSIVE_MUTEX);
 
 void Cache::init() {
     Cache::_size = 0;
@@ -53,7 +54,7 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
     std::string key = request.url;
     Retranslator *retranslator;
 
-    _mutex.lock();
+    _cache_mutex.lock();
 
     // if such entry is already present
     if (_cache.find(key) != _cache.end()) {
@@ -63,8 +64,7 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
         if (ce.get_state() == CacheEntry::CACHED) {
             Logger::info("Cache HIT %s", key.c_str());
             client_listener->add_data(ce.data());
-            _mutex.unlock();
-            
+            _cache_mutex.unlock();
             client_listener->finished();
             return;
 
@@ -90,23 +90,18 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
     }
 
     client_listener->set_retranslator(retranslator);
-    _mutex.unlock();
+    _cache_mutex.unlock();
 }
 
 void Cache::drop(std::string key) {
-    _mutex.lock();
+    _cache_mutex.lock();
     Logger::info("Cache DROP %s", key.c_str());
     Cache::_size -= _cache[key].size();
     _retranslators.erase(key);
     _cache.erase(key);
-    _mutex.unlock();
+    _cache_mutex.unlock();
 }
 
-void Cache::bytes_added(int bytes) {
-    _mutex.lock();
-    Cache::_size += bytes;
-    _mutex.unlock();
-}
 
 int Cache::size() {
     return Cache::_size;

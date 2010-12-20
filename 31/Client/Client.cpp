@@ -150,7 +150,6 @@ void Client::handle_write() {
             _client_retranslator->client_finished(this);
             this->finished();
             _callback_mutex.unlock();
-
             close();
 
             return;
@@ -191,19 +190,19 @@ void Client::add_data(const Buffer *b) {
 
 void Client::finished() {
     Logger::debug("Client::finished()");
-    _callback_mutex.lock();
+    //_callback_mutex.lock();
     this->set_retranslator(DummyRetranslator::instance());
     _finished = true;
-    _callback_mutex.unlock();
+   // _callback_mutex.unlock();
 }
 
 void Client::set_retranslator(ClientRetranslator* client_retranslator) {
     Logger::debug("Client::set_retranslator(%p)", client_retranslator);
-    _callback_mutex.lock();
+   // _callback_mutex.lock();
     if (!_finished) {
         _client_retranslator = client_retranslator;
     } else {
         Logger::debug("Client::set_retranslator() ignoring because _finished");
     }
-    _callback_mutex.unlock();
+    //_callback_mutex.unlock();
 }

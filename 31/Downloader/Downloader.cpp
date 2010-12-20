@@ -42,10 +42,12 @@ bool Downloader::writable() const {
 }
 
 void Downloader::handle_read() {
+    _mutex.lock();
     if (_cancelled) {
-        close();
+        _mutex.unlock();
         return;
     }
+    _mutex.unlock();
     Logger::debug("Downloader::handle_read()");
     try {
         recv(_in);
@@ -64,10 +66,12 @@ void Downloader::handle_read() {
 }
 
 void Downloader::handle_write() {
+    _mutex.lock();
     if (_cancelled) {
-        close();
+        _mutex.unlock();
         return;
     }
+    _mutex.unlock();
     Logger::debug("Downloader::handle_write()");
 
     try {
@@ -87,15 +91,18 @@ void Downloader::handle_close() {
     _mutex.lock();
     _download_retranslator->download_finished();
     _download_retranslator = DummyRetranslator::instance();
-    _mutex.unlock();
     close();
+    _mutex.unlock();
+    
 }
 
 void Downloader::handle_connect() {
+    _mutex.lock();
     if (_cancelled) {
-        close();
+        _mutex.unlock();
         return;
     }
+    _mutex.unlock();
 
     Logger::debug("Downloader::handle_connect()");
     try {
@@ -112,8 +119,9 @@ void Downloader::handle_connect() {
 
 void Downloader::cancel() {
     _mutex.lock();
-    _download_retranslator = DummyRetranslator::instance();
     _cancelled = true;
+    _download_retranslator = DummyRetranslator::instance();
     _mutex.unlock();
+    close();
 }
 

@@ -16,7 +16,8 @@ private:
     static std::map<std::string, CacheEntry> _cache;
     static std::map<std::string, Retranslator*> _retranslators;
 
-    static Mutex _mutex;
+    static Mutex _cache_mutex;
+    static Mutex _retraslators_mutex;
     static int _size;
     Cache();
     static void bytes_added(int bytes);
