@@ -58,7 +58,7 @@ void Cache::request(BrokenUpHTTPRequest request, ClientListener *client_listener
 
     // if such entry is already present
     if (_cache.find(key) != _cache.end()) {
-        CacheEntry ce = _cache[key];
+        CacheEntry &ce = _cache[key];
         // if CacheEntry is CACHED append CacheEntry's buffer
         // to client buffer and setting finished flag;
         if (ce.get_state() == CacheEntry::CACHED) {

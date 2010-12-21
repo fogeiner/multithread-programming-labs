@@ -4,6 +4,7 @@
 #include "../libs/Logger/Logger.h"
 #include "../libs/Mutex/Mutex.h"
 #include "../libs/Logger/Logger.h"
+#include "../libs/Thread/Thread.h"
 #include "BrokenUpHTTPRequest.h"
 #include "CacheEntry.h"
 #include <map>

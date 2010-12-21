@@ -1,4 +1,5 @@
 #include "Cache.h"
+#include "Downloader.h"
 #include "CacheEntry.h"
 #include "config.h"
 std::map<std::string, CacheEntry*> Cache::_cache;
@@ -54,8 +55,8 @@ void Cache::request(std::string url, Client *client) {
 }
 
 void Cache::request(BrokenUpHTTPRequest request, Client *client) {
-    Logger::debug("Cache::request(%s, %p)", request.url.c_str(), client);
-    const std::string key = request.url;
+    Logger::debug("Cache::request(%s, %p)", request.url().c_str(), client);
+    const std::string key = request.url();
 
     Cache::_cache_mutex.lock();
 
@@ -75,9 +76,22 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
         // if there's no such entry we should create one
     } else {
         Logger::info("Cache NEW %s", key.c_str());
-        CacheEntry *ce = new CacheEntry();
+        CacheEntry *ce = new CacheEntry(request);
         ce->add_client(client);
-        _cache[key] = ce;
+
+        try {
+            Downloader *downloader = new Downloader(ce);
+            Thread downloader_thread(Downloader::run, downloader);
+            downloader_thread.run();
+            downloader_thread.detach();
+            _cache[key] = ce;
+        } catch (std::exception &ex) {
+            Logger::debug("Cache::request() Exception: %s", ex.what());
+            delete ce;
+            _cache[HTTP_INTERNAL_ERROR]->add_client(client);
+        }
+
+
     }
 
     Cache::_cache_mutex.unlock();
@@ -94,7 +108,7 @@ void Cache::drop(std::string url) {
     Logger::debug("Cache::drop(%s)", url.c_str());
     Cache::_cache_mutex.lock();
     CacheEntry *ce = _cache[url];
-    Cache::bytes_added(-ce->size());
+    Cache::bytes_added(-ce->bytes_received());
     _cache.erase(url);
     Cache::_cache_mutex.unlock();
 }

@@ -20,7 +20,7 @@ private:
     TCPSocket *_sock;
     Buffer *_in;
     Buffer *_out;
-    BrokenUpHTTPRequest *_request;
+    BrokenUpHTTPRequest _request;
     int _bytes_sent;
     CacheEntry *_ce;
 
