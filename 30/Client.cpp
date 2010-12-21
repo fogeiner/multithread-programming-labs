@@ -7,9 +7,11 @@ _out(new VectorBuffer()),
 _request(NULL),
 _bytes_sent(0),
 _ce(NULL) {
+    Logger::debug("Client::Client() fd=%d", _sock->fileno());
 }
 
 Client::~Client() {
+    Logger::debug("Client::~Client()");
     delete _in;
     delete _out;
     delete _request;

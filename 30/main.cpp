@@ -25,9 +25,9 @@ int main(int argc, char *argv[]) {
             // creating new Client object
             Client *client = new Client(c_sock);
             // making Thread to run this object
-            Thread client_thread(Client::run, client);
-            client_thread.detach();
+            Thread client_thread(Client::run, client);  
             client_thread.run();
+            client_thread.detach();
         }
     } catch (AcceptException &ex) {
         Logger::error("main() Accept: %s", ex.what());
