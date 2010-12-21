@@ -15,12 +15,69 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="libs"
+                     projectFiles="true"
+                     kind="SOURCE_LOGICAL_FOLDER">
+        <logicalFolder name="f7"
+                       displayName="Buffer"
+                       projectFiles="true"
+                       kind="SOURCE_LOGICAL_FOLDER">
+          <itemPath>../../libs/Buffer/Buffer.h</itemPath>
+          <itemPath>../../libs/Buffer/VectorBuffer.h</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f1"
+                       displayName="CondVar"
+                       projectFiles="true"
+                       kind="SOURCE_LOGICAL_FOLDER">
+          <itemPath>../../libs/CondVar/CondVar.cpp</itemPath>
+          <itemPath>../../libs/CondVar/CondVar.h</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f2"
+                       displayName="HTTPURIParser"
+                       projectFiles="true"
+                       kind="SOURCE_LOGICAL_FOLDER">
+          <itemPath>../../libs/HTTPURIParser/HTTPURIParser.cpp</itemPath>
+          <itemPath>../../libs/HTTPURIParser/HTTPURIParser.h</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f3"
+                       displayName="Logger"
+                       projectFiles="true"
+                       kind="SOURCE_LOGICAL_FOLDER">
+          <itemPath>../../libs/Logger/Logger.cpp</itemPath>
+          <itemPath>../../libs/Logger/Logger.h</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f4"
+                       displayName="Mutex"
+                       projectFiles="true"
+                       kind="SOURCE_LOGICAL_FOLDER">
+          <itemPath>../../libs/Mutex/Mutex.cpp</itemPath>
+          <itemPath>../../libs/Mutex/Mutex.h</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f5"
+                       displayName="TCPSocket"
+                       projectFiles="true"
+                       kind="SOURCE_LOGICAL_FOLDER">
+          <itemPath>../../libs/TCPSocket/TCPSocket.cpp</itemPath>
+          <itemPath>../../libs/TCPSocket/TCPSocket.h</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f6"
+                       displayName="Thread"
+                       projectFiles="true"
+                       kind="SOURCE_LOGICAL_FOLDER">
+          <itemPath>../../libs/Thread/Thread.cpp</itemPath>
+          <itemPath>../../libs/Thread/Thread.h</itemPath>
+        </logicalFolder>
+      </logicalFolder>
+      <itemPath>../BrokenUpHTTPRequest.h</itemPath>
       <itemPath>../Cache.cpp</itemPath>
       <itemPath>../Cache.h</itemPath>
+      <itemPath>../CacheEntry.cpp</itemPath>
+      <itemPath>../CacheEntry.h</itemPath>
       <itemPath>../Client.cpp</itemPath>
       <itemPath>../Client.h</itemPath>
-      <itemPath>../Server.cpp</itemPath>
-      <itemPath>../Server.h</itemPath>
+      <itemPath>../Downloader.cpp</itemPath>
+      <itemPath>../Downloader.h</itemPath>
       <itemPath>../config.cpp</itemPath>
       <itemPath>../config.h</itemPath>
       <itemPath>../main.cpp</itemPath>
@@ -46,6 +103,11 @@
         <platform>2</platform>
       </toolsSet>
       <compileType>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
+          </linkerLibItems>
+        </linkerTool>
       </compileType>
     </conf>
     <conf name="Release" type="1">
