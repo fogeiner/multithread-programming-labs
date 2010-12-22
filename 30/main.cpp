@@ -28,12 +28,10 @@ int main(int argc, char *argv[]) {
                 client_thread.detach();
             } catch (ThreadException &ex) {
                 Logger::error("main() Thread: %s", ex.what());
-            } catch (SocketException &ex){
-                 Logger::error("main() Socket: %s", ex.what());
+            } catch (AcceptException &ex) {
+                Logger::error("main() Accept: %s", ex.what());
             }
         }
-    } catch (AcceptException &ex) {
-        Logger::error("main() Accept: %s", ex.what());
     } catch (BindException &ex) {
         Logger::error("main() Bind: %s", ex.what());
     } catch (std::exception &ex) {
