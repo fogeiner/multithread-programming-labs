@@ -28,7 +28,7 @@ void CacheEntry::set_state(CacheEntryState state) {
 
 void CacheEntry::add_data(const char *msg) {
     Logger::debug("CacheEntry::add_data()");
-    
+
     _data->append(msg);
     _bytes_received += _data->size();
 }
@@ -40,7 +40,7 @@ const Buffer *CacheEntry::data() const {
 int CacheEntry::add_data(const Buffer *buffer) {
     Logger::debug("CacheEntry::add_data()");
 
-    if(_state == CACHING){
+    if (_state == CACHING) {
         Cache::bytes_added(buffer->size());
     }
     _data->append(buffer);
@@ -57,6 +57,7 @@ void CacheEntry::add_client(Client *client) {
 }
 
 struct CompareClientsBytes {
+
     bool operator()(const std::pair<Client*, size_t>& left, const std::pair<Client*, size_t>& right) const {
         return left.second < right.second;
     }
