@@ -28,7 +28,6 @@ public:
     static void init();
     static void request(BrokenUpHTTPRequest request, Client *client);
     static void request(std::string url, Client *client);
-    static void set_cached(std::string ur);
     static int size();
 
     static void bytes_added(int bytes);

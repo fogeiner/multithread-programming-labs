@@ -2,6 +2,7 @@
 #include "CacheEntry.h"
 #include "../libs/Thread/Thread.h"
 #include "Cache.h"
+#include <sstream>
 
 Downloader::Downloader(CacheEntry* cache_entry) :
 _in(new VectorBuffer()),
@@ -78,11 +79,78 @@ void *Downloader::run(void* downloader_ptr) {
         Thread::exit(NULL);
     }
 
-    bool response_code_got = false;
+    bool response_code_received = false;
+    int clients_count = 0;
 
-    //   while (1) {
+    while (1) {
+        try {
+            if (0 == sock->recv(in)) {
+                ce->lock();
+                if ((ce->get_state() == CacheEntry::CACHING) && response_code_received) {
+                    ce->set_state(CacheEntry::CACHED);
+                }
+                ce->remove_downloader();
+                ce->broadcast();
+                ce->unlock();
+                delete d;
+                Thread::exit(NULL);
 
-    //   }
+            }
+        } catch (RecvException &ex) {
+            Logger::error("Downloader RecvException: %s", ex.what());
+            ce->lock();
+            ce->set_state(CacheEntry::RECV_ERROR);
+            ce->remove_downloader();
+            ce->broadcast();
+            ce->unlock();
+            delete d;
+            Thread::exit(NULL);
+        }
+
+        ce->lock();
+
+        clients_count = ce->add_data(in);
+
+        if (clients_count == 0) {
+            Logger::debug("Downloader finishing due to the lack of clients");
+
+            Cache::drop(ce->request().url());
+
+            ce->remove_downloader();
+            ce->broadcast();
+            ce->unlock();
+            delete d;
+            Thread::exit(NULL);
+        }
+
+        in->clear();
+
+        // strlen("HTTP/1.x 200") == 12
+        if ((response_code_received == false) && (ce->data()->size() >= 12)) {
+            Logger::debug("Downloader analyzing response");
+            response_code_received = true;
+
+            std::string response = *(ce->data());
+            std::string word1;
+            std::string word2;
+            std::istringstream iss(response, std::istringstream::in);
+            iss >> word1;
+            iss >> word2;
+
+            if ((word1 == "HTTP/1.0" || word1 == "HTTP/1.1") && word2 == "200") {
+                Logger::debug("Downloader Valid 200 response, caching");
+            } else {
+                Logger::debug("Downloader dropping due to non 200 response");
+                Logger::info("Dropping: code %s", word2.c_str());
+
+                Cache::drop(ce->request().url());
+                ce->set_state(CacheEntry::DOWNLOADING);
+            }
+        }
+
+        ce->broadcast();
+        ce->unlock();
+    }
 
     // reading request from server
     // as soon as there enough symbols to detect

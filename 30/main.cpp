@@ -21,10 +21,7 @@ int main(int argc, char *argv[]) {
         while (1) {
             // accepting new client
             TCPSocket *c_sock = l_sock.accept();
-            Logger::debug("New client accepted");
-            // creating new Client object
             Client *client = new Client(c_sock);
-            // making Thread to run this object
             Thread client_thread(Client::run, client);  
             client_thread.run();
             client_thread.detach();

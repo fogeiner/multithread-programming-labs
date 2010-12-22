@@ -94,9 +94,10 @@ void *Client::run(void *client_ptr) {
         do {
             try {
                 if (c->_sock->recv(c->_in) == 0) {
+                    Logger::debug("Client closed connection");
                     c->_sock->close();
                     delete c;
-                    return NULL;
+                    Thread::exit(NULL);
                 }
             } catch (RecvException &ex) {
                 Logger::error("Client::recv_request() RecvException");
@@ -106,6 +107,7 @@ void *Client::run(void *client_ptr) {
             }
         } while (!c->parse_request());
 
+        Logger::debug("Client request was successfully parsed");
         Cache::request(c->_request, c);
     } catch (NotImlementedException &ex) {
         Logger::error("Client::parse_request() NotImplementedException");
@@ -132,6 +134,7 @@ void *Client::run(void *client_ptr) {
 
         while ((ce_state == CacheEntry::CACHING || ce_state == CacheEntry::DOWNLOADING)
                 && c->_bytes_sent <= ce->bytes_received()) {
+            Logger::debug("Client waits");
             ce->wait();
             ce_state = ce->get_state();
         }

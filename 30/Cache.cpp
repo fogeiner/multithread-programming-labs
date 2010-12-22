@@ -90,17 +90,8 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
             delete ce;
             _cache[HTTP_INTERNAL_ERROR]->add_client(client);
         }
-
-
     }
 
-    Cache::_cache_mutex.unlock();
-}
-
-void Cache::set_cached(std::string url) {
-    Logger::debug("Cache::set_cached(%s)", url.c_str());
-    Cache::_cache_mutex.lock();
-    _cache[url]->set_state(CacheEntry::CACHED);
     Cache::_cache_mutex.unlock();
 }
 

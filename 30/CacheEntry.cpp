@@ -57,8 +57,6 @@ void CacheEntry::add_client(Client *client) {
     _clients.push_back(client);
 }
 
-;
-
 struct CompareClientsBytes {
 
     bool operator()(const std::pair<Client*, int>& left, const std::pair<Client*, int>& right) const {
@@ -85,6 +83,7 @@ void CacheEntry::remove_client(Client *client) {
     to_delete = (_clients.size() == 0) && (_downloader == NULL) && (_state != CACHED);
 
     if (to_delete) {
+        Logger::debug("CacheEntry deleting due to no clients and downloader");
         delete this;
     }
 }
@@ -97,6 +96,7 @@ void CacheEntry::remove_downloader() {
     to_delete = (_clients.size() == 0) && (_downloader == NULL) && (_state != CACHED);
 
     if (to_delete) {
+        Logger::debug("CacheEntry deleting due to no clients and downloader");
         delete this;
     }
 }
