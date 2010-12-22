@@ -4,16 +4,23 @@
 #include "Cache.h"
 #include <sstream>
 
-Downloader::Downloader(CacheEntry* cache_entry) :
+Downloader::Downloader(CacheEntry* cache_entry) try :
 _in(new VectorBuffer()),
 _out(new VectorBuffer()),
 _ce(cache_entry),
 _sock(new TCPSocket) {
+
+} catch (SocketException &ex){
+	delete _in;
+	delete _out;
+	throw;
 }
 
 Downloader::~Downloader() {
     delete _in;
     delete _out;
+	if(!_sock->is_closed())
+		_sock->close();
     delete _sock;
 }
 

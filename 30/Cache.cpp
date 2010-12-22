@@ -84,6 +84,7 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
         Logger::info("Cache NEW %s", key.c_str());
         CacheEntry *ce = new CacheEntry(request);
         ce->add_client(client);
+		Downloader *downloader = NULL;
 
         try {
             Downloader *downloader = new Downloader(ce);
@@ -91,11 +92,16 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
             downloader_thread.run();
             downloader_thread.detach();
             _cache[key] = ce;
-        } catch (std::exception &ex) {
-            Logger::debug("Cache::request() Exception: %s", ex.what());
+        } catch (ThreadException &ex) {
+            Logger::error("Cache::request() ThreadException: %s", ex.what());
+			delete downloader;
             delete ce;
             _cache[HTTP_INTERNAL_ERROR]->add_client(client);
-        }
+        } catch (SocketException &ex){
+            Logger::error("Cache::request() SocketException: %s", ex.what());
+            delete ce;
+            _cache[HTTP_INTERNAL_ERROR]->add_client(client);
+		}
     }
 
     Cache::_cache_mutex.unlock();
