@@ -94,8 +94,8 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
             _cache[key] = ce;
         } catch (ThreadException &ex) {
             Logger::error("Cache::request() ThreadException: %s", ex.what());
-			delete downloader;
             delete ce;
+			delete downloader;
             _cache[HTTP_INTERNAL_ERROR]->add_client(client);
         } catch (SocketException &ex){
             Logger::error("Cache::request() SocketException: %s", ex.what());
