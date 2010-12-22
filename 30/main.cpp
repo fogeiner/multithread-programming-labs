@@ -19,17 +19,21 @@ int main(int argc, char *argv[]) {
         Logger::info("Proxy is bound to %d port", ProxyConfig::listening_port);
 
         while (1) {
-            // accepting new client
-            TCPSocket *c_sock = l_sock.accept();
-            Client *client = new Client(c_sock);
-            Thread client_thread(Client::run, client);  
-            client_thread.run();
-            client_thread.detach();
+            try {
+                // accepting new client
+                TCPSocket *c_sock = l_sock.accept();
+                Client *client = new Client(c_sock);
+                Thread client_thread(Client::run, client);
+                client_thread.run();
+                client_thread.detach();
+            } catch (ThreadException &ex) {
+                Logger::error("main() Thread: %s", ex.what());
+            } catch (SocketException &ex){
+                 Logger::error("main() Socket: %s", ex.what());
+            }
         }
     } catch (AcceptException &ex) {
         Logger::error("main() Accept: %s", ex.what());
-    } catch (ThreadException &ex) {
-        Logger::error("main() Thread: %s", ex.what());
     } catch (BindException &ex) {
         Logger::error("main() Bind: %s", ex.what());
     } catch (std::exception &ex) {
