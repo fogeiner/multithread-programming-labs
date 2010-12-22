@@ -133,11 +133,13 @@ void *Client::run(void *client_ptr) {
         CacheEntry::CacheEntryState ce_state = ce->get_state();
 
         while ((ce_state == CacheEntry::CACHING || ce_state == CacheEntry::DOWNLOADING)
-                && c->_bytes_sent <= ce->bytes_received()) {
+                && c->_bytes_sent >= ce->bytes_received()) {
             Logger::debug("Client waits");
             ce->wait();
             ce_state = ce->get_state();
         }
+
+        Logger::debug("Client works");
 
         // copying data from CacheEntry to _out and informing CacheEntry about it
         const Buffer *cache_entry_buffer = ce->data();
@@ -230,8 +232,13 @@ void *Client::run(void *client_ptr) {
 
     ce->lock();
     ce->remove_client(c);
-    ce->broadcast();
-    ce->unlock();
+    if (ce->to_delete()) {
+        ce->unlock();
+        delete ce;
+    } else {
+        ce->broadcast();
+        ce->unlock();
+    }
     c->_sock->close();
     delete c;
     Thread::exit(NULL);

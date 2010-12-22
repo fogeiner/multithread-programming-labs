@@ -41,8 +41,8 @@ public:
     ~CacheEntry();
     CacheEntryState get_state() const;
     void set_state(CacheEntryState state);
-    int add_data(const char *msg);
-    int add_data(const Buffer *buffer);
+    void add_data(const char *msg);
+    void add_data(const Buffer *buffer);
     const Buffer *data() const;
     void add_client(Client *client);
     void remove_client(Client *client);
@@ -50,7 +50,7 @@ public:
 
     void set_downloader(Downloader *downloader);
     void remove_downloader();
-
+    bool to_delete() const;
 
 
     void lock();

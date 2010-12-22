@@ -42,9 +42,14 @@ void *Downloader::run(void* downloader_ptr) {
         Cache::drop(request.url());
         ce->lock();
         ce->remove_downloader();
-        ce->set_state(CacheEntry::CONNECTION_ERROR);
-        ce->broadcast();
-        ce->unlock();
+        if (ce->to_delete()) {
+            ce->unlock();
+            delete ce;
+        } else {
+            ce->set_state(CacheEntry::CONNECTION_ERROR);
+            ce->broadcast();
+            ce->unlock();
+        }
         sock->close();
         delete d;
         Thread::exit(NULL);
@@ -53,9 +58,14 @@ void *Downloader::run(void* downloader_ptr) {
         Cache::drop(request.url());
         ce->lock();
         ce->remove_downloader();
-        ce->set_state(CacheEntry::CONNECTION_ERROR);
-        ce->broadcast();
-        ce->unlock();
+        if (ce->to_delete()) {
+            ce->unlock();
+            delete ce;
+        } else {
+            ce->set_state(CacheEntry::CONNECTION_ERROR);
+            ce->broadcast();
+            ce->unlock();
+        }
         sock->close();
         delete d;
         Thread::exit(NULL);
@@ -72,9 +82,14 @@ void *Downloader::run(void* downloader_ptr) {
         Logger::error("Downloader SendException: %s", ex.what());
         ce->lock();
         ce->remove_downloader();
-        ce->set_state(CacheEntry::SEND_ERROR);
-        ce->broadcast();
-        ce->unlock();
+        if (ce->to_delete()) {
+            ce->unlock();
+            delete ce;
+        } else {
+            ce->set_state(CacheEntry::SEND_ERROR);
+            ce->broadcast();
+            ce->unlock();
+        }
         delete d;
         Thread::exit(NULL);
     }
@@ -86,12 +101,23 @@ void *Downloader::run(void* downloader_ptr) {
         try {
             if (0 == sock->recv(in)) {
                 ce->lock();
-                if ((ce->get_state() == CacheEntry::CACHING) && response_code_received) {
-                    ce->set_state(CacheEntry::CACHED);
+
+                if (response_code_received) {
+                    if (ce->get_state() == CacheEntry::CACHING)
+                        ce->set_state(CacheEntry::CACHED);
+                    else
+                        ce->set_state(CacheEntry::FINISHED);
                 }
+
                 ce->remove_downloader();
-                ce->broadcast();
-                ce->unlock();
+                if (ce->to_delete()) {
+                    ce->unlock();
+                    delete ce;
+                } else {
+                    ce->broadcast();
+                    ce->unlock();
+                }
+                sock->close();
                 delete d;
                 Thread::exit(NULL);
 
@@ -101,8 +127,14 @@ void *Downloader::run(void* downloader_ptr) {
             ce->lock();
             ce->set_state(CacheEntry::RECV_ERROR);
             ce->remove_downloader();
-            ce->broadcast();
-            ce->unlock();
+            if (ce->to_delete()) {
+                ce->unlock();
+                delete ce;
+            } else {
+                ce->broadcast();
+                ce->unlock();
+            }
+            sock->close();
             delete d;
             Thread::exit(NULL);
         }
@@ -117,13 +149,27 @@ void *Downloader::run(void* downloader_ptr) {
             Cache::drop(ce->request().url());
 
             ce->remove_downloader();
-            ce->broadcast();
-            ce->unlock();
+            if (ce->to_delete()) {
+                ce->unlock();
+                delete ce;
+            } else {
+                ce->broadcast();
+                ce->unlock();
+            }
+            sock->close();
             delete d;
             Thread::exit(NULL);
         }
 
         in->clear();
+
+        // iCache::size() > Cache::MAX_CACHE_SIZE f CacheEntry exceeds size
+        if (ce->get_state() == CacheEntry::CACHING &&
+                (Cache::size() > Cache::MAX_CACHE_SIZE || ce->data()->size() > Cache::MAX_CACHE_ENTRY_SIZE)) {
+            Logger::info("Dropping CacheEntry due to size overflow");
+            Cache::drop(ce->request().url());
+            ce->set_state(CacheEntry::DOWNLOADING);
+        }
 
         // strlen("HTTP/1.x 200") == 12
         if ((response_code_received == false) && (ce->data()->size() >= 12)) {

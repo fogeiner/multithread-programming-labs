@@ -8,9 +8,11 @@ _data(new VectorBuffer()),
 _bytes_received(0),
 _request(request),
 _mutex(Mutex::ERRORCHECK_MUTEX) {
+    Logger::debug("CacheEntry::CacheEntry()");
 }
 
 CacheEntry::~CacheEntry() {
+    Logger::debug("CacheEntry::~CacheEntry()");
     delete _data;
 }
 
@@ -22,16 +24,11 @@ void CacheEntry::set_state(CacheEntryState state) {
     _state = state;
 }
 
-int CacheEntry::add_data(const char *msg) {
+void CacheEntry::add_data(const char *msg) {
     Logger::debug("CacheEntry::add_data()");
-    int clients_count;
-
-    clients_count = _clients.size();
+    
     _data->append(msg);
     _bytes_received += _data->size();
-
-
-    return clients_count;
 }
 
 const Buffer *CacheEntry::data() const {
@@ -41,13 +38,8 @@ const Buffer *CacheEntry::data() const {
 int CacheEntry::add_data(const Buffer *buffer) {
     Logger::debug("CacheEntry::add_data()");
 
-    int clients_count;
-
-    clients_count = _clients.size();
     _data->append(buffer);
     _bytes_received += buffer->size();
-
-    return clients_count;
 }
 
 void CacheEntry::add_client(Client *client) {
@@ -58,7 +50,6 @@ void CacheEntry::add_client(Client *client) {
 }
 
 struct CompareClientsBytes {
-
     bool operator()(const std::pair<Client*, int>& left, const std::pair<Client*, int>& right) const {
         return left.second < right.second;
     }
@@ -68,9 +59,18 @@ void CacheEntry::data_got(int bytes_got, Client* client) {
     Logger::debug("CacheEntry::data_got()");
     _clients_bytes_got[client] = bytes_got;
     if (_state == DOWNLOADING || _state == FINISHED) {
-        int min = (*std::min_element(_clients_bytes_got.begin(), _clients_bytes_got.end(), CompareClientsBytes())).second;
+        int min = (*std::min_element(_clients_bytes_got.begin(),
+                _clients_bytes_got.end(), CompareClientsBytes())).second;
+        Logger::debug("Dropping %d bytes from CacheEntry", min - (_bytes_received - _data->size()));
         _data->drop_first(min - (_bytes_received - _data->size()));
+        Cache::bytes_added(-(min - (_bytes_received - _data->size())));
+    } else {
+        Logger::debug("State is not downloading");
     }
+}
+
+bool CacheEntry::to_delete() const {
+    return (_clients.size() == 0) && (_downloader == NULL) && (_state != CACHED);
 }
 
 void CacheEntry::remove_client(Client *client) {
@@ -79,13 +79,6 @@ void CacheEntry::remove_client(Client *client) {
 
     _clients.remove(client);
     _clients_bytes_got.erase(client);
-
-    to_delete = (_clients.size() == 0) && (_downloader == NULL) && (_state != CACHED);
-
-    if (to_delete) {
-        Logger::debug("CacheEntry deleting due to no clients and downloader");
-        delete this;
-    }
 }
 
 void CacheEntry::remove_downloader() {
@@ -94,11 +87,6 @@ void CacheEntry::remove_downloader() {
 
     _downloader = NULL;
     to_delete = (_clients.size() == 0) && (_downloader == NULL) && (_state != CACHED);
-
-    if (to_delete) {
-        Logger::debug("CacheEntry deleting due to no clients and downloader");
-        delete this;
-    }
 }
 
 void CacheEntry::set_downloader(Downloader *downloader) {

@@ -7,7 +7,7 @@
 #include "config.h"
 
 int main(int argc, char *argv[]) {
-    Logger::set_level(Logger::DEBUG);
+    Logger::set_level(Logger::INFO);
     Cache::init();
 
     try {
