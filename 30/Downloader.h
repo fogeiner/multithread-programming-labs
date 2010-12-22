@@ -2,9 +2,9 @@
 
 #include "../libs/TCPSocket/TCPSocket.h"
 #include "../libs/Buffer/VectorBuffer.h"
-#include "BrokenUpHTTPRequest.h"
 
-class CacheEntry;
+#include "CacheEntry.h"
+#include "BrokenUpHTTPRequest.h"
 
 struct DownloaderParameter {
     BrokenUpHTTPRequest request;
@@ -16,10 +16,11 @@ private:
     TCPSocket *_sock;
     Buffer *_in;
     Buffer *_out;
+    void close_delete_exit();
+    void remove_or_change_state(CacheEntry::CacheEntryState state);
 public:
     Downloader(CacheEntry *cache_entry);
     ~Downloader();
+    static Downloader *dummy_downloader();
     static void *run(void *downloader_ptr);
-
-
 };

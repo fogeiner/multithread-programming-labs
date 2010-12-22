@@ -29,7 +29,7 @@ public:
         return *this;
     }
 
-    VectorBuffer(const char *buf, int length) : _v(buf, buf + length) {
+    VectorBuffer(const char *buf, size_t length) : _v(buf, buf + length) {
     }
 
     virtual void append(const Buffer *buffer) {
@@ -40,12 +40,12 @@ public:
         this->append(&buffer);
     }
 
-    virtual void append(const char *buf, int length) {
+    virtual void append(const char *buf, size_t length) {
         this->_v.insert(this->_v.end(), buf, buf + length);
     }
 
     virtual void append(const char *buf) {
-        int i;
+        size_t i;
         for (i = 0; *(buf + i) != '\0'; ++i)
             ;
         this->_v.insert(this->_v.end(), buf, buf + i);
@@ -61,11 +61,11 @@ public:
 #endif
     }
 
-    virtual int size() const {
+    virtual size_t size() const {
         return this->_v.size();
     }
 
-    virtual Buffer *subbuf(int start, int end) const {
+    virtual Buffer *subbuf(size_t start, size_t end) const {
         assert(start >= 0);
         assert(end >= 0);
         assert(end >= start);
@@ -74,30 +74,30 @@ public:
         return new VectorBuffer(&_v[start], end - start);
     }
 
-    virtual Buffer *first(int count) const {
+    virtual Buffer *first(size_t count) const {
         return this->subbuf(0, count);
     }
 
-    virtual Buffer *last(int count) const {
-        int size = this->size();
+    virtual Buffer *last(size_t count) const {
+        size_t size = this->size();
         return this->subbuf(size - count, size);
     }
 
-    virtual void drop_first(int count) {
+    virtual void drop_first(size_t count) {
         assert(count <= this->size());
         this->_v.erase(this->_v.begin(), this->_v.begin() + count);
     }
 
-    virtual void drop_last(int count) {
+    virtual void drop_last(size_t count) {
         assert(count <= this->size());
         this->_v.erase(this->_v.begin() + this->size() - count, this->_v.end());
     }
 
-    virtual char at(int index) const {
+    virtual char at(size_t index) const {
         return (*this)[index];
     }
 
-    virtual char operator[](int index) const {
+    virtual char operator[](size_t index) const {
         assert(index >= 0);
         assert(index <= this->size());
         return this->_v[index];

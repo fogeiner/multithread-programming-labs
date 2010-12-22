@@ -4,10 +4,10 @@
 #include "config.h"
 std::map<std::string, CacheEntry*> Cache::_cache;
 Mutex Cache::_cache_mutex(Mutex::RECURSIVE_MUTEX);
-int Cache::_size;
+size_t Cache::_size;
 Mutex Cache::_size_mutex(Mutex::RECURSIVE_MUTEX);
-const int Cache::MAX_CACHE_ENTRY_SIZE = ProxyConfig::max_cache_entry_size;
-const int Cache::MAX_CACHE_SIZE = ProxyConfig::max_cache_size;
+const size_t Cache::MAX_CACHE_ENTRY_SIZE = ProxyConfig::max_cache_entry_size;
+const size_t Cache::MAX_CACHE_SIZE = ProxyConfig::max_cache_size;
 
 // kinda bad request but that cannot be processed
 const std::string Cache::HTTP_NOT_IMPLEMENTED("HTTP_NOT_IMPLEMENTED");
@@ -40,13 +40,19 @@ void Cache::init() {
     _cache[HTTP_SERVICE_UNAVAILABLE]->set_state(CacheEntry::CACHED);
 }
 
-int Cache::size() {
+size_t Cache::size() {
     return Cache::_size;
 }
 
-void Cache::bytes_added(int bytes) {
+void Cache::bytes_added(size_t bytes) {
     Cache::_size_mutex.lock();
     Cache::_size += bytes;
+    Cache::_size_mutex.unlock();
+}
+
+void Cache::bytes_removed(size_t bytes) {
+    Cache::_size_mutex.lock();
+    Cache::_size -= bytes;
     Cache::_size_mutex.unlock();
 }
 
@@ -99,7 +105,7 @@ void Cache::drop(std::string url) {
     Logger::debug("Cache::drop(%s)", url.c_str());
     Cache::_cache_mutex.lock();
     CacheEntry *ce = _cache[url];
-    Cache::bytes_added(-ce->bytes_received());
+    Cache::bytes_removed(ce->bytes_received());
     _cache.erase(url);
     Cache::_cache_mutex.unlock();
 }

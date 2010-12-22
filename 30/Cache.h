@@ -14,11 +14,11 @@ private:
     static std::map<std::string, CacheEntry*> _cache;
     static Mutex _cache_mutex;
     static Mutex _size_mutex;
-    static int _size;
+    static size_t _size;
     Cache();
 public:
-    static const int MAX_CACHE_SIZE;
-    static const int MAX_CACHE_ENTRY_SIZE;
+    static const size_t MAX_CACHE_SIZE;
+    static const size_t MAX_CACHE_ENTRY_SIZE;
 
     static const std::string HTTP_NOT_IMPLEMENTED;
     static const std::string HTTP_BAD_REQUEST;
@@ -28,9 +28,10 @@ public:
     static void init();
     static void request(BrokenUpHTTPRequest request, Client *client);
     static void request(std::string url, Client *client);
-    static int size();
+    static size_t size();
 
-    static void bytes_added(int bytes);
+    static void bytes_added(size_t bytes);
+    static void bytes_removed(size_t bytes);
     static void drop(std::string key);
 };
 

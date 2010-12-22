@@ -1,8 +1,10 @@
-#include "CacheEntry.h"
 #include <algorithm>
+#include "CacheEntry.h"
 #include "Client.h"
+#include "Downloader.h"
 
 CacheEntry::CacheEntry(BrokenUpHTTPRequest request) :
+_downloader(Downloader::dummy_downloader()),
 _state(CacheEntry::CACHING),
 _data(new VectorBuffer()),
 _bytes_received(0),
@@ -38,8 +40,13 @@ const Buffer *CacheEntry::data() const {
 int CacheEntry::add_data(const Buffer *buffer) {
     Logger::debug("CacheEntry::add_data()");
 
+    if(_state == CACHING){
+        Cache::bytes_added(buffer->size());
+    }
     _data->append(buffer);
     _bytes_received += buffer->size();
+
+    return _clients.size();
 }
 
 void CacheEntry::add_client(Client *client) {
@@ -50,22 +57,21 @@ void CacheEntry::add_client(Client *client) {
 }
 
 struct CompareClientsBytes {
-    bool operator()(const std::pair<Client*, int>& left, const std::pair<Client*, int>& right) const {
+    bool operator()(const std::pair<Client*, size_t>& left, const std::pair<Client*, size_t>& right) const {
         return left.second < right.second;
     }
 };
 
-void CacheEntry::data_got(int bytes_got, Client* client) {
+void CacheEntry::data_got(size_t bytes_got, Client* client) {
     Logger::debug("CacheEntry::data_got()");
     _clients_bytes_got[client] = bytes_got;
+
     if (_state == DOWNLOADING || _state == FINISHED) {
-        int min = (*std::min_element(_clients_bytes_got.begin(),
+        size_t min = (*std::min_element(_clients_bytes_got.begin(),
                 _clients_bytes_got.end(), CompareClientsBytes())).second;
         Logger::debug("Dropping %d bytes from CacheEntry", min - (_bytes_received - _data->size()));
         _data->drop_first(min - (_bytes_received - _data->size()));
-        Cache::bytes_added(-(min - (_bytes_received - _data->size())));
-    } else {
-        Logger::debug("State is not downloading");
+        Cache::bytes_removed(min - (_bytes_received - _data->size()));
     }
 }
 
@@ -75,7 +81,6 @@ bool CacheEntry::to_delete() const {
 
 void CacheEntry::remove_client(Client *client) {
     Logger::debug("CacheEntry::remove_client()");
-    bool to_delete = false;
 
     _clients.remove(client);
     _clients_bytes_got.erase(client);
@@ -83,10 +88,7 @@ void CacheEntry::remove_client(Client *client) {
 
 void CacheEntry::remove_downloader() {
     Logger::debug("CacheEntry::remove_downloader()");
-    bool to_delete = false;
-
     _downloader = NULL;
-    to_delete = (_clients.size() == 0) && (_downloader == NULL) && (_state != CACHED);
 }
 
 void CacheEntry::set_downloader(Downloader *downloader) {
@@ -94,7 +96,7 @@ void CacheEntry::set_downloader(Downloader *downloader) {
     _downloader = downloader;
 }
 
-int CacheEntry::bytes_received() const {
+size_t CacheEntry::bytes_received() const {
     return _bytes_received;
 }
 

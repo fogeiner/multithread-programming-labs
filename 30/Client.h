@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../libs/Buffer/VectorBuffer.h"
 #include "../libs/TCPSocket/TCPSocket.h"
 #include "../libs/HTTPURIParser/HTTPURIParser.h"
@@ -21,9 +22,9 @@ private:
     Buffer *_in;
     Buffer *_out;
     BrokenUpHTTPRequest _request;
-    int _bytes_sent;
+    size_t _bytes_sent;
     CacheEntry *_ce;
-
+    void close_delete_exit();
 public:
 
     Client(TCPSocket *c_sock);

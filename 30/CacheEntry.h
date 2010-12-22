@@ -28,11 +28,11 @@ public:
     };
 private:
     std::list<Client*> _clients;
-    std::map<Client*, int> _clients_bytes_got;
+    std::map<Client*, size_t> _clients_bytes_got;
     Downloader *_downloader;
     CacheEntryState _state;
     Buffer *_data;
-    int _bytes_received;
+    size_t _bytes_received;
     BrokenUpHTTPRequest _request;
     mutable Mutex _mutex;
     mutable CondVar _cv;
@@ -42,11 +42,11 @@ public:
     CacheEntryState get_state() const;
     void set_state(CacheEntryState state);
     void add_data(const char *msg);
-    void add_data(const Buffer *buffer);
+    int add_data(const Buffer *buffer);
     const Buffer *data() const;
     void add_client(Client *client);
     void remove_client(Client *client);
-    void data_got(int bytes_got, Client *client);
+    void data_got(size_t bytes_got, Client *client);
 
     void set_downloader(Downloader *downloader);
     void remove_downloader();
@@ -59,6 +59,6 @@ public:
     void signal();
     void broadcast();
 
-    int bytes_received() const;
+    size_t bytes_received() const;
     const BrokenUpHTTPRequest &request() const;
 };

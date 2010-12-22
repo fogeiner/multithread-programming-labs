@@ -1,5 +1,5 @@
 #include "Downloader.h"
-#include "CacheEntry.h"
+
 #include "../libs/Thread/Thread.h"
 #include "Cache.h"
 #include <sstream>
@@ -17,19 +17,46 @@ Downloader::~Downloader() {
     delete _sock;
 }
 
+Downloader *Downloader::dummy_downloader() {
+    static Downloader d(NULL);
+    return &d;
+}
+
+void Downloader::close_delete_exit() {
+    _sock->close();
+    delete this;
+    Thread::exit(NULL);
+}
+
+void Downloader::remove_or_change_state(CacheEntry::CacheEntryState state) {
+    CacheEntry *ce = this->_ce;
+    ce->lock();
+    ce->remove_downloader();
+    if (ce->to_delete()) {
+        ce->unlock();
+        delete ce;
+    } else {
+        ce->set_state(state);
+        ce->broadcast();
+        ce->unlock();
+    }
+}
+
 void *Downloader::run(void* downloader_ptr) {
     Downloader *d = static_cast<Downloader*> (downloader_ptr);
+
     CacheEntry *ce = d->_ce;
     Buffer *in = d->_in;
     Buffer *out = d->_out;
     TCPSocket *sock = d->_sock;
 
+    ce->lock();
     ce->set_downloader(d);
     const BrokenUpHTTPRequest &request = ce->request();
+    ce->unlock();
 
     // forming query to send
     out->append(ce->request().request().c_str(), ce->request().request().size());
-
 
     // try to connect
     try {
@@ -40,35 +67,14 @@ void *Downloader::run(void* downloader_ptr) {
     } catch (ConnectException &ex) {
         Logger::error("Downloader ConnectException: %s", ex.what());
         Cache::drop(request.url());
-        ce->lock();
-        ce->remove_downloader();
-        if (ce->to_delete()) {
-            ce->unlock();
-            delete ce;
-        } else {
-            ce->set_state(CacheEntry::CONNECTION_ERROR);
-            ce->broadcast();
-            ce->unlock();
-        }
-        sock->close();
-        delete d;
-        Thread::exit(NULL);
+        d->remove_or_change_state(CacheEntry::CONNECTION_ERROR);
+        d->close_delete_exit();
+
     } catch (DNSException &ex) {
         Logger::error("Downloader DNSException: %s", ex.what());
         Cache::drop(request.url());
-        ce->lock();
-        ce->remove_downloader();
-        if (ce->to_delete()) {
-            ce->unlock();
-            delete ce;
-        } else {
-            ce->set_state(CacheEntry::CONNECTION_ERROR);
-            ce->broadcast();
-            ce->unlock();
-        }
-        sock->close();
-        delete d;
-        Thread::exit(NULL);
+        d->remove_or_change_state(CacheEntry::CONNECTION_ERROR);
+        d->close_delete_exit();
     }
 
 
@@ -76,22 +82,14 @@ void *Downloader::run(void* downloader_ptr) {
     try {
         Logger::debug("Downloader sending request");
         sock->send(out, true);
+        out->clear();
         // if fail -- set Entry status to SEND_ERROR
         // and quit
     } catch (SendException &ex) {
         Logger::error("Downloader SendException: %s", ex.what());
-        ce->lock();
-        ce->remove_downloader();
-        if (ce->to_delete()) {
-            ce->unlock();
-            delete ce;
-        } else {
-            ce->set_state(CacheEntry::SEND_ERROR);
-            ce->broadcast();
-            ce->unlock();
-        }
-        delete d;
-        Thread::exit(NULL);
+        Cache::drop(request.url());
+        d->remove_or_change_state(CacheEntry::SEND_ERROR);
+        d->close_delete_exit();
     }
 
     bool response_code_received = false;
@@ -100,13 +98,16 @@ void *Downloader::run(void* downloader_ptr) {
     while (1) {
         try {
             if (0 == sock->recv(in)) {
+                Logger::debug("Downloader finished downloading");
                 ce->lock();
 
                 if (response_code_received) {
                     if (ce->get_state() == CacheEntry::CACHING)
                         ce->set_state(CacheEntry::CACHED);
-                    else
+                    else if (ce->get_state() == CacheEntry::DOWNLOADING)
                         ce->set_state(CacheEntry::FINISHED);
+                    else
+                        assert(false);
                 }
 
                 ce->remove_downloader();
@@ -117,48 +118,34 @@ void *Downloader::run(void* downloader_ptr) {
                     ce->broadcast();
                     ce->unlock();
                 }
-                sock->close();
-                delete d;
-                Thread::exit(NULL);
+
+                d->close_delete_exit();
 
             }
         } catch (RecvException &ex) {
             Logger::error("Downloader RecvException: %s", ex.what());
-            ce->lock();
-            ce->set_state(CacheEntry::RECV_ERROR);
-            ce->remove_downloader();
-            if (ce->to_delete()) {
-                ce->unlock();
-                delete ce;
-            } else {
-                ce->broadcast();
-                ce->unlock();
-            }
-            sock->close();
-            delete d;
-            Thread::exit(NULL);
+            d->remove_or_change_state(CacheEntry::RECV_ERROR);
+            d->close_delete_exit();
         }
 
         ce->lock();
-
         clients_count = ce->add_data(in);
 
         if (clients_count == 0) {
             Logger::debug("Downloader finishing due to the lack of clients");
 
-            Cache::drop(ce->request().url());
+            if (ce->get_state() == CacheEntry::CACHING)
+                Cache::drop(ce->request().url());
 
             ce->remove_downloader();
             if (ce->to_delete()) {
                 ce->unlock();
                 delete ce;
             } else {
-                ce->broadcast();
-                ce->unlock();
+                assert(false);
             }
-            sock->close();
-            delete d;
-            Thread::exit(NULL);
+
+            d->close_delete_exit();
         }
 
         in->clear();
@@ -185,6 +172,7 @@ void *Downloader::run(void* downloader_ptr) {
 
             if ((word1 == "HTTP/1.0" || word1 == "HTTP/1.1") && word2 == "200") {
                 Logger::debug("Downloader Valid 200 response, caching");
+                ce->set_state(CacheEntry::CACHING);
             } else {
                 Logger::debug("Downloader dropping due to non 200 response");
                 Logger::info("Dropping: code %s", word2.c_str());
@@ -197,16 +185,4 @@ void *Downloader::run(void* downloader_ptr) {
         ce->broadcast();
         ce->unlock();
     }
-
-    // reading request from server
-    // as soon as there enough symbols to detect
-    // HTTP code, parse header and in case
-    // it's not 200, delete CacheEntry from Cache
-
-    // if recv fails delete Entry from Cache (if it wasn't deleted earlier)
-    // set Entry status to RECV_ERROR and quit
-
-    // if recv = 0 then set Entry to Cached one (or just FINISHED)
-    // and quit
-
 }

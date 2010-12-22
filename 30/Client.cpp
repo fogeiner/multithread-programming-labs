@@ -21,6 +21,12 @@ void Client::set_cache_entry(CacheEntry *cache_entry) {
     _ce = cache_entry;
 }
 
+void Client::close_delete_exit() {
+    _sock->close();
+    delete this;
+    Thread::exit(NULL);
+}
+
 bool Client::parse_request() {
     std::string raw_request = *_in;
 
@@ -101,9 +107,8 @@ void *Client::run(void *client_ptr) {
                 }
             } catch (RecvException &ex) {
                 Logger::error("Client::recv_request() RecvException");
-                c->_sock->close();
-                delete c;
-                Thread::exit(NULL);
+
+                c->close_delete_exit();
             }
         } while (!c->parse_request());
 
@@ -111,26 +116,28 @@ void *Client::run(void *client_ptr) {
         Cache::request(c->_request, c);
     } catch (NotImlementedException &ex) {
         Logger::error("Client::parse_request() NotImplementedException");
-        BrokenUpHTTPRequest broken_up_request(Cache::HTTP_NOT_IMPLEMENTED);
-        Cache::request(broken_up_request, c);
+        Cache::request(Cache::HTTP_NOT_IMPLEMENTED, c);
     } catch (BadRequestException &ex) {
         Logger::error("Client::parse_request() BadRequestException");
-        BrokenUpHTTPRequest broken_up_request(Cache::HTTP_BAD_REQUEST);
-        Cache::request(broken_up_request, c);
+        Cache::request(Cache::HTTP_BAD_REQUEST, c);
     }
+    c->_in->clear();
 
     // in request procedure Client's _ce is meant to be set to
     // the active CacheEntry
     bool done = false;
-    CacheEntry *ce = c->_ce;
+
+    CacheEntry *ce;
 
     do {
-        Buffer *out = c->_out;
         ce = c->_ce;
+
+        Buffer *out = c->_out;
+        CacheEntry::CacheEntryState ce_state;
 
         ce->lock();
 
-        CacheEntry::CacheEntryState ce_state = ce->get_state();
+        ce_state = ce->get_state();
 
         while ((ce_state == CacheEntry::CACHING || ce_state == CacheEntry::DOWNLOADING)
                 && c->_bytes_sent >= ce->bytes_received()) {
@@ -143,9 +150,9 @@ void *Client::run(void *client_ptr) {
 
         // copying data from CacheEntry to _out and informing CacheEntry about it
         const Buffer *cache_entry_buffer = ce->data();
-        int client_bytes_got = c->_out->size() + c->_bytes_sent;
-        int cache_entry_bytes_received = ce->bytes_received();
-        int cache_entry_buffer_size = cache_entry_buffer->size();
+        size_t client_bytes_got = c->_out->size() + c->_bytes_sent;
+        size_t cache_entry_bytes_received = ce->bytes_received();
+        size_t cache_entry_buffer_size = cache_entry_buffer->size();
 
         Buffer *sub_buf = cache_entry_buffer->subbuf(cache_entry_buffer_size -
                 (cache_entry_bytes_received - client_bytes_got), cache_entry_buffer_size);
@@ -153,6 +160,9 @@ void *Client::run(void *client_ptr) {
         out->append(sub_buf);
 
         delete sub_buf;
+
+        ce->broadcast();
+        ce->unlock();
 
         switch (ce_state) {
                 // working; add data and try to send it
@@ -194,9 +204,9 @@ void *Client::run(void *client_ptr) {
             case CacheEntry::CONNECTION_ERROR:
             {
                 Logger::debug("Client: CONNECTION_ERROR");
-                Cache::request(Cache::HTTP_SERVICE_UNAVAILABLE, c);
                 c->_out->clear();
                 c->_bytes_sent = 0;
+                Cache::request(Cache::HTTP_SERVICE_UNAVAILABLE, c);
                 break;
             }
                 // there was a problem while sending request to the server
@@ -204,22 +214,19 @@ void *Client::run(void *client_ptr) {
             case CacheEntry::SEND_ERROR:
             {
                 Logger::debug("Client: SEND_ERROR");
-                Cache::request(Cache::HTTP_INTERNAL_ERROR, c);
                 c->_out->clear();
                 c->_bytes_sent = 0;
+                Cache::request(Cache::HTTP_INTERNAL_ERROR, c);
                 break;
             }
         }
 
-        ce->broadcast();
-        ce->unlock();
-
 
         try {
-            int sent;
-            sent = c->_sock->send(c->_out, true);
+            int sent = c->_sock->send(c->_out, true);
             c->_bytes_sent += sent;
             c->_out->drop_first(sent);
+
             ce->lock();
             ce->data_got(c->_bytes_sent, c);
             ce->broadcast();
@@ -232,6 +239,7 @@ void *Client::run(void *client_ptr) {
 
     ce->lock();
     ce->remove_client(c);
+
     if (ce->to_delete()) {
         ce->unlock();
         delete ce;
@@ -239,7 +247,6 @@ void *Client::run(void *client_ptr) {
         ce->broadcast();
         ce->unlock();
     }
-    c->_sock->close();
-    delete c;
-    Thread::exit(NULL);
+
+    c->close_delete_exit();
 }
