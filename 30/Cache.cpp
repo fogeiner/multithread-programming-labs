@@ -70,6 +70,7 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
     if (_cache.find(key) != _cache.end()) {
         CacheEntry *ce = _cache[key];
 
+        ce->lock();
         if (ce->get_state() == CacheEntry::CACHED) {
             Logger::info("Cache HIT %s", key.c_str());
         } else if (ce->get_state() == CacheEntry::CACHING) {
@@ -77,17 +78,18 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
         } else {
             assert(false);
         }
-
         ce->add_client(client);
+        ce->unlock();
         // if there's no such entry we should create one
     } else {
         Logger::info("Cache NEW %s", key.c_str());
-        CacheEntry *ce = new CacheEntry(request);
-        ce->add_client(client);
-		Downloader *downloader = NULL;
+        CacheEntry *ce = NULL;
+        Downloader *downloader = NULL;
 
         try {
-            Downloader *downloader = new Downloader(ce);
+            ce = new CacheEntry(request);
+            ce->add_client(client);
+            downloader = new Downloader(ce);
             Thread downloader_thread(Downloader::run, downloader);
             downloader_thread.run();
             downloader_thread.detach();
@@ -95,13 +97,13 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
         } catch (ThreadException &ex) {
             Logger::error("Cache::request() ThreadException: %s", ex.what());
             delete ce;
-			delete downloader;
+            delete downloader;
             _cache[HTTP_INTERNAL_ERROR]->add_client(client);
-        } catch (SocketException &ex){
+        } catch (SocketException &ex) {
             Logger::error("Cache::request() SocketException: %s", ex.what());
             delete ce;
             _cache[HTTP_INTERNAL_ERROR]->add_client(client);
-		}
+        }
     }
 
     Cache::_cache_mutex.unlock();
