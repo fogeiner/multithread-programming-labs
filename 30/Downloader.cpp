@@ -158,15 +158,15 @@ void *Downloader::run(void* downloader_ptr) {
         in->clear();
 
         // iCache::size() > Cache::MAX_CACHE_SIZE f CacheEntry exceeds size
-        if (ce->get_state() == CacheEntry::CACHING &&
-                (Cache::size() > Cache::MAX_CACHE_SIZE || ce->data()->size() > Cache::MAX_CACHE_ENTRY_SIZE)) {
+        if ((ce->get_state() == CacheEntry::CACHING &&
+                (Cache::size() > Cache::MAX_CACHE_SIZE || ce->data()->size() > Cache::MAX_CACHE_ENTRY_SIZE))) {
             Logger::info("Dropping CacheEntry due to size overflow");
             Cache::drop(ce->request().url());
             ce->set_state(CacheEntry::DOWNLOADING);
         }
 
         // strlen("HTTP/1.x 200") == 12
-        if ((response_code_received == false) && (ce->data()->size() >= 12)) {
+        if ((response_code_received == false) && (ce->get_state() == CacheEntry::CACHING) && (ce->data()->size() >= 12)) {
             Logger::debug("Downloader analyzing response");
             response_code_received = true;
 
