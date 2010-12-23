@@ -101,13 +101,10 @@ void *Client::run(void *client_ptr) {
             try {
                 if (c->_sock->recv(c->_in) == 0) {
                     Logger::debug("Client closed connection");
-                    c->_sock->close();
-                    delete c;
-                    Thread::exit(NULL);
+                    c->close_delete_exit();
                 }
             } catch (RecvException &ex) {
                 Logger::error("Client::recv_request() RecvException");
-
                 c->close_delete_exit();
             }
         } while (!c->parse_request());
@@ -121,6 +118,7 @@ void *Client::run(void *client_ptr) {
         Logger::error("Client::parse_request() BadRequestException");
         Cache::request(Cache::HTTP_BAD_REQUEST, c);
     }
+
     c->_in->clear();
 
     // in request procedure Client's _ce is meant to be set to
