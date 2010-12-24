@@ -37,7 +37,7 @@ const Buffer *CacheEntry::data() const {
     return _data;
 }
 
-int CacheEntry::add_data(const Buffer *buffer) {
+void CacheEntry::add_data(const Buffer *buffer) {
     Logger::debug("CacheEntry::add_data()");
 
     if (_state == CACHING) {
@@ -45,8 +45,6 @@ int CacheEntry::add_data(const Buffer *buffer) {
     }
     _data->append(buffer);
     _bytes_received += buffer->size();
-
-    return _clients.size();
 }
 
 void CacheEntry::add_client(Client *client) {
@@ -128,4 +126,8 @@ void CacheEntry::signal() {
 void CacheEntry::broadcast() {
     Logger::debug("CacheEntry::broadcast()");
     _cv.broadcast();
+}
+
+int CacheEntry::clients_count() const {
+    return _clients.size();
 }

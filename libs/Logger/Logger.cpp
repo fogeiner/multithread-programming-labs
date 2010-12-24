@@ -83,7 +83,7 @@ void Logger::log(enum level priority, const char *fmt, va_list ap){
             cr_fmt[fmt_length] = '\n';
             cr_fmt[fmt_length + 1] = '\0';
             vfprintf(stderr, cr_fmt, ap);
-            delete cr_fmt;
+            delete[] cr_fmt;
 	}
 #ifdef MT_LOGGER
 	_m.unlock();

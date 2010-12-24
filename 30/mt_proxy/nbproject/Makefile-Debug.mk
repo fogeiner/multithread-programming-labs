@@ -39,8 +39,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1472/Downloader.o \
 	${OBJECTDIR}/_ext/297160205/TCPSocket.o \
 	${OBJECTDIR}/_ext/575434844/CondVar.o \
-	${OBJECTDIR}/_ext/413176034/HTTPURIParser.o \
 	${OBJECTDIR}/_ext/1472/config.o \
+	${OBJECTDIR}/_ext/413176034/HTTPURIParser.o \
 	${OBJECTDIR}/_ext/238894769/Logger.o \
 	${OBJECTDIR}/_ext/1472/CacheEntry.o \
 	${OBJECTDIR}/_ext/1472/main.o \
@@ -101,15 +101,15 @@ ${OBJECTDIR}/_ext/575434844/CondVar.o: ../../libs/CondVar/CondVar.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/575434844/CondVar.o ../../libs/CondVar/CondVar.cpp
 
-${OBJECTDIR}/_ext/413176034/HTTPURIParser.o: ../../libs/HTTPURIParser/HTTPURIParser.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/413176034
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/413176034/HTTPURIParser.o ../../libs/HTTPURIParser/HTTPURIParser.cpp
-
 ${OBJECTDIR}/_ext/1472/config.o: ../config.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/config.o ../config.cpp
+
+${OBJECTDIR}/_ext/413176034/HTTPURIParser.o: ../../libs/HTTPURIParser/HTTPURIParser.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/413176034
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/413176034/HTTPURIParser.o ../../libs/HTTPURIParser/HTTPURIParser.cpp
 
 ${OBJECTDIR}/_ext/238894769/Logger.o: ../../libs/Logger/Logger.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/238894769

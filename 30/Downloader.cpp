@@ -103,10 +103,17 @@ void *Downloader::run(void* downloader_ptr) {
     int clients_count = 0;
 
     while (1) {
+
+        ce->lock();
+        while ((ce->get_state() == CacheEntry::DOWNLOADING) &&
+                (ce->data()->size() > Cache::MAX_CACHE_ENTRY_SIZE) &&
+                (ce->clients_count() > 0)) {
+            ce->wait();
+        }
+
         try {
             if (0 == sock->recv(in)) {
                 Logger::debug("Downloader finished downloading");
-                ce->lock();
 
                 if (response_code_received) {
                     if (ce->get_state() == CacheEntry::CACHING)
@@ -135,8 +142,8 @@ void *Downloader::run(void* downloader_ptr) {
             d->close_delete_exit();
         }
 
-        ce->lock();
-        clients_count = ce->add_data(in);
+        ce->add_data(in);
+        clients_count = ce->clients_count();
 
         if (clients_count == 0) {
             Logger::debug("Downloader finishing due to the lack of clients");

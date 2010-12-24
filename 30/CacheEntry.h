@@ -42,7 +42,10 @@ public:
     CacheEntryState get_state() const;
     void set_state(CacheEntryState state);
     void add_data(const char *msg);
-    int add_data(const Buffer *buffer);
+    void add_data(const Buffer *buffer);
+
+    int clients_count() const;
+
     const Buffer *data() const;
     void add_client(Client *client);
     void remove_client(Client *client);

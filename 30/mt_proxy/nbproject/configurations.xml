@@ -129,6 +129,9 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <commandLine>-lpthread</commandLine>
+        </linkerTool>
       </compileType>
     </conf>
   </confs>
