@@ -10,7 +10,7 @@
 
 int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
-    Logger::set_level(Logger::DEBUG);
+    Logger::set_level(Logger::INFO);
     Cache::init();
 
     try {

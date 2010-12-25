@@ -8,7 +8,7 @@ namespace ProxyConfig {
     const char *http_status_503 = "HTTP/1.0 503 Service unavailable\r\n\r\n<html><head><title>503</title></head><body><h1>503 Service unavailable</h1><hr>proxy server couldn't connect to the requested server</body></html>";
 
     // 10 kB
-    const size_t max_cache_entry_size = 1 * 1024 * 1024;
+    const size_t max_cache_entry_size = 5 * 1024 * 1024;
     // 100 Mb
-    const size_t max_cache_size = 8 * 1024 * 1024;
+    const size_t max_cache_size = 512 * 1024 * 1024;
 }
