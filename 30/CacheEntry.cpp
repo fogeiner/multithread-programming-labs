@@ -9,7 +9,7 @@ _state(CacheEntry::CACHING),
 _data(new VectorBuffer()),
 _bytes_received(0),
 _request(request),
-_mutex(Mutex::ERRORCHECK_MUTEX) {
+_mutex(Mutex::NORMAL_MUTEX) {
     Logger::debug("CacheEntry::CacheEntry()");
 }
 

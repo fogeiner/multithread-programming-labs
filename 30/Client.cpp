@@ -12,6 +12,9 @@ _ce(NULL) {
 
 Client::~Client() {
     Logger::debug("Client::~Client()");
+    if(!_sock->is_closed()){
+        _sock->close();
+    }
     delete _sock;
     delete _in;
     delete _out;

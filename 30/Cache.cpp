@@ -3,7 +3,7 @@
 #include "CacheEntry.h"
 #include "config.h"
 std::map<std::string, CacheEntry*> Cache::_cache;
-Mutex Cache::_cache_mutex(Mutex::RECURSIVE_MUTEX);
+Mutex Cache::_cache_mutex(Mutex::NORMAL_MUTEX);
 size_t Cache::_size;
 Mutex Cache::_size_mutex(Mutex::RECURSIVE_MUTEX);
 const size_t Cache::MAX_CACHE_ENTRY_SIZE = ProxyConfig::max_cache_entry_size;
@@ -88,19 +88,22 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
 
         try {
             ce = new CacheEntry(request);
+            _cache[key] = ce;
             ce->add_client(client);
             downloader = new Downloader(ce);
             Thread downloader_thread(Downloader::run, downloader);
             downloader_thread.run();
             downloader_thread.detach();
-            _cache[key] = ce;
+
         } catch (ThreadException &ex) {
             Logger::error("Cache::request() ThreadException: %s", ex.what());
+            _cache.erase(key);
             delete ce;
             delete downloader;
             _cache[HTTP_INTERNAL_ERROR]->add_client(client);
         } catch (SocketException &ex) {
             Logger::error("Cache::request() SocketException: %s", ex.what());
+            _cache.erase(key);
             delete ce;
             _cache[HTTP_INTERNAL_ERROR]->add_client(client);
         }
@@ -112,8 +115,12 @@ void Cache::request(BrokenUpHTTPRequest request, Client *client) {
 void Cache::drop(std::string url) {
     Logger::debug("Cache::drop(%s)", url.c_str());
     Cache::_cache_mutex.lock();
-    CacheEntry *ce = _cache[url];
-    Cache::bytes_removed(ce->bytes_received());
-    _cache.erase(url);
+
+    // no idea why but it happens once in a blue moon :(
+    if (_cache.find(url) != _cache.end()) {
+        CacheEntry *ce = _cache[url];
+        Cache::bytes_removed(ce->bytes_received());
+        _cache.erase(url);
+    }
     Cache::_cache_mutex.unlock();
 }

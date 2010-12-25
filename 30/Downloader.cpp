@@ -4,16 +4,16 @@
 #include "Cache.h"
 #include <sstream>
 
-Downloader::Downloader(CacheEntry* cache_entry) try :
-    _in(new VectorBuffer()),
-    _out(new VectorBuffer()),
-    _ce(cache_entry),
-    _sock(new TCPSocket) {
-
-} catch (SocketException &ex) {
-    delete _in;
-    delete _out;
-    throw;
+Downloader::Downloader(CacheEntry* cache_entry) {
+    try {
+        _sock = new TCPSocket();
+        _in = new VectorBuffer();
+        _out = new VectorBuffer();
+        _ce = cache_entry;
+    } catch (SocketException &ex) {
+        Logger::error("Downloader::Downlaoder() SocketException: %s", ex.what());
+        throw;
+    }
 }
 
 Downloader::~Downloader() {
@@ -24,7 +24,7 @@ Downloader::~Downloader() {
     delete _sock;
 }
 
-Downloader *Downloader::dummy_downloader() {
+Downloader * Downloader::dummy_downloader() {
     static Downloader d(NULL);
     return &d;
 }
@@ -57,10 +57,8 @@ void *Downloader::run(void* downloader_ptr) {
     Buffer *out = d->_out;
     TCPSocket *sock = d->_sock;
 
-    ce->lock();
     ce->set_downloader(d);
     const BrokenUpHTTPRequest &request = ce->request();
-    ce->unlock();
 
     // forming query to send
     out->append(ce->request().request().c_str(), ce->request().request().size());
@@ -76,14 +74,12 @@ void *Downloader::run(void* downloader_ptr) {
         Cache::drop(request.url());
         d->remove_or_change_state(CacheEntry::CONNECTION_ERROR);
         d->close_delete_exit();
-
     } catch (DNSException &ex) {
         Logger::error("Downloader DNSException: %s", ex.what());
         Cache::drop(request.url());
         d->remove_or_change_state(CacheEntry::CONNECTION_ERROR);
         d->close_delete_exit();
     }
-
 
     // try to send request
     try {
@@ -104,16 +100,11 @@ void *Downloader::run(void* downloader_ptr) {
 
     while (1) {
 
-        ce->lock();
-        while ((ce->get_state() == CacheEntry::DOWNLOADING) &&
-                (ce->data()->size() > Cache::MAX_CACHE_ENTRY_SIZE) &&
-                (ce->clients_count() > 0)) {
-            ce->wait();
-        }
-
         try {
             if (0 == sock->recv(in)) {
                 Logger::debug("Downloader finished downloading");
+
+                ce->lock();
 
                 if (response_code_received) {
                     if (ce->get_state() == CacheEntry::CACHING)
@@ -138,8 +129,16 @@ void *Downloader::run(void* downloader_ptr) {
             }
         } catch (RecvException &ex) {
             Logger::error("Downloader RecvException: %s", ex.what());
+            Cache::drop(request.url());
             d->remove_or_change_state(CacheEntry::RECV_ERROR);
             d->close_delete_exit();
+        }
+
+        ce->lock();
+        while ((ce->get_state() == CacheEntry::DOWNLOADING) &&
+                (ce->data()->size() > Cache::MAX_CACHE_ENTRY_SIZE) &&
+                (ce->clients_count() > 0)) {
+            ce->wait();
         }
 
         ce->add_data(in);
