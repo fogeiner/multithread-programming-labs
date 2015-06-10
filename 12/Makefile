@@ -1,13 +1,10 @@
-APP = bin
-FLAGS = -g -lpthread -pthread -std=c99 -Wall
-OBJ = source.o
-CC = mpicc
+#/usr/bin/make -f
 
-$(APP): $(OBJ)
-	$(CC) -o $(APP) $(OBJ) $(FLAGS)
+LDFLAGS= -pthread
+CFLAGS = -std=c99 
+CC= gcc
 
-source.o: source.c
-	$(CC) -o source.o source.c $(FLAGS) -c
+main: main.o
 
 clean:
-	rm -rf core $(APP) $(OBJ)
+	rm -rf core main *.o

@@ -1,1 +1,1 @@
-В отличие от мутекса на семафор не накладываются ограничения на то, какой поток может его разблокировать.
+Mutex must be released by the same thread that acquired it earlier. Semaphone does not have such limitation.

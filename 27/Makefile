@@ -1,16 +1,9 @@
-APP = bin
-OBJ = source.o ../libs/Terminal/Terminal.o
-CXXFLAGS = -lrt
-CC = g++
+#!/usr/bin/make -f
 
-$(APP): $(OBJ)
-	$(CC) -o $(APP) $(OBJ) $(CXXFLAGS)
+CC= g++
+LDLIBS= -lrt
 
-source.o: source.cpp ../libs/ChunkBuffer/Buffer.h
-	$(CC) -c -o source.o source.cpp $(CXXFLAGS)
-
-../libs/Terminal/Terminal.o: ../libs/Terminal/Terminal.h ../libs/Terminal/Terminal.cpp
-	$(CC) -o ../libs/Terminal/Terminal.o -c ../libs/Terminal/Terminal.cpp $(CXXFLAGS)
+main: main.o ../libs/Terminal/Terminal.o
 
 clean:
-	rm -rf $(APP) $(OBJ) core
+	rm -rf core main *.o

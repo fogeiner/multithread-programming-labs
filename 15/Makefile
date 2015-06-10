@@ -1,15 +1,11 @@
 #/usr/bin/make -f
 
-APP = bin
-OBJ = source.o
-FLAGS = -std=c99 -lpthread -pthread -lrt
-CC = gcc
+LDFLAGS= -pthread
+LDLIBS= -lrt
+CFLAGS = -std=c99 
+CC= gcc
 
-$(APP): $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $(APP)
-
-source.o: source_independent.c
-	$(CC) -c source_independent.c $(FLAGS) -o source.o
+main: main.o
 
 clean:
-	rm -rf core $(APP) $(OBJ)
+	rm -rf core main *.o

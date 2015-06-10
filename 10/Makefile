@@ -1,21 +1,9 @@
 #/usr/bin/make -f
 
-APP = bin
-OBJ = source.o ../libs/Mutex/Mutex.o ../libs/Thread/Thread.o
-CXXFLAGS = -lpthread -pthread
+LDFLAGS = -pthread
 CC = g++
 
-$(APP): $(OBJ)
-	$(CC) $(CXXFLAGS) $(OBJ) -o $(APP)
-
-../libs/Mutex/Mutex.o: ../libs/Mutex/Mutex.cpp ../libs/Mutex/Mutex.h
-	g++ $(CXXFLAGS) -c -o ../libs/Mutex/Mutex.o ../libs/Mutex/Mutex.cpp
-
-../libs/Thread/Thread.o: ../libs/Thread/Thread.cpp ../libs/Thread/Thread.h
-	g++ $(CXXFLAGS) -c -o ../libs/Thread/Thread.o ../libs/Thread/Thread.cpp
-
-source.o: source.cpp
-	$(CC) -c source.cpp $(CXXFLAGS) -o source.o
+main: main.o ../libs/Mutex/Mutex.o ../libs/Thread/Thread.o
 
 clean:
-	rm -rf core $(APP) $(OBJ)
+	rm -rf core *.o main

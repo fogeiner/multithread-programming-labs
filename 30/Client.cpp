@@ -250,4 +250,5 @@ void *Client::run(void *client_ptr) {
     }
 
     c->close_delete_exit();
+    return NULL;
 }

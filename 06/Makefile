@@ -1,15 +1,10 @@
 #/usr/bin/make -f
 
-APP = rcopy
-OBJ = source.o
-FLAGS = -lpthread -pthread -lpthread
-CC = gcc
+LDFLAGS= -pthread
+CFLAG= -std=c99 
+CC= gcc
 
-$(APP): $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $(APP)
-
-source.o: source.c
-	$(CC) -c source.c $(FLAGS) -o source.o
+main: main.o
 
 clean:
-	rm -rf core $(APP) $(OBJ)
+	rm -rf core main *.o
